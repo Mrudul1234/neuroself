@@ -81,8 +81,10 @@ function ReaderPage() {
           });
           if (cancelled) return;
           setText(fullText);
-          // Cache for next time (best-effort)
-          updateItem(it.id, { extracted_text: fullText }).catch(() => {});
+          // Cache extracted text server-side so subsequent opens skip pdf.js.
+          cacheExtractedText({ data: { id: it.id, text: fullText } }).catch(
+            (e) => console.warn("Failed to cache extracted text", e),
+          );
         } else {
           // Article: fetch readable text via microlink
           setStatus("Fetching article…");
