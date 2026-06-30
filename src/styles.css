@@ -29,9 +29,12 @@
 
   /* === Typography — families === */
   --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: "EB Garamond", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-figtree: "Figtree", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-eb-garamond: "EB Garamond", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-instrument: "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-fraunces: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  /* Backwards-compat alias for any leftover `font-eb-garamond` classes */
+  --font-eb-garamond: "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 
   /* === Typography — scale === */
   --text-caption: 14px;
