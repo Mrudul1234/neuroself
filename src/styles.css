@@ -139,12 +139,17 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Serif is the signature — always EB Garamond for these */
+  /* Serif is the signature — Instrument Serif by default */
   .font-serif,
-  .font-eb-garamond {
-    font-family: var(--font-eb-garamond);
+  .font-eb-garamond,
+  .font-instrument {
+    font-family: var(--font-instrument);
     font-weight: 400;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
     line-height: 0.95;
+  }
+  .font-fraunces {
+    font-family: var(--font-fraunces);
+    letter-spacing: -0.04em;
   }
 }
