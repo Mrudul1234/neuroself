@@ -10,6 +10,9 @@ export interface LibraryItem {
   type: ItemType;
   domain: string | null;
   created_at: string;
+  storage_path?: string | null;
+  extracted_text?: string | null;
+  file_size?: number | null;
 }
 
 export interface DraftItem {
@@ -18,7 +21,12 @@ export interface DraftItem {
   thumbnail_url: string | null;
   type: ItemType;
   domain: string | null;
+  storage_path?: string | null;
+  file_size?: number | null;
+  extracted_text?: string | null;
 }
+
+const BUCKET = "library-files";
 
 export function getDomain(url: string): string | null {
   try {
@@ -42,11 +50,7 @@ async function fetchYouTube(url: string): Promise<DraftItem | null> {
       `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`,
     );
     if (!res.ok) return null;
-    const data = (await res.json()) as {
-      title?: string;
-      thumbnail_url?: string;
-      author_name?: string;
-    };
+    const data = (await res.json()) as { title?: string; thumbnail_url?: string };
     return {
       title: data.title ?? url,
       url,
@@ -60,19 +64,12 @@ async function fetchYouTube(url: string): Promise<DraftItem | null> {
 }
 
 async function fetchOpenGraph(url: string): Promise<Partial<DraftItem> | null> {
-  // Microlink is a free CORS-friendly OG metadata service.
   try {
-    const res = await fetch(
-      `https://api.microlink.io/?url=${encodeURIComponent(url)}`,
-    );
+    const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
     if (!res.ok) return null;
     const json = (await res.json()) as {
       status?: string;
-      data?: {
-        title?: string;
-        image?: { url?: string };
-        publisher?: string;
-      };
+      data?: { title?: string; image?: { url?: string }; description?: string };
     };
     if (json.status !== "success" || !json.data) return null;
     return {
@@ -129,6 +126,16 @@ export async function listItems(): Promise<LibraryItem[]> {
   return (data ?? []) as LibraryItem[];
 }
 
+export async function getItem(id: string): Promise<LibraryItem | null> {
+  const { data, error } = await supabase
+    .from("library_items")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as LibraryItem | null) ?? null;
+}
+
 export async function insertItem(draft: DraftItem): Promise<LibraryItem> {
   const { data, error } = await supabase
     .from("library_items")
@@ -139,7 +146,44 @@ export async function insertItem(draft: DraftItem): Promise<LibraryItem> {
   return data as LibraryItem;
 }
 
+export async function updateItem(
+  id: string,
+  patch: Partial<DraftItem>,
+): Promise<void> {
+  const { error } = await supabase.from("library_items").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
 export async function deleteItem(id: string): Promise<void> {
   const { error } = await supabase.from("library_items").delete().eq("id", id);
   if (error) throw error;
+}
+
+export async function uploadPdfFile(
+  file: File,
+  onProgress?: (pct: number) => void,
+): Promise<{ path: string; size: number }> {
+  const ext = file.name.split(".").pop() || "pdf";
+  const path = `${crypto.randomUUID()}.${ext}`;
+  // Supabase JS doesn't expose XHR progress; emulate coarse progress.
+  onProgress?.(5);
+  const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+    contentType: file.type || "application/pdf",
+    upsert: false,
+  });
+  onProgress?.(95);
+  if (error) throw error;
+  onProgress?.(100);
+  return { path, size: file.size };
+}
+
+export async function getSignedFileUrl(
+  path: string,
+  expiresIn = 60 * 60,
+): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrl(path, expiresIn);
+  if (error) throw error;
+  return data.signedUrl;
 }
