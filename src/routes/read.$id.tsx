@@ -75,6 +75,7 @@ function ReaderPage() {
 
         if (isPdf) {
           setStatus("Extracting PDF text…");
+          const { extractPdfText } = await import("@/lib/pdf");
           const { fullText } = await extractPdfText(sourceUrl, (done, total) => {
             if (!cancelled) setStatus(`Reading page ${done} of ${total}…`);
           });
