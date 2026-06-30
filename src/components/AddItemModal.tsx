@@ -83,8 +83,11 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
         storage_path: path,
         file_size: size,
       });
+      toast.success("PDF uploaded — review and save.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed.");
+      const msg = err instanceof Error ? err.message : "Upload failed.";
+      setError(msg);
+      toast.error(`Upload failed: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -95,11 +98,14 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
     setSaving(true);
     try {
       await insertItem(draft);
+      toast.success("Added to your library.");
       reset();
       onSaved();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save.");
+      const msg = err instanceof Error ? err.message : "Failed to save.";
+      setError(msg);
+      toast.error(`Save failed: ${msg}`);
       setSaving(false);
     }
   };
