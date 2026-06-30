@@ -14,13 +14,13 @@ interface CardProps {
   width?: number;
 }
 
-export function LibraryCard({ item, width = 120 }: CardProps) {
+export function LibraryCard({ item, width = 132 }: CardProps) {
   const Icon = iconFor[item.type];
   const isExternalVideo = item.type === "video";
 
   const cover = (
     <div
-      className="relative w-full overflow-hidden rounded-[14px] border border-stone-mist bg-white shadow-[0_10px_18px_-12px_rgba(26,26,26,0.55)] transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_18px_26px_-14px_rgba(26,26,26,0.55)]"
+      className="relative w-full overflow-hidden rounded-[10px] border border-stone-mist bg-white shadow-[0_12px_22px_-12px_rgba(26,26,26,0.55)] transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_20px_28px_-14px_rgba(26,26,26,0.55)]"
       style={{ aspectRatio: "2 / 3" }}
     >
       {item.thumbnail_url ? (
