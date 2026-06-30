@@ -27,12 +27,13 @@ export const Route = createFileRoute("/")({
 });
 
 // Accent palette — one per shelf row, in order.
-const ACCENTS = ["#ffa946", "#a8d5e8", "#f0d7ff"];
+const ACCENTS = ["#f0b265", "#a8d5e8", "#dcc5f0"];
 
 function LibraryPage() {
   const [items, setItems] = useState<LibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [folderView, setFolderView] = useState(false);
 
@@ -62,33 +63,25 @@ function LibraryPage() {
   }, [items, search]);
 
   const shelves: Array<{ label: string; items: LibraryItem[] }> = [
-    { label: "Research Papers", items: filtered.filter((i) => i.type === "paper") },
+    { label: "Papers", items: filtered.filter((i) => i.type === "paper") },
     { label: "Articles", items: filtered.filter((i) => i.type === "article") },
     { label: "Videos", items: filtered.filter((i) => i.type === "video") },
   ];
 
   return (
     <div className="min-h-screen bg-cream-paper">
-      <div className="mx-auto max-w-[1200px] px-4 pb-32 pt-4 sm:px-8 sm:pt-6">
-        {/* Top bar */}
-        <header className="flex items-center justify-between gap-3">
+      <div className="mx-auto max-w-[1200px] px-5 pb-36 pt-5 sm:px-8 sm:pt-6">
+        {/* Top utility bar — minimal, like the reference */}
+        <header className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setSearchOpen((v) => !v)}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-mist bg-white text-midnight-ink transition-colors hover:bg-cream-paper"
+            aria-label="Search"
+          >
+            <Search size={15} />
+          </button>
           <div className="flex items-center gap-2">
-            <div
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-midnight-ink text-white"
-              style={{ fontSize: 14, fontWeight: 700 }}
-            >
-              N
-            </div>
-            <span
-              className="text-midnight-ink"
-              style={{ fontSize: 16, fontWeight: 700, letterSpacing: "-0.01em" }}
-            >
-              NeuroShelf
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Folder view toggle — mobile only */}
             <button
               type="button"
               onClick={() => setFolderView((v) => !v)}
@@ -96,15 +89,6 @@ function LibraryPage() {
               aria-label="Toggle folder view"
             >
               {folderView ? <LayoutGrid size={15} /> : <FolderClosed size={15} />}
-            </button>
-            <button
-              type="button"
-              onClick={() => setModalOpen(true)}
-              className="hidden items-center gap-1.5 rounded-full bg-midnight-ink px-4 py-2 text-white hover:opacity-90 sm:inline-flex"
-              style={{ fontSize: 13, fontWeight: 600 }}
-            >
-              <Plus size={14} strokeWidth={2.5} />
-              Add Item
             </button>
           </div>
         </header>
@@ -115,52 +99,50 @@ function LibraryPage() {
           </div>
         ) : (
           <>
-            {/* Page title */}
-            <div className="mt-10 text-center sm:mt-16">
+            {/* Title block — small label over giant serif */}
+            <div className="mt-6 text-center sm:mt-10">
               <div
-                className="text-smoke"
-                style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.18em", textTransform: "uppercase" }}
+                className="text-midnight-ink"
+                style={{ fontSize: 13, fontWeight: 400 }}
               >
                 My Brain Library
               </div>
               <h1
-                className="mt-3 font-eb-garamond text-midnight-ink"
+                className="mt-1 font-eb-garamond text-midnight-ink"
                 style={{
-                  fontSize: "clamp(48px, 9vw, 96px)",
+                  fontSize: "clamp(56px, 14vw, 104px)",
                   lineHeight: 0.9,
-                  letterSpacing: "-0.05em",
+                  letterSpacing: "-0.04em",
+                  fontWeight: 500,
                 }}
               >
                 SHELVES
               </h1>
-              <p
-                className="mx-auto mt-4 max-w-md text-smoke"
-                style={{ fontSize: 14, lineHeight: 1.4 }}
-              >
-                A warm corner for neuroscience papers, articles, and videos worth remembering.
-              </p>
             </div>
 
-            {/* Search */}
-            <div className="mx-auto mt-8 flex max-w-md items-center">
-              <div className="relative w-full">
-                <Search
-                  size={14}
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-smoke"
-                />
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search my library"
-                  className="w-full rounded-full border border-stone-mist bg-white py-2.5 pl-10 pr-4 text-midnight-ink outline-none placeholder:text-smoke focus:border-graphite-veil"
-                  style={{ fontSize: 13, fontWeight: 500 }}
-                />
+            {/* Collapsible search */}
+            {searchOpen && (
+              <div className="mx-auto mt-5 max-w-md">
+                <div className="relative w-full">
+                  <Search
+                    size={14}
+                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-smoke"
+                  />
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search my library"
+                    autoFocus
+                    className="w-full rounded-full border border-stone-mist bg-white py-2.5 pl-10 pr-4 text-midnight-ink outline-none placeholder:text-smoke focus:border-graphite-veil"
+                    style={{ fontSize: 13, fontWeight: 500 }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Shelves */}
-            <div className="mt-12 space-y-12 sm:mt-16 sm:space-y-14">
+            <div className="mt-8 space-y-9 sm:mt-12 sm:space-y-12">
               {loading ? (
                 <div
                   className="text-center text-smoke"
@@ -184,16 +166,18 @@ function LibraryPage() {
         )}
       </div>
 
-      {/* Floating add button (mobile + always-visible bottom CTA) */}
-      <button
-        type="button"
-        onClick={() => setModalOpen(true)}
-        className="fixed bottom-6 left-1/2 z-30 inline-flex -translate-x-1/2 items-center gap-2 rounded-full bg-midnight-ink px-6 py-3 text-white shadow-[0_14px_30px_-12px_rgba(26,26,26,0.55)] hover:opacity-90 sm:hidden"
-        style={{ fontSize: 14, fontWeight: 600 }}
-      >
-        <Plus size={16} strokeWidth={2.5} />
-        Add Item
-      </button>
+      {/* Bottom centered Add Item pill (mobile + desktop) */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-30 flex justify-center">
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-midnight-ink px-7 py-3.5 text-white shadow-[0_14px_30px_-12px_rgba(26,26,26,0.55)] transition-opacity hover:opacity-90"
+          style={{ fontSize: 15, fontWeight: 600 }}
+        >
+          <Plus size={15} strokeWidth={2.5} />
+          Add Item
+        </button>
+      </div>
 
       <AddItemModal
         open={modalOpen}
