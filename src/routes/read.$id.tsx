@@ -9,7 +9,6 @@ import {
   Type,
 } from "lucide-react";
 import { getItem, getSignedFileUrl, type LibraryItem } from "@/lib/library";
-import { extractPdfText } from "@/lib/pdf";
 import { cacheExtractedText } from "@/lib/library.functions";
 
 export const Route = createFileRoute("/read/$id")({
