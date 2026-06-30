@@ -18,7 +18,10 @@ export type Database = {
         Row: {
           created_at: string
           domain: string | null
+          extracted_text: string | null
+          file_size: number | null
           id: string
+          storage_path: string | null
           thumbnail_url: string | null
           title: string
           type: string
@@ -27,7 +30,10 @@ export type Database = {
         Insert: {
           created_at?: string
           domain?: string | null
+          extracted_text?: string | null
+          file_size?: number | null
           id?: string
+          storage_path?: string | null
           thumbnail_url?: string | null
           title: string
           type: string
@@ -36,7 +42,10 @@ export type Database = {
         Update: {
           created_at?: string
           domain?: string | null
+          extracted_text?: string | null
+          file_size?: number | null
           id?: string
+          storage_path?: string | null
           thumbnail_url?: string | null
           title?: string
           type?: string

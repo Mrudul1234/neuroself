@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { FileText, Newspaper, Play } from "lucide-react";
 import type { LibraryItem, ItemType } from "@/lib/library";
 
@@ -9,80 +10,97 @@ const iconFor: Record<ItemType, typeof FileText> = {
 
 interface CardProps {
   item: LibraryItem;
-  onClick?: (item: LibraryItem) => void;
+  /** Width in px for the cover */
+  width?: number;
 }
 
-export function LibraryCard({ item, onClick }: CardProps) {
+export function LibraryCard({ item, width = 120 }: CardProps) {
   const Icon = iconFor[item.type];
+  const isExternalVideo = item.type === "video";
 
-  const inner = (
-    <>
-      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-t-[18px] rounded-b-[4px]">
-        {item.thumbnail_url ? (
-          <img
-            src={item.thumbnail_url}
-            alt=""
-            loading="lazy"
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-cream-paper px-2 text-center">
-            <span
-              className="font-eb-garamond text-midnight-ink line-clamp-5"
-              style={{ fontSize: 14, lineHeight: 1.05, letterSpacing: "-0.02em" }}
-            >
-              {item.title}
-            </span>
-          </div>
-        )}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-multiply"
-          style={{
-            backgroundImage:
-              "radial-gradient(rgba(0,0,0,0.6) 1px, transparent 1px)",
-            backgroundSize: "3px 3px",
-          }}
+  const cover = (
+    <div
+      className="relative w-full overflow-hidden rounded-[14px] border border-stone-mist bg-white shadow-[0_10px_18px_-12px_rgba(26,26,26,0.55)] transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_18px_26px_-14px_rgba(26,26,26,0.55)]"
+      style={{ aspectRatio: "2 / 3" }}
+    >
+      {item.thumbnail_url ? (
+        <img
+          src={item.thumbnail_url}
+          alt=""
+          loading="lazy"
+          className="h-full w-full object-cover"
         />
-        <div className="absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-white/95 shadow-sm">
-          <Icon size={10} className="text-midnight-ink" strokeWidth={2.5} />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-cream-paper px-2 text-center">
+          <span
+            className="font-eb-garamond text-midnight-ink line-clamp-6"
+            style={{ fontSize: 15, lineHeight: 1.05, letterSpacing: "-0.02em" }}
+          >
+            {item.title}
+          </span>
         </div>
-        {/* spine highlight */}
-        <div
-          className="pointer-events-none absolute inset-y-0 left-0 w-[3px]"
-          style={{
-            background:
-              "linear-gradient(to right, rgba(0,0,0,0.25), rgba(0,0,0,0))",
-          }}
-        />
+      )}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-multiply"
+        style={{
+          backgroundImage: "radial-gradient(rgba(0,0,0,0.6) 1px, transparent 1px)",
+          backgroundSize: "3px 3px",
+        }}
+      />
+      <div className="absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-white/95 shadow-sm">
+        <Icon size={10} className="text-midnight-ink" strokeWidth={2.5} />
       </div>
-    </>
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 w-[3px]"
+        style={{
+          background: "linear-gradient(to right, rgba(0,0,0,0.22), rgba(0,0,0,0))",
+        }}
+      />
+    </div>
   );
 
+  const Wrapper: React.ElementType = isExternalVideo ? "a" : Link;
+  const wrapperProps = isExternalVideo
+    ? { href: item.url, target: "_blank", rel: "noreferrer" }
+    : { to: "/read/$id", params: { id: item.id } };
+
   return (
-    <div className="group flex w-[88px] shrink-0 flex-col items-center sm:w-[104px]">
-      <button
-        type="button"
-        onClick={() => onClick?.(item)}
-        title={item.title}
-        className="relative block w-full overflow-hidden rounded-t-[18px] rounded-b-[4px] border border-stone-mist bg-white shadow-[0_8px_14px_-10px_rgba(26,26,26,0.55)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_16px_22px_-12px_rgba(26,26,26,0.55)]"
-      >
-        {inner}
-      </button>
+    <div
+      className="group flex shrink-0 flex-col items-center"
+      style={{ width }}
+    >
+      <Wrapper {...wrapperProps} title={item.title} className="block w-full">
+        {cover}
+      </Wrapper>
       <div
-        className="mt-2 line-clamp-2 w-full text-center text-midnight-ink"
-        style={{ fontSize: 11, fontWeight: 500, lineHeight: 1.25 }}
+        className="mt-2.5 line-clamp-2 w-full text-center text-midnight-ink"
+        style={{ fontSize: 12, fontWeight: 500, lineHeight: 1.3 }}
       >
         {item.title}
       </div>
+      {item.domain && (
+        <div
+          className="mt-0.5 line-clamp-1 w-full text-center text-graphite-veil"
+          style={{ fontSize: 11, fontWeight: 400 }}
+        >
+          {item.domain}
+        </div>
+      )}
     </div>
   );
 }
 
-export function EmptyCard({ label }: { label: string }) {
+export function EmptyCard({ label, width = 120 }: { label: string; width?: number }) {
   return (
-    <div className="flex w-[88px] shrink-0 flex-col items-center sm:w-[104px]">
-      <div className="flex aspect-[2/3] w-full items-center justify-center rounded-t-[18px] rounded-b-[4px] border-2 border-dashed border-stone-mist bg-white/40 p-2 text-center">
-        <span className="text-smoke" style={{ fontSize: 10, fontWeight: 500, lineHeight: 1.25 }}>
+    <div className="flex shrink-0 flex-col items-center" style={{ width }}>
+      <div
+        className="flex w-full items-center justify-center rounded-[14px] border-2 border-dashed border-stone-mist bg-white/40 p-2 text-center"
+        style={{ aspectRatio: "2 / 3" }}
+      >
+        <span
+          className="text-smoke"
+          style={{ fontSize: 11, fontWeight: 500, lineHeight: 1.3 }}
+        >
           {label}
         </span>
       </div>
