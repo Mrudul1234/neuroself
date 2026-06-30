@@ -8,8 +8,9 @@ import {
   Sun,
   Type,
 } from "lucide-react";
-import { getItem, getSignedFileUrl, updateItem, type LibraryItem } from "@/lib/library";
+import { getItem, getSignedFileUrl, type LibraryItem } from "@/lib/library";
 import { extractPdfText } from "@/lib/pdf";
+import { cacheExtractedText } from "@/lib/library.functions";
 
 export const Route = createFileRoute("/read/$id")({
   component: ReaderPage,
@@ -80,8 +81,10 @@ function ReaderPage() {
           });
           if (cancelled) return;
           setText(fullText);
-          // Cache for next time (best-effort)
-          updateItem(it.id, { extracted_text: fullText }).catch(() => {});
+          // Cache extracted text server-side so subsequent opens skip pdf.js.
+          cacheExtractedText({ data: { id: it.id, text: fullText } }).catch(
+            (e) => console.warn("Failed to cache extracted text", e),
+          );
         } else {
           // Article: fetch readable text via microlink
           setStatus("Fetching article…");
