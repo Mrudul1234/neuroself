@@ -101,7 +101,7 @@ function StickyNote() {
         fill="currentColor"
       />
       <div
-        className="font-eb-garamond text-midnight-ink"
+        className="font-instrument text-midnight-ink"
         style={{ fontSize: 16, lineHeight: 1.15, fontStyle: "italic" }}
       >
         Things I keep coming back to ✨

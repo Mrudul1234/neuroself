@@ -130,7 +130,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
         </button>
 
         <h2
-          className="font-eb-garamond text-midnight-ink"
+          className="font-instrument text-midnight-ink"
           style={{ fontSize: 36, lineHeight: 0.95, letterSpacing: "-0.04em" }}
         >
           Add to <span className="text-graphite-veil">library</span>
