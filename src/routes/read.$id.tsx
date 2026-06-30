@@ -144,7 +144,7 @@ function ReaderPage() {
       <article className="mx-auto max-w-[640px] px-5 pb-40 pt-8 sm:px-8 sm:pt-12">
         {item && (
           <h1
-            className="font-eb-garamond text-center"
+            className="font-instrument text-center"
             style={{
               fontSize: "clamp(28px, 5vw, 44px)",
               lineHeight: 1.05,
@@ -188,7 +188,7 @@ function ReaderPage() {
           </div>
         ) : (
           <div
-            className="font-eb-garamond"
+            className="font-instrument"
             style={{ fontSize, lineHeight: 1.65 }}
           >
             {paragraphs.map((p, i) => (

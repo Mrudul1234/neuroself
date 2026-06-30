@@ -99,25 +99,32 @@ function LibraryPage() {
           </div>
         ) : (
           <>
-            {/* Title block — small label over giant serif */}
+            {/* Title block — small label over giant display serif */}
             <div className="mt-6 text-center sm:mt-10">
               <div
-                className="text-midnight-ink"
-                style={{ fontSize: 13, fontWeight: 400 }}
+                className="uppercase text-graphite-veil"
+                style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.22em" }}
               >
                 My Brain Library
               </div>
               <h1
-                className="mt-1 font-eb-garamond text-midnight-ink"
+                className="mt-2 font-fraunces text-midnight-ink"
                 style={{
-                  fontSize: "clamp(56px, 14vw, 104px)",
-                  lineHeight: 0.9,
-                  letterSpacing: "-0.04em",
+                  fontSize: "clamp(64px, 16vw, 132px)",
+                  lineHeight: 0.88,
+                  letterSpacing: "-0.055em",
                   fontWeight: 500,
+                  fontVariationSettings: '"opsz" 144',
                 }}
               >
-                SHELVES
+                Shelves<span className="text-amber-pulse">.</span>
               </h1>
+              <div
+                className="mx-auto mt-3 font-instrument italic text-smoke"
+                style={{ fontSize: 15, lineHeight: 1.2, maxWidth: 320 }}
+              >
+                a quiet place for the things your brain wants to keep
+              </div>
             </div>
 
             {/* Collapsible search */}

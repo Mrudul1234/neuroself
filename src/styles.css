@@ -29,9 +29,12 @@
 
   /* === Typography — families === */
   --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: "EB Garamond", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-figtree: "Figtree", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-eb-garamond: "EB Garamond", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-instrument: "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-fraunces: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  /* Backwards-compat alias for any leftover `font-eb-garamond` classes */
+  --font-eb-garamond: "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 
   /* === Typography — scale === */
   --text-caption: 14px;
@@ -136,12 +139,17 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Serif is the signature — always EB Garamond for these */
+  /* Serif is the signature — Instrument Serif by default */
   .font-serif,
-  .font-eb-garamond {
-    font-family: var(--font-eb-garamond);
+  .font-eb-garamond,
+  .font-instrument {
+    font-family: var(--font-instrument);
     font-weight: 400;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
     line-height: 0.95;
+  }
+  .font-fraunces {
+    font-family: var(--font-fraunces);
+    letter-spacing: -0.04em;
   }
 }
