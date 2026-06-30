@@ -6,50 +6,48 @@ interface ShelfProps {
   type: ItemType;
   items: LibraryItem[];
   searching: boolean;
+  showViewAll?: boolean;
 }
 
-export function Shelf({ label, items, searching }: ShelfProps) {
+export function Shelf({ label, items, searching, showViewAll = true }: ShelfProps) {
   return (
-    <section className="space-y-6">
-      {/* Header row */}
+    <section className="space-y-3">
       <div className="flex items-end justify-between gap-4 px-1">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <span
-            className="uppercase text-smoke"
-            style={{
-              fontSize: 14,
-              fontWeight: 600,
-              letterSpacing: "0.1em",
-            }}
+            className="text-midnight-ink"
+            style={{ fontSize: 16, fontWeight: 500 }}
           >
             {label}
           </span>
           <span
-            className="inline-flex items-center rounded-[8px] bg-amber-pulse px-2 py-0.5 text-midnight-ink"
-            style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.04em" }}
+            className="inline-flex items-center rounded-[8px] bg-amber-pulse/90 px-1.5 py-0.5 text-midnight-ink"
+            style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.04em" }}
           >
             {items.length}
           </span>
         </div>
-        <button
-          type="button"
-          className="text-midnight-ink transition-opacity hover:opacity-60"
-          style={{ fontSize: 14, fontWeight: 500 }}
-        >
-          View all →
-        </button>
+        {showViewAll && (
+          <button
+            type="button"
+            className="text-smoke transition-colors hover:text-midnight-ink"
+            style={{ fontSize: 13, fontWeight: 500 }}
+          >
+            Full shelf →
+          </button>
+        )}
       </div>
 
-      {/* Shelf rail with horizontal scroll */}
+      {/* Shelf rail */}
       <div className="relative">
-        <div className="-mx-4 overflow-x-auto px-4 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex items-end gap-5">
+        <div className="-mx-2 overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex items-end gap-3 pb-1">
             {items.length === 0 ? (
               <EmptyCard
                 label={
                   searching
-                    ? "No matches on this shelf"
-                    : "No items yet — add your first one"
+                    ? "No matches"
+                    : "Add your first one"
                 }
               />
             ) : (
@@ -57,11 +55,20 @@ export function Shelf({ label, items, searching }: ShelfProps) {
             )}
           </div>
         </div>
-        {/* Shelf ledge */}
-        <div
-          className="mx-1 h-[4px] rounded-full bg-stone-mist"
-          style={{ boxShadow: "0 6px 14px -6px rgba(26,26,26,0.25)" }}
-        />
+        {/* Shelf ledge: warm cream-mist plank with depth shadow underneath */}
+        <div className="relative">
+          <div
+            className="h-[6px] rounded-full"
+            style={{
+              background:
+                "linear-gradient(to bottom, #efe9d8 0%, #e4dec9 60%, #d4cdb6 100%)",
+            }}
+          />
+          <div
+            className="absolute inset-x-2 -bottom-2 h-3 rounded-full opacity-50 blur-md"
+            style={{ background: "rgba(26,26,26,0.22)" }}
+          />
+        </div>
       </div>
     </section>
   );
