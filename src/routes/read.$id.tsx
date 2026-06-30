@@ -9,7 +9,6 @@ import {
   Type,
 } from "lucide-react";
 import { getItem, getSignedFileUrl, type LibraryItem } from "@/lib/library";
-import { extractPdfText } from "@/lib/pdf";
 import { cacheExtractedText } from "@/lib/library.functions";
 
 export const Route = createFileRoute("/read/$id")({
@@ -76,6 +75,7 @@ function ReaderPage() {
 
         if (isPdf) {
           setStatus("Extracting PDF text…");
+          const { extractPdfText } = await import("@/lib/pdf");
           const { fullText } = await extractPdfText(sourceUrl, (done, total) => {
             if (!cancelled) setStatus(`Reading page ${done} of ${total}…`);
           });
