@@ -9,20 +9,15 @@ const iconFor: Record<ItemType, typeof FileText> = {
 
 interface CardProps {
   item: LibraryItem;
+  onClick?: (item: LibraryItem) => void;
 }
 
-export function LibraryCard({ item }: CardProps) {
+export function LibraryCard({ item, onClick }: CardProps) {
   const Icon = iconFor[item.type];
 
-  return (
-    <a
-      href={item.url}
-      target="_blank"
-      rel="noreferrer"
-      className="group block w-[200px] shrink-0 rounded-[32px] border border-stone-mist bg-white transition-all duration-200 hover:-translate-y-1 hover:border-graphite-veil hover:shadow-[0_18px_40px_-20px_rgba(26,26,26,0.35)] sm:w-[220px]"
-    >
-      {/* Thumbnail — 2:3 ratio, rounded only on top */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-t-[32px]">
+  const inner = (
+    <>
+      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-t-[18px] rounded-b-[4px]">
         {item.thumbnail_url ? (
           <img
             src={item.thumbnail_url}
@@ -31,59 +26,66 @@ export function LibraryCard({ item }: CardProps) {
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-cream-paper px-4 text-center">
+          <div className="flex h-full w-full items-center justify-center bg-cream-paper px-2 text-center">
             <span
-              className="font-eb-garamond text-midnight-ink"
-              style={{ fontSize: 24, lineHeight: 1.05, letterSpacing: "-0.03em" }}
+              className="font-eb-garamond text-midnight-ink line-clamp-5"
+              style={{ fontSize: 14, lineHeight: 1.05, letterSpacing: "-0.02em" }}
             >
               {item.title}
             </span>
           </div>
         )}
-
-        {/* Grain overlay */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-multiply"
+          className="pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-multiply"
           style={{
             backgroundImage:
               "radial-gradient(rgba(0,0,0,0.6) 1px, transparent 1px)",
             backgroundSize: "3px 3px",
           }}
         />
-
-        {/* Type badge */}
-        <div className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm">
-          <Icon size={14} className="text-midnight-ink" strokeWidth={2.25} />
+        <div className="absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-white/95 shadow-sm">
+          <Icon size={10} className="text-midnight-ink" strokeWidth={2.5} />
         </div>
-      </div>
-
-      {/* Meta */}
-      <div className="px-4 py-4">
+        {/* spine highlight */}
         <div
-          className="line-clamp-2 text-midnight-ink"
-          style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.3 }}
-        >
-          {item.title}
-        </div>
-        {item.domain && (
-          <div
-            className="mt-1 truncate text-smoke"
-            style={{ fontSize: 14, fontWeight: 400, lineHeight: 1.3 }}
-          >
-            {item.domain}
-          </div>
-        )}
+          className="pointer-events-none absolute inset-y-0 left-0 w-[3px]"
+          style={{
+            background:
+              "linear-gradient(to right, rgba(0,0,0,0.25), rgba(0,0,0,0))",
+          }}
+        />
       </div>
-    </a>
+    </>
+  );
+
+  return (
+    <div className="group flex w-[88px] shrink-0 flex-col items-center sm:w-[104px]">
+      <button
+        type="button"
+        onClick={() => onClick?.(item)}
+        title={item.title}
+        className="relative block w-full overflow-hidden rounded-t-[18px] rounded-b-[4px] border border-stone-mist bg-white shadow-[0_8px_14px_-10px_rgba(26,26,26,0.55)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_16px_22px_-12px_rgba(26,26,26,0.55)]"
+      >
+        {inner}
+      </button>
+      <div
+        className="mt-2 line-clamp-2 w-full text-center text-midnight-ink"
+        style={{ fontSize: 11, fontWeight: 500, lineHeight: 1.25 }}
+      >
+        {item.title}
+      </div>
+    </div>
   );
 }
 
 export function EmptyCard({ label }: { label: string }) {
   return (
-    <div className="flex aspect-[2/3] w-[200px] shrink-0 items-center justify-center rounded-[32px] border-2 border-dashed border-stone-mist bg-transparent p-6 text-center sm:w-[220px]">
-      <span className="text-smoke" style={{ fontSize: 14, fontWeight: 500 }}>
-        {label}
-      </span>
+    <div className="flex w-[88px] shrink-0 flex-col items-center sm:w-[104px]">
+      <div className="flex aspect-[2/3] w-full items-center justify-center rounded-t-[18px] rounded-b-[4px] border-2 border-dashed border-stone-mist bg-white/40 p-2 text-center">
+        <span className="text-smoke" style={{ fontSize: 10, fontWeight: 500, lineHeight: 1.25 }}>
+          {label}
+        </span>
+      </div>
     </div>
   );
 }
