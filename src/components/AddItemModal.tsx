@@ -35,7 +35,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [generatingCover, setGeneratingCover] = useState(false);
-  const [imageModel, setImageModel] = useState("turbo");
+  const [imageModel, setImageModel] = useState("flux");
   const fileInput = useRef<HTMLInputElement>(null);
 
   if (!open) return null;
@@ -302,7 +302,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
                         animation: pulseText 2s infinite ease-in-out;
                       }
                     `}</style>
-                    <div className="text-[11px] font-figtree italic text-[#5f5f59] mt-2 text-center pulse-opacity leading-tight">
+                    <div className="text-[12px] font-figtree italic text-[#5f5f59] mt-2 text-center pulse-opacity leading-tight">
                       ✦ Claude is crafting your cover...
                     </div>
                   </div>
@@ -377,11 +377,9 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
                     className="w-full rounded-[12px] border border-stone-mist bg-cream-paper px-3 py-2 text-midnight-ink outline-none focus:border-graphite-veil"
                     style={{ fontSize: 13, fontWeight: 500 }}
                   >
-                    <option value="turbo">Ultra Fast (Turbo)</option>
-                    <option value="flux">Standard (Flux)</option>
-                    <option value="flux-realism">High Detail (Realism)</option>
-                    <option value="flux-3d">3D Render (Flux 3D)</option>
-                    <option value="any-dark">Dark Theme (Any Dark)</option>
+                    <option value="flux">Fast (Flux)</option>
+                    <option value="gptimage-large">High Quality (GPT Image)</option>
+                    <option value="ideogram-v4-quality">Artistic (Ideogram)</option>
                   </select>
                 </div>
               </div>

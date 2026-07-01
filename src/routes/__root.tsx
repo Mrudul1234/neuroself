@@ -167,7 +167,7 @@ function RootComponent() {
               }
 
               if (!coverUrl) {
-                coverUrl = await generateNeuroShelfCover(item.title, item.type, "turbo");
+                coverUrl = await generateNeuroShelfCover(item.title, item.type as "paper" | "article" | "video", "flux");
               }
 
               if (coverUrl) {

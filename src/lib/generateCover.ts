@@ -16,65 +16,125 @@ export function cleanTitleForPrompt(title: string): string {
   return cleaned || "Scientific Research";
 }
 
-// Generate cover image URL directly using Pollinations AI Image API
+const getTextModel = (title: string): string => {
+  // Longer, more complex titles benefit from smarter model
+  if (title.length > 80) return "openai-large"; // Fallback from claude
+  return "openai"; // Fallback from claude-fast
+};
+
+// ── STEP 1: AI writes the image prompt ──────────────────
+const writeCoverPrompt = async (
+  title: string,
+  type: "paper" | "article" | "video"
+): Promise<string> => {
+  const typeContext = {
+    paper: "a neuroscience research paper",
+    article: "a neuroscience article or blog post",
+    video: "an educational neuroscience video",
+  };
+
+  const systemInstruction = `You are an expert book cover art director 
+specializing in vintage academic and scientific illustration. 
+Your job is to write a single detailed image generation prompt 
+for a book/content cover.
+
+STYLE RULES (always follow these exactly):
+- Background: cream or parchment texture (#ffffeb base)
+- Illustration style: vintage scientific engraving, 
+  botanical illustration, or anatomical diagram style
+- Color palette: ONLY warm teal (#034f46), gold/amber (#ffa946), 
+  cream (#ffffeb), and muted ink brown — no other colors
+- Subject: always related to the neuroscience/brain topic in the title
+- No photorealism, no modern digital art, no neon
+- No text or words in the image — illustration only
+- Highly detailed, elegant, scholarly aesthetic
+- Aspect ratio: portrait (2:3)
+
+OUTPUT: Return ONLY the image prompt text. 
+No explanation, no preamble, no quotes. 
+Just the raw prompt string, max 120 words.`;
+
+  const userMessage = `Write an image generation prompt for a cover 
+of ${typeContext[type]} titled: "${title}"`;
+
+  const textModel = getTextModel(title);
+
+  const response = await fetch("https://text.pollinations.ai/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messages: [
+        { role: "system", content: systemInstruction },
+        { role: "user", content: userMessage },
+      ],
+      model: textModel,
+      seed: Math.floor(Math.random() * 99999),
+      jsonMode: false,
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Prompt generation failed: ${response.status}`);
+  const imagePrompt = await response.text();
+  return imagePrompt.trim();
+};
+
+// ── STEP 2: Generate image from AI prompt ─────────────
+const generateCoverImage = async (imagePrompt: string, selectedModel: string = "flux"): Promise<string> => {
+  const encoded = encodeURIComponent(imagePrompt);
+  const seed = Math.floor(Math.random() * 999999);
+  
+  // Use the user's secret API key
+  const apiKey = (import.meta as any).env?.VITE_POLLINATIONS_API_KEY || "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
+
+  const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=400&height=560&model=${selectedModel}&seed=${seed}&nologo=true&enhance=true&key=${apiKey}`;
+
+  console.log("[NeuroShelf Cover] Requesting Pollinations Image API:", { imagePrompt, model: selectedModel, imageUrl });
+
+  try {
+    // Actually make the API call to force Pollinations to generate it right now
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      console.warn("[NeuroShelf Cover] Image API returned non-OK status:", response.status);
+    }
+  } catch (error) {
+    console.error("[NeuroShelf Cover] Image API fetch failed:", error);
+  }
+
+  return imageUrl;
+};
+
+// ── MAIN EXPORT: full pipeline ───────────────────────────────
 export const generateNeuroShelfCover = async (
   title: string,
   type: "paper" | "article" | "video",
   model: string = "flux"
-): Promise<string> => {
+): Promise<string | null> => {
   const cleanedTitle = cleanTitleForPrompt(title);
 
-  // Position the title at the very start of the prompt for strong subject/topic alignment
-  const stylePrompts = {
-    paper: `"${cleanedTitle}", vintage academic book cover, cream parchment texture background, 
-      elegant serif typography, subtle anatomical brain illustration, 
-      warm teal #034f46 and gold #ffa946 ink accents, ornate decorative 
-      border, botanical scientific engraving style, 
-      no text except title, soft warm lighting, aged paper texture, 
-      highly detailed illustration, editorial academic aesthetic, 
-      not photorealistic, not modern digital, not neon, not white background`,
-
-    article: `"${cleanedTitle}", vintage journal magazine cover, cream ivory background, 
-      delicate neuroscience diagram illustration, 
-      thin elegant line art of neural pathways or brain cross-section, 
-      teal and amber color palette, clean editorial layout, 
-      hand-drawn scientific illustration style, 
-      scholarly yet beautiful, no cluttered elements, 
-      not photorealistic, not modern digital, not neon, not white background`,
-
-    video: `"${cleanedTitle}", modern educational book cover, cream background with 
-      subtle geometric neural network pattern, 
-      bold EB Garamond serif typography, 
-      soft illustrated brain anatomy diagram centered, 
-      deep forest teal #034f46 accent elements, 
-      clean minimal academic poster style, 
-      warm sophisticated palette, slight watercolor wash texture, 
-      not photorealistic, not modern digital, not neon, not white background`
-  };
-
-  const prompt = encodeURIComponent(stylePrompts[type]);
-  const seed = Math.floor(Math.random() * 999999);
-
-  // If model is turbo, use flux (since flux is the fastest supported image model, ~800ms)
-  const resolvedModel = model === "turbo" ? "flux" : model;
-  
-  // Use the user's secret API key
-  const apiKey = import.meta.env.VITE_POLLINATIONS_API_KEY || "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
-
-  const url = `https://image.pollinations.ai/prompt/${prompt}?width=400&height=560&seed=${seed}&model=${resolvedModel}&nologo=true&key=${apiKey}`;
-
-  console.log("[NeuroShelf Cover] Requesting Pollinations API:", { title, cleanedTitle, type, model: resolvedModel, url });
-  
+  let imagePrompt = "";
   try {
-    // Actually make the API call to force Pollinations to generate it right now
-    // This ensures the loading spinner stays active until the image is ready
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.warn("[NeuroShelf Cover] API returned non-OK status:", response.status);
-    }
+    // Step 1: Write the prompt
+    imagePrompt = await writeCoverPrompt(cleanedTitle, type);
+    console.log("[NeuroShelf Cover] Generated prompt:", imagePrompt);
   } catch (error) {
-    console.error("[NeuroShelf Cover] API fetch failed:", error);
+    console.error("[NeuroShelf Cover] Step 1 Text generation failed:", error);
+    
+    // Fallback template
+    imagePrompt = `vintage scientific illustration, brain anatomy, 
+      cream parchment background, teal and gold accents, 
+      elegant engraving style, no text, ${cleanedTitle}`;
+    console.log("[NeuroShelf Cover] Using fallback prompt:", imagePrompt);
   }
-  
-  return url;
+
+  try {
+    // If model is turbo, map it to flux (or whatever fast model the user prefers)
+    const resolvedModel = model === "turbo" ? "flux" : model;
+    
+    // Step 2: Image URL from that prompt
+    const imageUrl = await generateCoverImage(imagePrompt, resolvedModel);
+    return imageUrl;
+  } catch (error) {
+    console.error("[NeuroShelf Cover] Step 2 Cover generation failed:", error);
+    return null;
+  }
 };
