@@ -118,28 +118,52 @@ export const generateNeuroShelfCover = async (
 ): Promise<string | null> => {
   const cleanedTitle = cleanTitleForPrompt(title);
 
-  let imagePrompt = "";
-  try {
-    // Step 1: Write the prompt
-    imagePrompt = await writeCoverPrompt(cleanedTitle, type);
-    console.log("[NeuroShelf Cover] Generated prompt:", imagePrompt);
-  } catch (error) {
-    console.error("[NeuroShelf Cover] Step 1 Text generation failed:", error);
+  // 5 premium artistic styles, rotated randomly
+  const STYLES = [
+    "Pop Art / Warhol Silk Screen",
+    "Papercut Layered Paper Art",
+    "Vintage Comic Halftone Sticker",
+    "Diffusion Tensor Imaging Fiber Tractography",
+    "Fauvist Expressionist Oil Painting"
+  ];
+  const selectedStyle = STYLES[Math.floor(Math.random() * STYLES.length)];
 
-    // Fallback — matches reference vintage book cover style
-    imagePrompt = `Vintage academic book cover illustration on warm cream linen-textured paper (#ffffeb), fine dot grid background. Subject: ${cleanedTitle}. Centered anatomical neuroscience illustration in the style of 1950s medical textbook engraving, hand-drawn, scholarly. Color palette: teal (#034f46) and gold/amber (#ffa946) only on cream. Elegant ornamental swirl flourishes and ribbon motifs in teal and gold at bottom of composition. No text, no labels, no photorealism. Portrait format 2:3.`;
-    console.log("[NeuroShelf Cover] Using fallback prompt:", imagePrompt);
-  }
+  // The new Pollinations AI Master Prompt
+  const imagePrompt = `Create a museum-quality neuroscience illustration using the following style: ${selectedStyle}
+
+Subject:
+${cleanedTitle}
+
+Requirements:
+No humans.
+No text.
+No watermark.
+Scientific accuracy.
+Beautiful composition.
+Premium lighting.
+Rich textures.
+Cinematic depth.
+Elegant colors.
+Highly aesthetic.
+Looks like artwork from an elite neuroscience exhibition.
+Square composition.
+Ultra detailed.
+Professional illustration.
+High visual hierarchy.
+Clean background.
+No logos.
+No typography.`;
 
   try {
     // If model is turbo, map it to flux (or whatever fast model the user prefers)
     const resolvedModel = model === "turbo" ? "flux" : model;
 
-    // Step 2: Image URL from that prompt
+    // Direct Image URL generation using our master prompt
     const imageUrl = await generateCoverImage(imagePrompt, resolvedModel);
     return imageUrl;
   } catch (error) {
-    console.error("[NeuroShelf Cover] Step 2 Cover generation failed:", error);
+    console.error("[NeuroShelf Cover] Cover generation failed:", error);
     return null;
   }
 };
+
