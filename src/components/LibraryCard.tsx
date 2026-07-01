@@ -553,45 +553,6 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
             })()}
           </div>
 
-          {/* Actions row */}
-          <div className="flex items-center justify-end gap-1.5 mt-1">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                void handleRegenerate(e);
-              }}
-              disabled={regenerating}
-              className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-pulse/10 text-amber-pulse border border-amber-pulse/20 transition-transform active:scale-90 disabled:opacity-50 cursor-pointer"
-              aria-label="Generate Cover"
-            >
-              {regenerating ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsEditing(true);
-              }}
-              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/70 text-midnight-ink border border-stone-mist/60 transition-transform active:scale-90 cursor-pointer"
-              aria-label="Edit item"
-            >
-              <Pencil size={10} />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setConfirming(true);
-              }}
-              className="flex h-6 w-6 items-center justify-center rounded-full bg-red-50 text-destructive border border-red-100 transition-transform active:scale-90 cursor-pointer"
-              aria-label="Remove item"
-            >
-              <X size={10} strokeWidth={2.5} />
-            </button>
-          </div>
         </div>
 
         {/* Modals */}
@@ -700,50 +661,7 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
         })()}
       </div>
 
-      {/* Mobile Card Actions (Generate Cover, Edit, Remove) */}
-      <div className="flex md:hidden items-center justify-center gap-4 mt-3 z-20">
-        {/* Generate cover */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            void handleRegenerate(e);
-          }}
-          disabled={regenerating}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-pulse/10 text-amber-pulse shadow-sm border border-amber-pulse/20 active:scale-90 disabled:opacity-50 cursor-pointer"
-          aria-label="Generate cover"
-        >
-          {regenerating ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
-        </button>
 
-        {/* Edit */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsEditing(true);
-          }}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-[#fbf9f6] text-midnight-ink shadow-sm border border-stone-mist active:scale-90 cursor-pointer"
-          aria-label="Edit item"
-        >
-          <Pencil size={13} />
-        </button>
-
-        {/* Remove */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setConfirming(true);
-          }}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-destructive shadow-sm border border-red-100 active:scale-90 cursor-pointer"
-          aria-label="Remove item"
-        >
-          <X size={13} strokeWidth={2.5} />
-        </button>
-      </div>
 
       {/* Confirm delete dialog — Portaled to body */}
       {confirming &&
