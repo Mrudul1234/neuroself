@@ -165,6 +165,7 @@ function LibraryPage() {
                     items={s.items}
                     searching={!!search}
                     accent={ACCENTS[idx % ACCENTS.length]}
+                    onChanged={refresh}
                   />
                 ))
               )}
