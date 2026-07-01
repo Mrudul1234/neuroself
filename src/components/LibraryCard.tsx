@@ -47,14 +47,10 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
   const [regenerating, setRegenerating] = useState(false);
   const [thumb, setThumb] = useState(item.thumbnail_url);
   const [editing, setEditing] = useState(false);
-  
   const router = useRouter();
 
   // Mobile / Interaction Touch states
-  const [touched, setTouched] = useState(false);
   const [pressed, setPressed] = useState(false);
-  const [signedPdfUrl, setSignedPdfUrl] = useState<string | null>(null);
-  const [pdfReaderOpen, setPdfReaderOpen] = useState(false);
 
   // Track start touch coordinates for mobile tap detection
   const [touchStartPos, setTouchStartPos] = useState({ x: 0, y: 0, time: 0 });
@@ -63,7 +59,6 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
     const t = e.touches[0];
     setTouchStartPos({ x: t.clientX, y: t.clientY, time: Date.now() });
     setPressed(true);
-    setTouched(true);
     // Tactile press feeling: scale down, then spring lift after 80ms
     setTimeout(() => {
       setPressed(false);
@@ -82,21 +77,12 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
         e.preventDefault();
         e.stopPropagation();
         void handleOpenStored(e as any);
-      } else if (opensInNewTab) {
-        e.preventDefault();
-        e.stopPropagation();
-        window.open(item.url, "_blank", "noopener,noreferrer");
       } else {
         e.preventDefault();
         e.stopPropagation();
-        router.navigate({ to: "/read/$id", params: { id: item.id } });
+        window.open(item.url, "_blank", "noopener,noreferrer");
       }
     }
-
-    // Only dismiss actions after 1500ms to allow users time to tap top action bar buttons
-    setTimeout(() => {
-      setTouched(false);
-    }, 1500);
   };
 
   const handleMouseDown = () => {
@@ -108,11 +94,7 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
   };
 
   // Lift tilt configurations matching user spec
-  const cardTransformStyle = pressed
-    ? "scale(0.97)"
-    : touched
-      ? "translateY(-12px) rotate3d(1, 0.2, 0, 8deg) scale(1.02)"
-      : "";
+  const cardTransformStyle = pressed ? "scale(0.97)" : "";
 
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -213,8 +195,7 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
     setOpening(true);
     try {
       const url = await getSignedFileUrl(item.storage_path!);
-      setSignedPdfUrl(url);
-      setPdfReaderOpen(true);
+      window.open(url, "_blank", "noopener,noreferrer");
     } catch (err) {
       toast.error(
         err instanceof Error ? `Couldn't open PDF: ${err.message}` : "Couldn't open PDF.",
@@ -268,7 +249,7 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
     }
   };
 
-  const showActions = touched ? "opacity-100 pointer-events-auto" : "opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto";
+  const showActions = "opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto";
 
   return (
     <div
@@ -282,7 +263,7 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
     >
       {/* Hover/Tap actions */}
       <div 
-        className={`absolute -top-5 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 p-1 bg-white/95 backdrop-blur-sm rounded-full shadow-lg border border-stone-mist/60 md:bg-transparent md:border-none md:shadow-none md:p-0 md:top-[-10px] md:right-[-8px] md:left-auto md:translate-x-0 ${showActions}`}
+        className={`absolute -top-5 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 p-1 bg-white/95 backdrop-blur-sm rounded-full shadow-lg border border-stone-mist/60 ${showActions}`}
         onTouchStart={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
@@ -291,14 +272,14 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
           type="button"
           onClick={handleRegenerate}
           disabled={regenerating}
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-midnight-ink shadow-md ring-1 ring-black/10 transition-transform active:scale-95 md:h-7 md:w-7 hover:bg-amber-pulse disabled:opacity-60"
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-midnight-ink shadow-md ring-1 ring-black/10 transition-transform active:scale-95 hover:bg-amber-pulse disabled:opacity-60"
           title="Generate AI cover"
           aria-label="Generate AI cover"
         >
           {regenerating ? (
-            <Loader2 size={12} className="animate-spin" />
+            <Loader2 size={11} className="animate-spin" />
           ) : (
-            <Sparkles size={13} />
+            <Sparkles size={12} />
           )}
         </button>
         <button
@@ -308,11 +289,11 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
             e.stopPropagation();
             setEditing(true);
           }}
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-midnight-ink shadow-md ring-1 ring-black/10 transition-transform active:scale-95 md:h-7 md:w-7 hover:bg-cream-paper"
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-midnight-ink shadow-md ring-1 ring-black/10 transition-transform active:scale-95 hover:bg-cream-paper"
           title="Edit"
           aria-label="Edit item"
         >
-          <Pencil size={13} />
+          <Pencil size={12} />
         </button>
         <button
           type="button"
@@ -321,33 +302,32 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
             e.stopPropagation();
             setConfirming(true);
           }}
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-destructive shadow-md ring-1 ring-black/10 transition-transform active:scale-95 md:h-7 md:w-7 hover:bg-destructive hover:text-white"
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive shadow-md ring-1 ring-black/10 transition-transform active:scale-95 hover:bg-destructive hover:text-white"
           title="Remove"
           aria-label="Remove item"
         >
-          <X size={14} strokeWidth={2.5} />
+          <X size={12} strokeWidth={2.5} />
         </button>
       </div>
 
-      {isStoredPdf ? (
-        <a href="#" onClick={handleOpenStored} title={item.title} className="block w-full">
-          {cover}
-        </a>
-      ) : opensInNewTab ? (
-        <a
-          href={item.url}
-          target="_blank"
-          rel="noreferrer"
-          title={item.title}
-          className="block w-full"
-        >
-          {cover}
-        </a>
-      ) : (
-        <Link to="/read/$id" params={{ id: item.id }} title={item.title} className="block w-full">
-          {cover}
-        </Link>
-      )}
+      <a
+        href={isStoredPdf ? "#" : item.url}
+        onClick={(e) => {
+          if (isStoredPdf) {
+            e.preventDefault();
+            e.stopPropagation();
+            void handleOpenStored(e as any);
+          } else {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(item.url, "_blank", "noopener,noreferrer");
+          }
+        }}
+        title={item.title}
+        className="block w-full"
+      >
+        {cover}
+      </a>
 
       <div
         className="mt-2 line-clamp-2 w-full text-center font-instrument text-midnight-ink transition-colors group-hover:text-deep-forest-teal"
@@ -418,15 +398,6 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
         onClose={() => setEditing(false)}
         onSaved={onChanged}
       />
-
-      {/* Full screen PDF Reader overlay */}
-      {pdfReaderOpen && signedPdfUrl && (
-        <PdfReader
-          url={signedPdfUrl}
-          title={item.title}
-          onClose={() => setPdfReaderOpen(false)}
-        />
-      )}
     </div>
   );
 }
