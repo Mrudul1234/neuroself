@@ -192,17 +192,40 @@ export async function uploadPdfFile(
 ): Promise<{ path: string; size: number }> {
   const ext = file.name.split(".").pop() || "pdf";
   const path = `${crypto.randomUUID()}.${ext}`;
-  // Supabase JS doesn't expose XHR progress; emulate coarse progress.
-  onProgress?.(5);
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+  
+  // Emulate progressive loading
+  let currentPct = 5;
+  onProgress?.(currentPct);
+  
+  const intervalId = setInterval(() => {
+    if (currentPct < 90) {
+      currentPct += Math.max(1, Math.floor((90 - currentPct) / 10)); // slower as it gets closer
+      onProgress?.(currentPct);
+    }
+  }, 300);
+
+  const uploadPromise = supabase.storage.from(BUCKET).upload(path, file, {
     contentType: file.type || "application/pdf",
     upsert: false,
   });
-  onProgress?.(95);
-  if (error) throw error;
-  onProgress?.(100);
-  return { path, size: file.size };
+
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("Upload timed out (30s). Please check your internet connection or verify that the 'library-files' storage bucket exists in your Supabase project.")), 30000)
+  );
+
+  try {
+    const { error } = await Promise.race([uploadPromise, timeoutPromise]);
+    clearInterval(intervalId);
+    if (error) throw error;
+    
+    onProgress?.(100);
+    return { path, size: file.size };
+  } catch (err) {
+    clearInterval(intervalId);
+    throw err;
+  }
 }
+
 
 export async function getSignedFileUrl(
   path: string,

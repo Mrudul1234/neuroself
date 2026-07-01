@@ -3,6 +3,7 @@ import {
   FileText,
   Loader2,
   Newspaper,
+  Pencil,
   Play,
   Sparkles,
   Trash2,
@@ -17,6 +18,7 @@ import {
   type ItemType,
   type LibraryItem,
 } from "@/lib/library";
+import { EditItemModal } from "./EditItemModal";
 
 const iconFor: Record<ItemType, typeof FileText> = {
   paper: FileText,
@@ -42,6 +44,7 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
   const [deleting, setDeleting] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [thumb, setThumb] = useState(item.thumbnail_url);
+  const [editing, setEditing] = useState(false);
 
   const cover = (
     <div
@@ -176,6 +179,19 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            setEditing(true);
+          }}
+          className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full bg-white text-midnight-ink shadow-md ring-1 ring-black/10 transition-transform hover:scale-110 hover:bg-cream-paper"
+          title="Edit"
+          aria-label="Edit item"
+        >
+          <Pencil size={12} />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             setConfirming(true);
           }}
           className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive shadow-md ring-1 ring-black/10 transition-transform hover:scale-110 hover:bg-destructive hover:text-white"
@@ -266,6 +282,14 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
           </div>
         </div>
       )}
+
+      {/* Edit dialog */}
+      <EditItemModal
+        open={editing}
+        item={item}
+        onClose={() => setEditing(false)}
+        onSaved={onChanged}
+      />
     </div>
   );
 }

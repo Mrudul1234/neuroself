@@ -52,22 +52,6 @@ export function Shelf({
 
       {/* Books + wooden plank */}
       <div className="relative">
-        {/* Left / right shelf supports (dark wood) */}
-        <div
-          className="pointer-events-none absolute -bottom-3 left-0 h-[calc(100%+6px)] w-2 rounded-l-md"
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(90,58,32,0) 0%, rgba(90,58,32,0.35) 40%, rgba(60,36,18,0.9) 100%)",
-          }}
-        />
-        <div
-          className="pointer-events-none absolute -bottom-3 right-0 h-[calc(100%+6px)] w-2 rounded-r-md"
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(90,58,32,0) 0%, rgba(90,58,32,0.35) 40%, rgba(60,36,18,0.9) 100%)",
-          }}
-        />
-
         {/* Books */}
         <div
           className="grid items-end gap-x-4 gap-y-5 px-3 pt-2"
