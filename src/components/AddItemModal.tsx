@@ -35,7 +35,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [generatingCover, setGeneratingCover] = useState(false);
-  const [imageModel, setImageModel] = useState("flux");
+  const [imageModel, setImageModel] = useState("turbo");
   const fileInput = useRef<HTMLInputElement>(null);
 
   if (!open) return null;
@@ -385,6 +385,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
                     className="w-full rounded-[12px] border border-stone-mist bg-cream-paper px-3 py-2 text-midnight-ink outline-none focus:border-graphite-veil"
                     style={{ fontSize: 13, fontWeight: 500 }}
                   >
+                    <option value="turbo">Ultra Fast (Turbo)</option>
                     <option value="flux">Fast (Flux)</option>
                     <option value="gptimage-large">High Quality (GPT Image)</option>
                     <option value="ideogram-v4-quality">Artistic (Ideogram)</option>

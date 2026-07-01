@@ -247,7 +247,7 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
     setRegenerating(true);
     toast.loading("Generating cover…", { id: `cover-${item.id}` });
     try {
-      const url = await generateNeuroShelfCover(item.title, item.type, "flux");
+      const url = await generateNeuroShelfCover(item.title, item.type, "turbo");
       if (url) {
         setThumb(url);
         // Save new thumbnail to database
