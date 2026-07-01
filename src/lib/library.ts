@@ -168,7 +168,57 @@ export async function deleteItemWithFile(item: LibraryItem): Promise<void> {
   });
 }
 
+/** Convert an HTMLImageElement to a base64 PNG dataUrl via canvas */
+async function imgElementToDataUrl(img: HTMLImageElement): Promise<string> {
+  return new Promise((resolve, reject) => {
+    // If the image is already loaded, draw immediately
+    const draw = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || 512;
+        canvas.height = img.naturalHeight || 512;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("Canvas context unavailable")); return; }
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    if (img.complete && img.naturalWidth) {
+      draw();
+    } else {
+      img.onload = draw;
+      img.onerror = () => reject(new Error("Image failed to load"));
+    }
+  });
+}
+
 export async function generateCover(item: LibraryItem): Promise<string> {
+  const kind =
+    item.type === "video"
+      ? "cinematic minimalist thumbnail"
+      : item.type === "article"
+        ? "editorial magazine cover"
+        : "scholarly book cover";
+
+  const prompt = `Design a ${kind} for a saved item titled "${item.title}"${
+    item.domain ? ` from ${item.domain}` : ""
+  }. Vertical 2:3 portrait aspect. Warm cream paper background, soft grain texture, muted amber and deep teal accents, elegant italic serif typography with the title visible and legible. Editorial, tactile, understated, no logos, no watermarks, no photorealistic faces.`;
+
+  // 1. Try Puter.js — free, runs in the browser, no API key needed
+  try {
+    const { puter } = await import("@heyputer/puter.js");
+    console.log("[Cover Gen] Trying Puter.js (free AI image generation)…");
+    const img = await (puter.ai as any).txt2img(prompt) as HTMLImageElement;
+    const dataUrl = await imgElementToDataUrl(img);
+    await updateItem(item.id, { thumbnail_url: dataUrl });
+    return dataUrl;
+  } catch (puterErr) {
+    console.warn("[Cover Gen] Puter.js failed, falling back to server API:", puterErr);
+  }
+
+  // 2. Fall back to server-side API (OpenAI / Gemini / Lovable / SVG)
   const res = await fetch("/api/generate-cover", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -186,6 +236,7 @@ export async function generateCover(item: LibraryItem): Promise<string> {
   await updateItem(item.id, { thumbnail_url: dataUrl });
   return dataUrl;
 }
+
 
 export async function uploadPdfFile(
   file: File,
