@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReadIdRouteImport } from './routes/read.$id'
+import { Route as ApiGenerateCoverRouteImport } from './routes/api/generate-cover'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,30 +23,39 @@ const ReadIdRoute = ReadIdRouteImport.update({
   path: '/read/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateCoverRoute = ApiGenerateCoverRouteImport.update({
+  id: '/api/generate-cover',
+  path: '/api/generate-cover',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/generate-cover': typeof ApiGenerateCoverRoute
   '/read/$id': typeof ReadIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/generate-cover': typeof ApiGenerateCoverRoute
   '/read/$id': typeof ReadIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/generate-cover': typeof ApiGenerateCoverRoute
   '/read/$id': typeof ReadIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/read/$id'
+  fullPaths: '/' | '/api/generate-cover' | '/read/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/read/$id'
-  id: '__root__' | '/' | '/read/$id'
+  to: '/' | '/api/generate-cover' | '/read/$id'
+  id: '__root__' | '/' | '/api/generate-cover' | '/read/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiGenerateCoverRoute: typeof ApiGenerateCoverRoute
   ReadIdRoute: typeof ReadIdRoute
 }
 
@@ -65,23 +75,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-cover': {
+      id: '/api/generate-cover'
+      path: '/api/generate-cover'
+      fullPath: '/api/generate-cover'
+      preLoaderRoute: typeof ApiGenerateCoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiGenerateCoverRoute: ApiGenerateCoverRoute,
   ReadIdRoute: ReadIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

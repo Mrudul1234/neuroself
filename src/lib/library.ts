@@ -159,6 +159,33 @@ export async function deleteItem(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Delete both the row and its uploaded PDF (if any). */
+export async function deleteItemWithFile(item: LibraryItem): Promise<void> {
+  if (item.storage_path) {
+    await supabase.storage.from(BUCKET).remove([item.storage_path]);
+  }
+  await deleteItem(item.id);
+}
+
+export async function generateCover(item: LibraryItem): Promise<string> {
+  const res = await fetch("/api/generate-cover", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title: item.title,
+      type: item.type,
+      domain: item.domain,
+    }),
+  });
+  if (!res.ok) {
+    const j = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(j.error ?? `Cover generation failed (${res.status})`);
+  }
+  const { dataUrl } = (await res.json()) as { dataUrl: string };
+  await updateItem(item.id, { thumbnail_url: dataUrl });
+  return dataUrl;
+}
+
 export async function uploadPdfFile(
   file: File,
   onProgress?: (pct: number) => void,
