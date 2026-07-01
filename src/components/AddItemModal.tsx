@@ -378,9 +378,10 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
                     style={{ fontSize: 13, fontWeight: 500 }}
                   >
                     <option value="turbo">Ultra Fast (Turbo)</option>
-                    <option value="flux">Fast (Flux)</option>
-                    <option value="gptimage-large">High Quality (GPT Image)</option>
-                    <option value="ideogram-v4-quality">Artistic (Ideogram)</option>
+                    <option value="flux">Standard (Flux)</option>
+                    <option value="flux-realism">High Detail (Realism)</option>
+                    <option value="flux-3d">3D Render (Flux 3D)</option>
+                    <option value="any-dark">Dark Theme (Any Dark)</option>
                   </select>
                 </div>
               </div>
