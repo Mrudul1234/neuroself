@@ -31,6 +31,14 @@ export function BookOverlay({ open, item, onClose }: Props) {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [generatingSummary, setGeneratingSummary] = useState(false);
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const handleClose = useCallback(() => {
     setClosing(true);
     setStage("closed");
@@ -239,13 +247,108 @@ export function BookOverlay({ open, item, onClose }: Props) {
         />
       ))}
 
+      {/* --- Mobile Layout --- */}
+      {isMobile && (
+        <div
+          className={`relative w-full max-w-sm flex flex-col items-center justify-center gap-8 px-6 transition-all duration-300 ${
+            closing ? "scale-95 opacity-0" : "scale-100 opacity-100"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Centered Premium Cover Image */}
+          <div 
+            onClick={handleOpenOriginal}
+            className="w-[200px] h-[300px] rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-stone-mist/40 cursor-pointer active:scale-98 transition-transform group relative bg-white"
+          >
+            {localItem.thumbnail_url ? (
+              <img
+                src={localItem.thumbnail_url}
+                alt={localItem.title}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <div className="flex h-full w-full flex-col justify-between p-6 bg-[#fcf9f2] text-center">
+                <div />
+                <BookOpen size={36} className="mx-auto text-graphite-veil" />
+                <span className="font-instrument italic text-smoke text-sm">NeuroSelf Lib</span>
+                <div />
+              </div>
+            )}
+            {/* Tap to open hint overlay */}
+            <div className="absolute inset-0 bg-black/45 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
+              <span className="text-white text-xs font-semibold tracking-wider uppercase">Tap to read</span>
+            </div>
+          </div>
+
+          {/* Title and metadata */}
+          <div className="text-center max-w-[280px]">
+            <h3 className="font-sans font-bold text-white text-lg leading-snug drop-shadow-md">
+              {localItem.title}
+            </h3>
+            {localItem.domain && (
+              <p className="text-[10px] text-white/60 font-bold uppercase tracking-wider mt-1.5 font-sans">
+                {localItem.domain}
+              </p>
+            )}
+          </div>
+
+          {/* Floating Bottom Action Bar (Edit | Generate | Close) */}
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[250] flex items-center justify-between gap-3.5 bg-white/95 backdrop-blur-md border border-stone-mist/60 rounded-full py-2.5 px-6 shadow-[0_12px_32px_rgba(0,0,0,0.18)] w-[90%] max-w-[320px] animate-in slide-in-from-bottom-5 duration-300">
+            {/* Edit Button */}
+            <button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-1 text-[11px] font-bold text-midnight-ink active:scale-95 transition-transform"
+              aria-label="Edit Item"
+            >
+              <Pencil size={13} />
+              <span>Edit</span>
+            </button>
+
+            {/* Separator */}
+            <div className="w-[1px] h-4 bg-stone-mist/75" />
+
+            {/* Generate Button */}
+            <button
+              type="button"
+              onClick={handleGenerateSummary}
+              disabled={generatingSummary}
+              className="flex items-center gap-1 text-[11px] font-bold text-midnight-ink active:scale-95 transition-transform disabled:opacity-50"
+              aria-label="Generate AI Summary"
+            >
+              {generatingSummary ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : (
+                <Sparkles size={13} />
+              )}
+              <span>Generate</span>
+            </button>
+
+            {/* Separator */}
+            <div className="w-[1px] h-4 bg-stone-mist/75" />
+
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={handleClose}
+              className="flex items-center gap-1 text-[11px] font-bold text-red-600 active:scale-95 transition-transform"
+              aria-label="Close Notebook"
+            >
+              <X size={13} strokeWidth={2.5} />
+              <span>Close</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* --- 3D Notebook Wrapper --- */}
-      <div
-        className={`notebook-wrapper relative w-full max-w-[840px] flex flex-col items-center justify-center transition-all duration-700 ${
-          closing ? "scale-90 opacity-0 -translate-y-8" : "scale-100 opacity-100 translate-y-0"
-        }`}
-        onClick={(e) => e.stopPropagation()}
-      >
+      {!isMobile && (
+        <div
+          className={`notebook-wrapper relative w-full max-w-[840px] flex flex-col items-center justify-center transition-all duration-700 ${
+            closing ? "scale-90 opacity-0 -translate-y-8" : "scale-100 opacity-100 translate-y-0"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
         <div className="notebook-container" style={getContainerStyle()}>
           {/* Leather back cover backing */}
           <div className="notebook-back" />
@@ -609,7 +712,8 @@ export function BookOverlay({ open, item, onClose }: Props) {
             </div>
           </>
         )}
-      </div>
+        </div>
+      )}
 
       {/* --- Edit Modal Integration --- */}
       <EditItemModal

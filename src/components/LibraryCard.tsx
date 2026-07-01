@@ -198,6 +198,38 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
     setPressed(false);
   };
 
+  const handleCardClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isEditing || confirming) return;
+
+    if (isVideo) {
+      setIsVideoOpen(true);
+      return;
+    }
+
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    if (isMobile) {
+      setIsBookOpen(true);
+    } else {
+      // Laptop: Open original content PDF/Link directly
+      try {
+        let targetUrl = item.url;
+        if (item.storage_path) {
+          const { getSignedFileUrl } = await import("@/lib/library");
+          targetUrl = await getSignedFileUrl(item.storage_path);
+        }
+        if (targetUrl) {
+          window.open(targetUrl, "_blank", "noopener,noreferrer");
+        } else {
+          toast.error("Document link not available.");
+        }
+      } catch {
+        toast.error("Could not resolve document link.");
+      }
+    }
+  };
+
   const cardTransformStyle = pressed ? "scale(0.97)" : "";
 
   const [imageError, setImageError] = useState(false);
@@ -471,14 +503,7 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
           minHeight: 120,
           background: bg,
         }}
-        onClick={(e) => {
-          if (isEditing || confirming) return;
-          if (isVideo) {
-            setIsVideoOpen(true);
-          } else {
-            setIsBookOpen(true);
-          }
-        }}
+        onClick={handleCardClick}
       >
         {/* Pinned pushpin */}
         <PushPin color={pinColor} />
@@ -499,7 +524,7 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
             className="font-sans font-semibold text-midnight-ink whitespace-normal leading-snug tracking-tight"
             style={{ 
               fontSize: "11.5px", 
-              fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" 
+              fontFamily: '"SamsungOne", "Samsung Sharp Sans", "Samsung sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
             }}
           >
             {item.title}
@@ -644,17 +669,7 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
       {/* Card Button Wrapper */}
       <button
         type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (isEditing || confirming) return;
-
-          if (isVideo) {
-            setIsVideoOpen(true);
-          } else {
-            setIsBookOpen(true);
-          }
-        }}
+        onClick={handleCardClick}
         title={item.title}
         className="block w-full text-left outline-none cursor-pointer"
       >
