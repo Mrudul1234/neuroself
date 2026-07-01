@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, X } from "lucide-react";
+import { Loader2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { updateItem, type ItemType, type LibraryItem } from "@/lib/library";
+import { updateItem, deleteItemWithFile, type ItemType, type LibraryItem } from "@/lib/library";
 import { LibraryCard } from "./LibraryCard";
 
 interface Props {
@@ -23,6 +23,7 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
   const [url, setUrl] = useState("");
   const [type, setType] = useState<ItemType>("article");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -69,8 +70,26 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
     }
   };
 
+  const handleDelete = async () => {
+    if (!item) return;
+    const confirmed = window.confirm("Are you sure you want to delete this item?");
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      await deleteItemWithFile(item.id, item.storage_path);
+      toast.success("Item deleted successfully.");
+      onSaved();
+      onClose();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to delete.";
+      toast.error(`Delete failed: ${msg}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleClose = () => {
-    // Always explicitly reset editing state — never close via bubbling
     onClose();
   };
 
@@ -200,7 +219,19 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end items-center gap-2 pt-2">
+            {/* Delete button (styled in red, aligned left) */}
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting || saving}
+              className="mr-auto inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-4 py-2.5 text-red-600 hover:bg-red-100 transition-colors active:scale-95 cursor-pointer disabled:opacity-50"
+              style={{ fontSize: 13, fontWeight: 600 }}
+            >
+              {deleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+              <span>Delete</span>
+            </button>
+
             <button
               type="button"
               onClick={(e) => {
@@ -214,7 +245,7 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
             </button>
             <button
               type="submit"
-              disabled={saving || !title.trim() || !url.trim()}
+              disabled={saving || deleting || !title.trim() || !url.trim()}
               className="inline-flex items-center gap-2 rounded-full bg-midnight-ink px-5 py-2.5 text-white hover:opacity-90 disabled:opacity-50"
               style={{ fontSize: 14, fontWeight: 600 }}
             >

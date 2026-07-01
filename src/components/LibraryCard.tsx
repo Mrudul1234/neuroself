@@ -203,11 +203,6 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
     e.stopPropagation();
     if (isEditing || confirming) return;
 
-    if (isVideo) {
-      setIsVideoOpen(true);
-      return;
-    }
-
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
     if (isMobile) {
       setIsBookOpen(true);

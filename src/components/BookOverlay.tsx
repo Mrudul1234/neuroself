@@ -250,11 +250,23 @@ export function BookOverlay({ open, item, onClose }: Props) {
       {/* --- Mobile Layout --- */}
       {isMobile && (
         <div
-          className={`relative w-full max-w-sm flex flex-col items-center justify-center gap-8 px-6 transition-all duration-300 ${
+          className={`relative w-full max-w-sm flex flex-col items-center justify-center gap-6 px-6 pb-28 transition-all duration-300 ${
             closing ? "scale-95 opacity-0" : "scale-100 opacity-100"
           }`}
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Title and metadata */}
+          <div className="text-center max-w-[280px]">
+            <h3 className="font-sans font-bold text-white text-lg leading-snug drop-shadow-md">
+              {localItem.title}
+            </h3>
+            {localItem.domain && (
+              <p className="text-[10px] text-white/60 font-bold uppercase tracking-wider mt-1.5 font-sans">
+                {localItem.domain}
+              </p>
+            )}
+          </div>
+
           {/* Centered Premium Cover Image */}
           <div 
             onClick={handleOpenOriginal}
@@ -278,18 +290,6 @@ export function BookOverlay({ open, item, onClose }: Props) {
             <div className="absolute inset-0 bg-black/45 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
               <span className="text-white text-xs font-semibold tracking-wider uppercase">Tap to read</span>
             </div>
-          </div>
-
-          {/* Title and metadata */}
-          <div className="text-center max-w-[280px]">
-            <h3 className="font-sans font-bold text-white text-lg leading-snug drop-shadow-md">
-              {localItem.title}
-            </h3>
-            {localItem.domain && (
-              <p className="text-[10px] text-white/60 font-bold uppercase tracking-wider mt-1.5 font-sans">
-                {localItem.domain}
-              </p>
-            )}
           </div>
 
           {/* Floating Bottom Action Bar (View | Edit | Generate | Close) */}
