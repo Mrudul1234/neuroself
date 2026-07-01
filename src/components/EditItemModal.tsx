@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { updateItem, type ItemType, type LibraryItem } from "@/lib/library";
@@ -73,9 +74,9 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
     onClose();
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4"
+      className="fixed inset-0 z-[250] flex items-center justify-center overflow-y-auto p-4"
       style={{ backgroundColor: "rgba(26,26,26,0.45)" }}
       onClick={(e) => {
         // Only close if clicking the backdrop itself, not children
@@ -222,6 +223,7 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

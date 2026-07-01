@@ -124,7 +124,7 @@ export const generateNeuroShelfCover = async (
     "Papercut Layered Paper Art",
     "Vintage Comic Halftone Sticker",
     "Diffusion Tensor Imaging Fiber Tractography",
-    "Fauvist Expressionist Oil Painting"
+    "Fauvist Expressionist Oil Painting",
   ];
   const selectedStyle = STYLES[Math.floor(Math.random() * STYLES.length)];
 
@@ -166,4 +166,3 @@ No typography.`;
     return null;
   }
 };
-

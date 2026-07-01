@@ -111,6 +111,60 @@ function LibraryPage() {
             animation: "slowRotate 150s linear infinite",
           }}
         />
+
+        {/* Faint Neural Connection lines (top left) */}
+        <svg
+          className="absolute top-10 left-10 w-[300px] h-[300px] text-midnight-ink opacity-[0.03] bg-float-wave"
+          viewBox="0 0 100 100"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="0.5"
+        >
+          <circle cx="20" cy="20" r="1.5" fill="currentColor" />
+          <circle cx="50" cy="40" r="1.5" fill="currentColor" />
+          <circle cx="80" cy="30" r="1.5" fill="currentColor" />
+          <circle cx="30" cy="70" r="1.5" fill="currentColor" />
+          <circle cx="70" cy="80" r="1.5" fill="currentColor" />
+          <line x1="20" y1="20" x2="50" y2="40" />
+          <line x1="50" y1="40" x2="80" y2="30" />
+          <line x1="20" y1="20" x2="30" y2="70" />
+          <line x1="50" y1="40" x2="30" y2="70" />
+          <line x1="50" y1="40" x2="70" y2="80" />
+          <line x1="80" y1="30" x2="70" y2="80" />
+        </svg>
+
+        {/* Faint DNA double helix strand (middle right) */}
+        <svg
+          className="absolute right-[10%] top-[40%] w-[120px] h-[400px] text-midnight-ink opacity-[0.025] bg-float-wave"
+          viewBox="0 0 40 120"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="0.75"
+          style={{ animationDelay: "-4s", animationDuration: "25s" }}
+        >
+          <path d="M10,10 C30,25 30,35 10,50 C-10,65 -10,75 10,90 C30,105 30,115 10,130" />
+          <path d="M30,10 C10,25 10,35 30,50 C50,65 50,75 30,90 C10,105 10,115 30,130" />
+          <line x1="13" y1="18" x2="27" y2="18" />
+          <line x1="18" y1="30" x2="22" y2="30" />
+          <line x1="27" y1="42" x2="13" y2="42" />
+          <line x1="13" y1="58" x2="27" y2="58" />
+          <line x1="18" y1="70" x2="22" y2="70" />
+          <line x1="27" y1="82" x2="13" y2="82" />
+          <line x1="13" y1="98" x2="27" y2="98" />
+        </svg>
+
+        {/* Floating Brain Wave Waves (bottom left) */}
+        <svg
+          className="absolute bottom-[10%] left-[5%] w-[400px] h-[150px] text-midnight-ink opacity-[0.02] bg-float-wave"
+          viewBox="0 0 200 60"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="0.75"
+          style={{ animationDelay: "-8s", animationDuration: "20s" }}
+        >
+          <path d="M0,30 Q25,10 50,30 T100,30 T150,30 T200,30" />
+          <path d="M0,35 Q25,20 50,35 T100,35 T150,35 T200,35" style={{ opacity: 0.5 }} />
+        </svg>
       </div>
       {/* ──────────────────────────────────────────────────────────── */}
 

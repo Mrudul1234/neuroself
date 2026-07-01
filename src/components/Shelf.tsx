@@ -47,7 +47,7 @@ export function Shelf({ label, items, searching, accent, cardWidth = 118, onChan
       <div className="relative">
         {/* Books */}
         <div
-          className="flex overflow-x-auto gap-4 px-3 pt-2 pb-3 scrollbar-none shelf-scroll-container md:grid md:gap-x-4 md:gap-y-5 md:pb-0 md:px-0"
+          className="flex overflow-x-auto gap-4 px-3 pt-2 pb-3 scrollbar-none shelf-scroll-container md:grid md:gap-x-4 md:gap-y-5 md:pb-0 md:px-0 md:overflow-visible"
           style={{
             gridTemplateColumns: `repeat(auto-fill, minmax(${cardWidth}px, 1fr))`,
           }}

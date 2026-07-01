@@ -5,23 +5,23 @@ const url2 = `https://image.pollinations.ai/prompt/test_vintage_academic_cover_i
 console.log("Fetching url1 (default model):", url1);
 const start1 = Date.now();
 fetch(url1)
-  .then(res => {
+  .then((res) => {
     console.log("url1 Status:", res.status, "Time:", Date.now() - start1, "ms");
     return res.arrayBuffer();
   })
-  .then(buf => {
+  .then((buf) => {
     console.log("url1 Byte length:", buf.byteLength);
-    
+
     console.log("\nFetching url2 (flux model):", url2);
     const start2 = Date.now();
-    return fetch(url2).then(res => {
+    return fetch(url2).then((res) => {
       console.log("url2 Status:", res.status, "Time:", Date.now() - start2, "ms");
       return res.arrayBuffer();
     });
   })
-  .then(buf => {
+  .then((buf) => {
     console.log("url2 Byte length:", buf.byteLength);
   })
-  .catch(err => {
+  .catch((err) => {
     console.error("Error:", err);
   });
