@@ -136,7 +136,9 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             style={{
               objectPosition: "center top",
-              display: imageLoaded ? "block" : "none",
+              opacity: imageLoaded ? 1 : 0,
+              position: imageLoaded ? "static" : "absolute",
+              pointerEvents: imageLoaded ? "auto" : "none"
             }}
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}
