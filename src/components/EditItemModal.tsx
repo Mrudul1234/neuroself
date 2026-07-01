@@ -128,6 +128,7 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
                   type,
                 }}
                 width={104}
+                previewOnly
               />
             </div>
             <div className="min-w-0 flex-1 space-y-4">

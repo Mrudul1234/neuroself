@@ -111,9 +111,10 @@ interface CardProps {
   item: LibraryItem;
   width?: number;
   onChanged?: () => void;
+  previewOnly?: boolean;
 }
 
-export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
+export function LibraryCard({ item, width = 128, onChanged, previewOnly }: CardProps) {
   const Icon = iconFor[item.type];
   const isVideo = item.type === "video";
 
@@ -423,6 +424,20 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
   // Actions menu classes for desktop (prevents clipping)
   const showActionsDesktop =
     "hidden md:flex opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto";
+
+  if (previewOnly) {
+    return (
+      <div className="flex flex-col items-center select-none" style={{ width }}>
+        {cover}
+        <div
+          className="mt-2.5 library-title-wrap w-full text-center font-instrument text-midnight-ink"
+          style={{ fontSize: 13, fontWeight: 500, padding: "0 2px" }}
+        >
+          {item.title}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

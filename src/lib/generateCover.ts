@@ -120,16 +120,16 @@ export const generateNeuroShelfCover = async (
 
   // 5 premium artistic styles, rotated randomly
   const STYLES = [
-    "Pop Art / Warhol Silk Screen",
-    "Papercut Layered Paper Art",
-    "Vintage Comic Halftone Sticker",
-    "Diffusion Tensor Imaging Fiber Tractography",
-    "Fauvist Expressionist Oil Painting",
+    "Pop Art / Warhol Silk Screen style, with flat vibrant solid colors, bold outlines, and clean simple aesthetic",
+    "Papercut Layered Paper Art style, with clean cut paper edges, 3D layered drop shadows, simple shapes, and tactile papercraft aesthetic",
+    "Vintage Comic Halftone Sticker style, retro comic book print, bold ink outlines, halftone dot shading, die-cut white sticker border, simple graphic design",
+    "Diffusion Tensor Imaging (DTI) Fiber Tractography style, minimalist glowing abstract neural tracts and pathways, neon lines on a clean simple background, scientific art",
+    "Fauvist Expressionist Oil Painting style, bold expressive brushstrokes, vibrant non-naturalistic flat color fields, simple shapes, high contrast artistic aesthetic"
   ];
   const selectedStyle = STYLES[Math.floor(Math.random() * STYLES.length)];
 
   // The new Pollinations AI Master Prompt
-  const imagePrompt = `Create a museum-quality neuroscience illustration using the following style: ${selectedStyle}
+  const imagePrompt = `Create a gorgeous, simple, and highly aesthetic neuroscience illustration using the following style: ${selectedStyle}
 
 Subject:
 ${cleanedTitle}
@@ -138,19 +138,17 @@ Requirements:
 No humans.
 No text.
 No watermark.
-Scientific accuracy.
-Beautiful composition.
-Premium lighting.
-Rich textures.
-Cinematic depth.
+Simple clean composition.
+Flat 2D graphic design, NOT realistic, NOT 3D rendered.
+Minimalist and modern.
+Simple shapes and clean linework.
+No complex lighting, no photorealism, no cinematic depth.
+No gradients or digital repaint textures.
 Elegant colors.
 Highly aesthetic.
-Looks like artwork from an elite neuroscience exhibition.
+Looks like a premium stylized logo or modern graphic print.
 Square composition.
-Ultra detailed.
-Professional illustration.
-High visual hierarchy.
-Clean background.
+Clean solid background.
 No logos.
 No typography.`;
 
