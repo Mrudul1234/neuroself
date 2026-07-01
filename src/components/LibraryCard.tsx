@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import {
   FileText,
   Loader2,
@@ -47,13 +47,20 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
   const [thumb, setThumb] = useState(item.thumbnail_url);
   const [editing, setEditing] = useState(false);
   
+  const router = useRouter();
+
   // Mobile / Interaction Touch states
   const [touched, setTouched] = useState(false);
   const [pressed, setPressed] = useState(false);
   const [signedPdfUrl, setSignedPdfUrl] = useState<string | null>(null);
   const [pdfReaderOpen, setPdfReaderOpen] = useState(false);
 
-  const handleTouchStart = () => {
+  // Track start touch coordinates for mobile tap detection
+  const [touchStartPos, setTouchStartPos] = useState({ x: 0, y: 0, time: 0 });
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    setTouchStartPos({ x: t.clientX, y: t.clientY, time: Date.now() });
     setPressed(true);
     setTouched(true);
     // Tactile press feeling: scale down, then spring lift after 80ms
@@ -63,6 +70,28 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    const t = e.changedTouches[0];
+    const diffX = Math.abs(t.clientX - touchStartPos.x);
+    const diffY = Math.abs(t.clientY - touchStartPos.y);
+    const diffTime = Date.now() - touchStartPos.time;
+
+    // Detect click / tap if touch didn't slide and was short
+    if (diffX < 8 && diffY < 8 && diffTime < 300) {
+      if (isStoredPdf) {
+        e.preventDefault();
+        e.stopPropagation();
+        void handleOpenStored(e as any);
+      } else if (opensInNewTab) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.open(item.url, "_blank", "noopener,noreferrer");
+      } else {
+        e.preventDefault();
+        e.stopPropagation();
+        router.navigate({ to: "/read/$id", params: { id: item.id } });
+      }
+    }
+
     // Only dismiss actions after 1500ms to allow users time to tap top action bar buttons
     setTimeout(() => {
       setTouched(false);
@@ -244,7 +273,12 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
       onMouseLeave={handleMouseUp}
     >
       {/* Hover/Tap actions */}
-      <div className={`absolute -top-3 -right-2 z-20 flex gap-1.5 p-2 ${showActions}`}>
+      <div 
+        className={`absolute -top-5 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 p-1 bg-white/95 backdrop-blur-sm rounded-full shadow-lg border border-stone-mist/60 md:bg-transparent md:border-none md:shadow-none md:p-0 md:top-[-10px] md:right-[-8px] md:left-auto md:translate-x-0 ${showActions}`}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <button
           type="button"
           onClick={handleRegenerate}

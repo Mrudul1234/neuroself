@@ -47,6 +47,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
     setSaving(false);
     setProgress(0);
     setMode("url");
+    setGeneratingCover(false);
   };
 
   const handleClose = () => {

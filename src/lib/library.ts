@@ -126,9 +126,15 @@ Rules:
 
 Raw Title: "${initialTitle}"`;
 
+    const apiKey = import.meta.env.VITE_POLLINATIONS_API_KEY || "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (apiKey) {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    }
+
     const res = await fetch("https://text.pollinations.ai/", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         messages: [
           { role: "system", content: "You are a professional research librarian." },

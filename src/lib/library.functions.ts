@@ -31,7 +31,7 @@ export const insertItemServer = createServerFn({ method: "POST" })
     z
       .object({
         title: z.string().min(1),
-        url: z.string().url(),
+        url: z.string().min(1),
         thumbnail_url: z.string().nullable(),
         type: itemTypeSchema,
         domain: z.string().nullable(),
@@ -60,7 +60,7 @@ export const updateItemServer = createServerFn({ method: "POST" })
         id: z.string().uuid(),
         patch: z.object({
           title: z.string().min(1).optional(),
-          url: z.string().url().optional(),
+          url: z.string().min(1).optional(),
           thumbnail_url: z.string().nullable().optional(),
           type: itemTypeSchema.optional(),
           domain: z.string().nullable().optional(),

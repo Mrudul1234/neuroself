@@ -41,9 +41,15 @@ Just the raw prompt string, max 120 words.`;
   const textModel = getTextModel(title);
 
   try {
+    const apiKey = import.meta.env.VITE_POLLINATIONS_API_KEY || "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (apiKey) {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    }
+
     const response = await fetch("https://text.pollinations.ai/", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         messages: [
           { role: "system", content: systemInstruction },
@@ -65,7 +71,39 @@ Just the raw prompt string, max 120 words.`;
   }
 };
 
-// Step 2: Build final Pollinations Image URL
+// Pre-fetch the generated image in background to ensure it is fully generated before showing it
+const fetchImageAsBase64 = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    const timeout = setTimeout(() => reject(new Error("Image generation timeout")), 35000);
+    img.onload = () => {
+      clearTimeout(timeout);
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || 400;
+        canvas.height = img.naturalHeight || 560;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        } else {
+          resolve(url);
+        }
+      } catch (e) {
+        // Fallback to raw url if canvas tainted
+        resolve(url);
+      }
+    };
+    img.onerror = () => {
+      clearTimeout(timeout);
+      reject(new Error("Image failed to load"));
+    };
+    img.src = url;
+  });
+};
+
+// Step 2: Build final Pollinations Image URL and pre-fetch it
 const generateCoverImage = async (
   imagePrompt: string,
   selectedModel: string = "flux"
@@ -73,7 +111,15 @@ const generateCoverImage = async (
   const encoded = encodeURIComponent(imagePrompt);
   const seed = Math.floor(Math.random() * 999999);
   const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=400&height=560&model=${selectedModel}&seed=${seed}&nologo=true&enhance=true`;
-  return imageUrl;
+  
+  try {
+    console.log("[NeuroShelf Cover] Pre-fetching generated image:", imageUrl);
+    const base64Data = await fetchImageAsBase64(imageUrl);
+    return base64Data;
+  } catch (err) {
+    console.warn("[NeuroShelf Cover] Image pre-fetch failed, returning raw URL:", err);
+    return imageUrl;
+  }
 };
 
 // Main Exported Cover Generation Pipeline
