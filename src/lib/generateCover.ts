@@ -63,6 +63,18 @@ export const generateNeuroShelfCover = async (
 
   const url = `https://image.pollinations.ai/prompt/${prompt}?width=400&height=560&seed=${seed}&model=${resolvedModel}&nologo=true&key=${apiKey}`;
 
-  console.log("[NeuroShelf Cover] Constructed URL:", { title, cleanedTitle, type, model: resolvedModel, url });
+  console.log("[NeuroShelf Cover] Requesting Pollinations API:", { title, cleanedTitle, type, model: resolvedModel, url });
+  
+  try {
+    // Actually make the API call to force Pollinations to generate it right now
+    // This ensures the loading spinner stays active until the image is ready
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.warn("[NeuroShelf Cover] API returned non-OK status:", response.status);
+    }
+  } catch (error) {
+    console.error("[NeuroShelf Cover] API fetch failed:", error);
+  }
+  
   return url;
 };
