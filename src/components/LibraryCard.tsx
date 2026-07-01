@@ -113,9 +113,30 @@ interface CardProps {
   width?: number;
   onChanged?: () => void;
   previewOnly?: boolean;
+  isPinboard?: boolean;
+  index?: number;
 }
 
-export function LibraryCard({ item, width = 128, onChanged, previewOnly }: CardProps) {
+function PushPin({ color = "#ef4444" }: { color?: string }) {
+  return (
+    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 filter drop-shadow-[1.5px_3px_2px_rgba(0,0,0,0.35)] pointer-events-none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Pin head */}
+        <ellipse cx="12" cy="7" rx="5.5" ry="4.5" fill={color} />
+        {/* Highlight */}
+        <ellipse cx="10.5" cy="5.5" rx="1.8" ry="1.3" fill="white" opacity="0.65" />
+        {/* Pin body */}
+        <path d="M9.5 10.5 L14.5 10.5 L13 7 L11 7 Z" fill={color} opacity="0.9" />
+        {/* Pin needle */}
+        <path d="M11.5 10.5 L12.5 10.5 L12.5 17 L11.5 17 Z" fill="#9ca3af" />
+        {/* Grip ring */}
+        <rect x="9" y="9.5" width="6" height="1.2" rx="0.4" fill="#374151" />
+      </svg>
+    </div>
+  );
+}
+
+export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinboard, index }: CardProps) {
   const Icon = iconFor[item.type];
   const isVideo = item.type === "video";
 
@@ -422,6 +443,139 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly }: CardP
           {item.title}
         </div>
       </div>
+    );
+  }
+
+  if (isPinboard) {
+    const rotation = ((index ?? 0) % 4) * 2.5 - 3.5; // rotates -3.5, -1, 1.5, 4 degrees for organic feel
+    const noteColors = [
+      "linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%)", // Warm Yellow
+      "linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%)", // Soft Blue
+      "linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%)", // Soft Green
+      "linear-gradient(180deg, #fdf2f8 0%, #fce7f3 100%)", // Soft Pink
+      "linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%)", // Soft Purple
+    ];
+    const bg = noteColors[(index ?? 0) % noteColors.length];
+    const pinColors = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#9c27b0"];
+    const pinColor = pinColors[(index ?? 0) % pinColors.length];
+
+    return (
+      <motion.div
+        ref={cardRef}
+        initial={{ opacity: 0, scale: 0.85, rotate: rotation - 5 }}
+        animate={{ opacity: 1, scale: 1, rotate: rotation }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="relative flex flex-col justify-between rounded-[2px] p-3.5 shadow-[4px_6px_12px_rgba(0,0,0,0.22)] select-none cursor-pointer group active:scale-[0.97] transition-all border border-white/20"
+        style={{
+          width,
+          minHeight: 180,
+          background: bg,
+        }}
+        onClick={(e) => {
+          if (isEditing || confirming) return;
+          if (isVideo) {
+            setIsVideoOpen(true);
+          } else {
+            setIsBookOpen(true);
+          }
+        }}
+      >
+        {/* Pinned pushpin */}
+        <PushPin color={pinColor} />
+
+        {/* Paper lines overlay */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-[0.07]" 
+          style={{
+            backgroundImage: "linear-gradient(#000 1px, transparent 1px)",
+            backgroundSize: "100% 18px",
+            backgroundPosition: "0 28px"
+          }}
+        />
+
+        <div className="flex flex-col gap-2 pt-2.5 z-10">
+          {/* Title */}
+          <div 
+            className="font-instrument italic font-semibold text-midnight-ink text-xs line-clamp-5 leading-snug tracking-tight"
+            style={{ fontSize: "11px", fontWeight: 700 }}
+          >
+            {item.title}
+          </div>
+
+          {/* Domain / Info */}
+          {item.domain && (
+            <span className="text-[8px] text-smoke font-medium font-sans">
+              {item.domain}
+            </span>
+          )}
+        </div>
+
+        {/* Bottom section with Badge + Actions */}
+        <div className="flex flex-col gap-2 mt-auto pt-2 border-t border-black/5 z-10">
+          <div className="flex items-center justify-between">
+            {(() => {
+              const platform = getPlatformInfo(item.url, item.storage_path);
+              const PlatformIcon = platform.icon;
+              return (
+                <span className="inline-flex items-center gap-1 text-[8px] font-bold text-midnight-ink/65 uppercase tracking-wider font-sans">
+                  <PlatformIcon size={8} />
+                  {platform.name}
+                </span>
+              );
+            })()}
+          </div>
+
+          {/* Actions row */}
+          <div className="flex items-center justify-end gap-1.5 mt-1">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                void handleRegenerate(e);
+              }}
+              disabled={regenerating}
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-pulse/10 text-amber-pulse border border-amber-pulse/20 transition-transform active:scale-90 disabled:opacity-50 cursor-pointer"
+              aria-label="Generate Cover"
+            >
+              {regenerating ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsEditing(true);
+              }}
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/70 text-midnight-ink border border-stone-mist/60 transition-transform active:scale-90 cursor-pointer"
+              aria-label="Edit item"
+            >
+              <Pencil size={10} />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setConfirming(true);
+              }}
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-red-50 text-destructive border border-red-100 transition-transform active:scale-90 cursor-pointer"
+              aria-label="Remove item"
+            >
+              <X size={10} strokeWidth={2.5} />
+            </button>
+          </div>
+        </div>
+
+        {/* Modals */}
+        <EditItemModal
+          open={isEditing}
+          item={item}
+          onClose={() => setIsEditing(false)}
+          onSaved={onChanged}
+        />
+        <BookOverlay open={isBookOpen} item={item} onClose={() => setIsBookOpen(false)} />
+        <VideoModal open={isVideoOpen} item={item} onClose={() => setIsVideoOpen(false)} />
+      </motion.div>
     );
   }
 

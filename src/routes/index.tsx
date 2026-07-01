@@ -51,6 +51,9 @@ function LibraryPage() {
 
   useEffect(() => {
     void refresh();
+    if (window.innerWidth < 768) {
+      setFolderView(true);
+    }
   }, []);
 
   const filtered = useMemo(() => {
@@ -194,7 +197,7 @@ function LibraryPage() {
 
         {folderView ? (
           <div className="mt-6 md:hidden">
-            <FolderView items={filtered} />
+            <FolderView items={filtered} onChanged={refresh} />
           </div>
         ) : (
           <>
