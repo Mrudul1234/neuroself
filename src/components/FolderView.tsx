@@ -11,15 +11,17 @@ export function FolderView({ items, onChanged }: Props) {
 
   return (
     <div
-      className="min-h-[calc(100vh-64px)] rounded-[20px] border-[14px] border-[#5c3a21] p-4 relative shadow-[inset_0_0_60px_rgba(0,0,0,0.4),0_12px_32px_rgba(0,0,0,0.35)] overflow-hidden"
+      className="min-h-[calc(100vh-64px)] rounded-[20px] border-[14px] border-[#5c3a21] p-4 relative shadow-[inset_0_0_60px_rgba(0,0,0,0.5),0_12px_32px_rgba(0,0,0,0.35)] overflow-hidden"
       style={{
-        backgroundColor: "#d7a15c",
+        backgroundColor: "#c68d4a",
         backgroundImage: `
-          radial-gradient(rgba(0, 0, 0, 0.12) 1.2px, transparent 0),
-          radial-gradient(rgba(0, 0, 0, 0.12) 1.2px, transparent 0)
+          radial-gradient(rgba(0, 0, 0, 0.15) 1.2px, transparent 0),
+          radial-gradient(rgba(0, 0, 0, 0.1) 2px, transparent 0),
+          linear-gradient(45deg, rgba(0, 0, 0, 0.02) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.02) 75%, rgba(0, 0, 0, 0.02)),
+          linear-gradient(45deg, rgba(0, 0, 0, 0.02) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.02) 75%, rgba(0, 0, 0, 0.02))
         `,
-        backgroundSize: "10px 10px",
-        backgroundPosition: "0 0, 5px 5px"
+        backgroundSize: "8px 8px, 16px 16px, 20px 20px, 20px 20px",
+        backgroundPosition: "0 0, 8px 8px, 0 0, 10px 10px"
       }}
     >
       {/* Wooden frame inner bevel highlight */}

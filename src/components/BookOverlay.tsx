@@ -61,36 +61,12 @@ export function BookOverlay({ open, item, onClose }: Props) {
       setAiSummary(item.extracted_text || null);
       document.body.style.overflow = "hidden";
 
-      const isMobile = window.innerWidth < 768;
-      if (!isMobile) {
-        // Laptop/Desktop: Skip the 3D opening animations and show settled state instantly
-        setStage("settled");
-        const isPdf = /\.pdf(\?|$)/i.test(item.url) || item.type === "paper" || !!item.storage_path;
-        if (isPdf) {
-          setShowReader(true);
-          void loadReaderContent(item);
-        }
-      } else {
-        // Mobile: Run the 3D flipping animation sequence
-        setStage("closed");
-        const t1 = setTimeout(() => setStage("lifting"), 50);
-        const t2 = setTimeout(() => setStage("cover-open"), 300);
-        const t3 = setTimeout(() => setStage("page-turn"), 900);
-        const t4 = setTimeout(() => {
-          setStage("settled");
-          const isPdf = /\.pdf(\?|$)/i.test(item.url) || item.type === "paper" || !!item.storage_path;
-          if (isPdf) {
-            setShowReader(true);
-            void loadReaderContent(item);
-          }
-        }, 1500);
-
-        return () => {
-          clearTimeout(t1);
-          clearTimeout(t2);
-          clearTimeout(t3);
-          clearTimeout(t4);
-        };
+      // Skip the 3D opening animations and show settled state instantly for all screen sizes
+      setStage("settled");
+      const isPdf = /\.pdf(\?|$)/i.test(item.url) || item.type === "paper" || !!item.storage_path;
+      if (isPdf) {
+        setShowReader(true);
+        void loadReaderContent(item);
       }
     }
   }, [open, item]);
@@ -218,26 +194,9 @@ export function BookOverlay({ open, item, onClose }: Props) {
     duration: `${8 + Math.random() * 8}s`,
   }));
 
-  // Determine stage-dependent 3D transforms for the notebook container
+  // Determine transforms for the notebook container
   const getContainerStyle = () => {
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-    if (!isMobile) {
-      return { transform: "none" };
-    }
-
-    switch (stage) {
-      case "closed":
-        return { transform: "rotateX(20deg) rotateY(0deg) scale(0.7) translateZ(-100px)" };
-      case "lifting":
-        return { transform: "rotateX(15deg) rotateY(-5deg) scale(0.9) translateZ(50px)" };
-      case "cover-open":
-        return { transform: "rotateX(10deg) rotateY(-2deg) scale(0.95) translateZ(20px)" };
-      case "page-turn":
-        return { transform: "rotateX(8deg) rotateY(-1deg) scale(1) translateZ(10px)" };
-      case "settled":
-      default:
-        return { transform: "rotateX(8deg) rotateY(0deg) scale(1) translateZ(0)" };
-    }
+    return { transform: "none" };
   };
 
   return createPortal(
@@ -530,78 +489,128 @@ export function BookOverlay({ open, item, onClose }: Props) {
           <div className="notebook-rings" />
         </div>
 
-        {/* --- RESTORED FIXED FLOATING CONTROL BAR --- */}
+        {/* --- DUAL FLOATING CONTROL BARS --- */}
         {stage === "settled" && (
-          <div className="mt-6 notebook-toolbar animate-in fade-in duration-300">
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={handleClose}
-              className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper transition-all cursor-pointer min-h-[48px]"
-              aria-label="Close Notebook"
-            >
-              <X size={15} />
-              <span>Close</span>
-            </button>
-
-            {/* Edit Button */}
-            <button
-              type="button"
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper transition-all cursor-pointer min-h-[48px]"
-              aria-label="Edit Item"
-            >
-              <Pencil size={14} />
-              <span>Edit</span>
-            </button>
-
-            {/* Read PDF / Reader Toggle Button - Desktop Only */}
-            <div className="hidden md:block">
+          <>
+            {/* Desktop Toolbar - Horizontal Row with Borders */}
+            <div className="hidden md:flex mt-6 notebook-toolbar animate-in fade-in duration-300">
+              {/* Close Button */}
               <button
                 type="button"
-                onClick={handleToggleReader}
-                className={`flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-bold transition-all cursor-pointer min-h-[48px] ${
-                  showReader
-                    ? "bg-midnight-ink border-midnight-ink text-white"
-                    : "border-stone-mist bg-white text-midnight-ink hover:bg-cream-paper"
-                }`}
-                aria-label="Toggle Reader View"
+                onClick={handleClose}
+                className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper transition-all cursor-pointer min-h-[48px]"
+                aria-label="Close Notebook"
               >
-                <BookOpen size={14} />
-                <span>{showReader ? "View Abstract" : "Read PDF"}</span>
+                <X size={15} />
+                <span>Close</span>
               </button>
-            </div>
 
-            {/* Generate Summary Button */}
-            <button
-              type="button"
-              onClick={handleGenerateSummary}
-              disabled={generatingSummary}
-              className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper disabled:opacity-50 transition-all cursor-pointer min-h-[48px]"
-              aria-label="Generate AI Summary"
-            >
-              {generatingSummary ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Sparkles size={14} />
-              )}
-              <span>Generate Summary</span>
-            </button>
-
-            {/* Save Summary Button - Desktop Only */}
-            <div className="hidden md:block">
+              {/* Edit Button */}
               <button
                 type="button"
-                onClick={handleSaveSummary}
-                disabled={!aiSummary || aiSummary === localItem.extracted_text}
-                className="flex items-center gap-1.5 rounded-full bg-midnight-ink text-white px-3.5 py-2 text-xs font-bold disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer min-h-[48px]"
-                aria-label="Save Summary to Notebook"
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper transition-all cursor-pointer min-h-[48px]"
+                aria-label="Edit Item"
               >
-                <Save size={14} />
-                <span>Save</span>
+                <Pencil size={14} />
+                <span>Edit</span>
+              </button>
+
+              {/* Read PDF / Reader Toggle Button */}
+              <div className="hidden md:block">
+                <button
+                  type="button"
+                  onClick={handleToggleReader}
+                  className={`flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-bold transition-all cursor-pointer min-h-[48px] ${
+                    showReader
+                      ? "bg-midnight-ink border-midnight-ink text-white"
+                      : "border-stone-mist bg-white text-midnight-ink hover:bg-cream-paper"
+                  }`}
+                  aria-label="Toggle Reader View"
+                >
+                  <BookOpen size={14} />
+                  <span>{showReader ? "View Abstract" : "Read PDF"}</span>
+                </button>
+              </div>
+
+              {/* Generate Summary Button */}
+              <button
+                type="button"
+                onClick={handleGenerateSummary}
+                disabled={generatingSummary}
+                className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper disabled:opacity-50 transition-all cursor-pointer min-h-[48px]"
+                aria-label="Generate AI Summary"
+              >
+                {generatingSummary ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Sparkles size={14} />
+                )}
+                <span>Generate Summary</span>
+              </button>
+
+              {/* Save Summary Button */}
+              <div className="hidden md:block">
+                <button
+                  type="button"
+                  onClick={handleSaveSummary}
+                  disabled={!aiSummary || aiSummary === localItem.extracted_text}
+                  className="flex items-center gap-1.5 rounded-full bg-midnight-ink text-white px-3.5 py-2 text-xs font-bold disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer min-h-[48px]"
+                  aria-label="Save Summary to Notebook"
+                >
+                  <Save size={14} />
+                  <span>Save</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile Floating Bottom Action Bar (Edit | Generate | Close) */}
+            <div className="flex md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[250] items-center justify-between gap-3.5 bg-white/95 backdrop-blur-md border border-stone-mist/60 rounded-full py-2.5 px-6 shadow-[0_12px_32px_rgba(0,0,0,0.18)] w-[90%] max-w-[340px] animate-in slide-in-from-bottom-5 duration-300">
+              {/* Edit Button */}
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-1 text-[11px] font-bold text-midnight-ink active:scale-95 transition-transform"
+                aria-label="Edit Item"
+              >
+                <Pencil size={13} />
+                <span>Edit</span>
+              </button>
+
+              {/* Separator */}
+              <div className="w-[1px] h-4 bg-stone-mist/75" />
+
+              {/* Generate Button */}
+              <button
+                type="button"
+                onClick={handleGenerateSummary}
+                disabled={generatingSummary}
+                className="flex items-center gap-1 text-[11px] font-bold text-midnight-ink active:scale-95 transition-transform disabled:opacity-50"
+                aria-label="Generate AI Summary"
+              >
+                {generatingSummary ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Sparkles size={13} />
+                )}
+                <span>Generate</span>
+              </button>
+
+              {/* Separator */}
+              <div className="w-[1px] h-4 bg-stone-mist/75" />
+
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={handleClose}
+                className="flex items-center gap-1 text-[11px] font-bold text-red-600 active:scale-95 transition-transform"
+                aria-label="Close Notebook"
+              >
+                <X size={13} strokeWidth={2.5} />
+                <span>Close</span>
               </button>
             </div>
-          </div>
+          </>
         )}
       </div>
 

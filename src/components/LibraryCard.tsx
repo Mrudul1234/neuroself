@@ -496,8 +496,11 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
         <div className="flex flex-col gap-2 pt-2.5 z-10">
           {/* Title */}
           <div 
-            className="font-instrument italic font-semibold text-midnight-ink text-xs line-clamp-5 leading-snug tracking-tight"
-            style={{ fontSize: "11px", fontWeight: 700 }}
+            className="font-sans font-semibold text-midnight-ink line-clamp-5 leading-snug tracking-tight"
+            style={{ 
+              fontSize: "11.5px", 
+              fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" 
+            }}
           >
             {item.title}
           </div>

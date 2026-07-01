@@ -118,40 +118,44 @@ export const generateNeuroShelfCover = async (
 ): Promise<string | null> => {
   const cleanedTitle = cleanTitleForPrompt(title);
 
-  // 3 premium aesthetic styles (simple, not fancy), rotated randomly
-  const STYLES = [
-    "Aesthetic simple Papercut Layered Paper Art style, with clean cut paper edges, 3D layered drop shadows, simple shapes, and tactile papercraft aesthetic, not fancy",
-    "Aesthetic simple Vintage Comic Halftone Sticker style, retro comic book print, bold ink outlines, halftone dot shading, die-cut white sticker border, simple graphic design, not fancy",
-    "Aesthetic simple Diffusion Tensor Imaging (DTI) Fiber Tractography style, minimalist glowing abstract neural tracts and pathways, neon lines on a clean simple background, scientific art, not fancy"
-  ];
-  const selectedStyle = STYLES[Math.floor(Math.random() * STYLES.length)];
+  const promptTemplate = `Create a clean editorial cover illustration for "{TITLE}".
 
-  // The new Pollinations AI Master Prompt
-  const imagePrompt = `Create a gorgeous, simple, and highly aesthetic conceptual graphic illustration directly representing the subject matter: "${cleanedTitle}".
+Interpret the title as a simple visual concept rather than a literal scene. Focus on one strong central subject with minimal supporting elements.
 
-Visual Style:
-Use the following artistic style: ${selectedStyle}. Keep it simple and clean.
+Art Direction:
+• Layered Papercut Craft with soft stacked paper depth
+• Modern Layered Paper Art composition
+• Subtle Pop Art influence using bold but limited color blocks
+• Inspired by DTI Fiber Tractography and abstract neural pathways with elegant flowing lines
+• Gentle spiral and organic wave motifs
+• Soft Fauvist color harmony with painterly textures
+• Light Impressionist brush touches and handcrafted paper feel
+• Contemporary educational illustration aesthetic
+• Calm, bright, minimal, and visually soothing
 
-Core Mandate:
-The illustration must be directly relevant and metaphorically representative of the title: "${cleanedTitle}". Translate the cognitive, neurological, or scientific concepts in the title into a clear, single symbolic visual.
+Style Rules:
+• Flat to semi-flat illustration
+• Clean geometric shapes
+• Soft rounded forms
+• Paper-cut layered shadows only
+• Limited color palette (4–6 harmonious colors)
+• Plenty of negative space
+• Balanced composition
+• Minimal details
+• No clutter
+• No text, labels, icons, logos, UI elements, borders, or watermarks
+• Avoid photorealism completely
+• Avoid cinematic lighting
+• Avoid hyper-detail
+• Avoid 3D rendering
+• Avoid realistic textures
+• Avoid people unless essential to the topic
+• Maintain a consistent modern editorial illustration style across all topics
 
-Requirements:
-No humans.
-No text.
-No watermark.
-Simple clean composition.
-Flat 2D graphic design, NOT realistic, NOT 3D rendered.
-Minimalist and modern.
-Simple shapes and clean linework.
-No complex lighting, no photorealism, no cinematic depth.
-No gradients or digital repaint textures.
-Elegant colors.
-Highly aesthetic.
-Looks like a premium stylized logo or modern graphic print.
-Square composition.
-Clean solid background.
-No logos.
-No typography.`;
+Mood:
+Thoughtful, intelligent, calming, aesthetic, modern, scientific, creative, approachable, premium.`;
+
+  const imagePrompt = promptTemplate.replace(/{TITLE}/g, cleanedTitle);
 
   try {
     // If model is turbo, map it to flux (or whatever fast model the user prefers)
