@@ -20,7 +20,7 @@ export function cleanTitleForPrompt(title: string): string {
 export const generateNeuroShelfCover = async (
   title: string,
   type: "paper" | "article" | "video",
-  model: string = "turbo"
+  model: string = "flux"
 ): Promise<string> => {
   const cleanedTitle = cleanTitleForPrompt(title);
 
@@ -55,8 +55,14 @@ export const generateNeuroShelfCover = async (
   const prompt = encodeURIComponent(stylePrompts[type]);
   const seed = Math.floor(Math.random() * 999999);
 
-  const url = `https://image.pollinations.ai/prompt/${prompt}?width=400&height=560&seed=${seed}&model=${model}&nologo=true`;
+  // If model is turbo, use flux (since flux is the fastest supported image model, ~800ms)
+  const resolvedModel = model === "turbo" ? "flux" : model;
+  
+  // Use the user's secret API key
+  const apiKey = import.meta.env.VITE_POLLINATIONS_API_KEY || "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
 
-  console.log("[NeuroShelf Cover] Constructed URL:", { title, cleanedTitle, type, model, url });
+  const url = `https://image.pollinations.ai/prompt/${prompt}?width=400&height=560&seed=${seed}&model=${resolvedModel}&nologo=true&key=${apiKey}`;
+
+  console.log("[NeuroShelf Cover] Constructed URL:", { title, cleanedTitle, type, model: resolvedModel, url });
   return url;
 };
