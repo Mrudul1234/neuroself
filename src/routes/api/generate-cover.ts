@@ -94,7 +94,9 @@ export const Route = createFileRoute("/api/generate-cover")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const key = process.env.LOVABLE_API_KEY;
+        const lovableKey = process.env.LOVABLE_API_KEY;
+        const geminiKey = process.env.GEMINI_API_KEY;
+        const openaiKey = process.env.OPENAI_API_KEY;
 
         let body: { title?: string; type?: string; domain?: string };
         try {
@@ -114,16 +116,6 @@ export const Route = createFileRoute("/api/generate-cover")({
           });
         }
 
-        if (!key) {
-          console.warn("[Lovable API] LOVABLE_API_KEY is not defined. Falling back to procedural cover generation.");
-          const svgBase64 = generateSvgCover(title, body.type, body.domain);
-          return new Response(
-            JSON.stringify({ dataUrl: `data:image/svg+xml;base64,${svgBase64}` }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
-          );
-        }
-
-
         const kind =
           body.type === "video"
             ? "cinematic minimalist thumbnail"
@@ -135,67 +127,143 @@ export const Route = createFileRoute("/api/generate-cover")({
           body.domain ? ` from ${body.domain}` : ""
         }. Vertical 2:3 portrait aspect. Warm cream paper background (#fffaf0), soft grain texture, muted amber and deep teal accents, elegant italic serif typography with the title visible and legible. Editorial, tactile, understated, no logos, no watermarks, no photorealistic faces. Rich but calm — like a rare-books library.`;
 
-        try {
-          const upstream = await fetch(
-            "https://ai.gateway.lovable.dev/v1/images/generations",
-            {
+        // 1. Direct Google Gemini Imagen 3
+        if (geminiKey) {
+          try {
+            console.log("[Cover Gen] Using direct Google Gemini (Imagen 3) API");
+            const res = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiKey}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  instances: [{ prompt }],
+                  parameters: {
+                    sampleCount: 1,
+                    outputMimeType: "image/jpeg",
+                    aspectRatio: "2:3",
+                  },
+                }),
+              }
+            );
+
+            if (!res.ok) {
+              const text = await res.text().catch(() => "");
+              throw new Error(`Gemini Imagen API error: ${text || res.statusText}`);
+            }
+
+            const json = (await res.json()) as {
+              predictions?: Array<{ bytesBase64Encoded?: string }>;
+            };
+            const b64 = json.predictions?.[0]?.bytesBase64Encoded;
+            if (!b64) throw new Error("No image data returned from Gemini");
+
+            return new Response(
+              JSON.stringify({ dataUrl: `data:image/jpeg;base64,${b64}` }),
+              { status: 200, headers: { "Content-Type": "application/json" } }
+            );
+          } catch (err) {
+            console.error("[Cover Gen] Gemini Imagen failed, trying other keys or fallback:", err);
+          }
+        }
+
+        // 2. OpenAI DALL-E 3
+        if (openaiKey) {
+          try {
+            console.log("[Cover Gen] Using OpenAI DALL-E 3 API");
+            const res = await fetch("https://api.openai.com/v1/images/generations", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${key}`,
+                Authorization: `Bearer ${openaiKey}`,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-3.1-flash-image",
-                messages: [{ role: "user", content: prompt }],
-                modalities: ["image", "text"],
+                model: "dall-e-3",
+                prompt,
+                n: 1,
+                size: "1024x1024",
+                response_format: "b64_json",
               }),
-            },
-          );
+            });
 
-          if (!upstream.ok) {
-            const text = await upstream.text().catch(() => "");
-            const status = upstream.status === 402 || upstream.status === 429
-              ? upstream.status
-              : 500;
+            if (!res.ok) {
+              const text = await res.text().catch(() => "");
+              throw new Error(`OpenAI API error: ${text || res.statusText}`);
+            }
+
+            const json = (await res.json()) as {
+              data?: Array<{ b64_json?: string }>;
+            };
+            const b64 = json.data?.[0]?.b64_json;
+            if (!b64) throw new Error("No image data returned from DALL-E 3");
+
             return new Response(
-              JSON.stringify({
-                error:
-                  upstream.status === 429
-                    ? "Rate limited — try again shortly."
-                    : upstream.status === 402
-                      ? "AI credits exhausted."
-                      : `Cover generation failed: ${text || upstream.statusText}`,
-              }),
-              { status, headers: { "Content-Type": "application/json" } },
+              JSON.stringify({ dataUrl: `data:image/png;base64,${b64}` }),
+              { status: 200, headers: { "Content-Type": "application/json" } }
             );
+          } catch (err) {
+            console.error("[Cover Gen] OpenAI DALL-E 3 failed, trying other keys or fallback:", err);
           }
-
-          const json = (await upstream.json()) as {
-            data?: Array<{ b64_json?: string }>;
-          };
-          const b64 = json.data?.[0]?.b64_json;
-          if (!b64) {
-            return new Response(
-              JSON.stringify({ error: "No image returned" }),
-              { status: 502, headers: { "Content-Type": "application/json" } },
-            );
-          }
-
-          return new Response(
-            JSON.stringify({ dataUrl: `data:image/png;base64,${b64}` }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
-          );
-        } catch (err) {
-          return new Response(
-            JSON.stringify({
-              error:
-                err instanceof Error
-                  ? err.message
-                  : "Unexpected error generating cover.",
-            }),
-            { status: 500, headers: { "Content-Type": "application/json" } },
-          );
         }
+
+        // 3. Lovable AI Gateway (Nano Banana / Gemini 3.1 Image)
+        if (lovableKey) {
+          try {
+            console.log("[Cover Gen] Using Lovable AI Gateway");
+            const res = await fetch(
+              "https://ai.gateway.lovable.dev/v1/images/generations",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${lovableKey}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "google/gemini-3.1-flash-image",
+                  messages: [{ role: "user", content: prompt }],
+                  modalities: ["image", "text"],
+                }),
+              }
+            );
+
+            if (!res.ok) {
+              const text = await res.text().catch(() => "");
+              const status = res.status === 402 || res.status === 429 ? res.status : 500;
+              return new Response(
+                JSON.stringify({
+                  error:
+                    res.status === 429
+                      ? "Rate limited — try again shortly."
+                      : res.status === 402
+                        ? "AI credits exhausted."
+                        : `Cover generation failed: ${text || res.statusText}`,
+                }),
+                { status, headers: { "Content-Type": "application/json" } }
+              );
+            }
+
+            const json = (await res.json()) as {
+              data?: Array<{ b64_json?: string }>;
+            };
+            const b64 = json.data?.[0]?.b64_json;
+            if (!b64) throw new Error("No image returned from Lovable");
+
+            return new Response(
+              JSON.stringify({ dataUrl: `data:image/png;base64,${b64}` }),
+              { status: 200, headers: { "Content-Type": "application/json" } }
+            );
+          } catch (err) {
+            console.error("[Cover Gen] Lovable gateway failed, trying fallback:", err);
+          }
+        }
+
+        // 4. Fallback: Elegant Procedural SVG Cover
+        console.warn("[Cover Gen] No valid API keys configured (LOVABLE_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY). Using procedural fallback.");
+        const svgBase64 = generateSvgCover(title, body.type, body.domain);
+        return new Response(
+          JSON.stringify({ dataUrl: `data:image/svg+xml;base64,${svgBase64}` }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
       },
     },
   },
