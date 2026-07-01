@@ -132,7 +132,7 @@ Raw Title: "${initialTitle}"`;
       headers["Authorization"] = `Bearer ${apiKey}`;
     }
 
-    const res = await fetch("https://text.pollinations.ai/", {
+    const res = await fetch("https://gen.pollinations.ai/v1/chat/completions", {
       method: "POST",
       headers,
       body: JSON.stringify({
@@ -147,7 +147,8 @@ Raw Title: "${initialTitle}"`;
     });
 
     if (res.ok) {
-      const refinedTitle = await res.text();
+      const data = await res.json();
+      const refinedTitle = data?.choices?.[0]?.message?.content;
       if (refinedTitle && refinedTitle.trim()) {
         initialTitle = refinedTitle.trim().replace(/^"|"$/g, "");
       }

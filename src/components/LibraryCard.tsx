@@ -9,7 +9,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   deleteItemWithFile,
@@ -115,6 +115,12 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
       : "";
 
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    setImageLoaded(false);
+    setImageError(false);
+  }, [thumb]);
 
   // Gradient fallbacks per item type
   const typeGradients = {
@@ -134,22 +140,23 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
     >
       {regenerating ? (
         /* Shimmer loading for regeneration */
-        <div
-          className="h-full w-full"
-          style={{
-            background: "linear-gradient(90deg, #e4e4d0 25%, #f0ebe0 50%, #e4e4d0 75%)",
-            backgroundSize: "200% 100%",
-            animation: "shimmer 1.5s infinite",
-          }}
-        />
+        <div className="h-full w-full animate-shimmer" />
       ) : thumb && !imageError ? (
-        <img
-          src={thumb}
-          alt=""
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-          onError={() => setImageError(true)}
-        />
+        <>
+          <img
+            src={thumb}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            style={{
+              objectPosition: "center top",
+              display: imageLoaded ? "block" : "none",
+            }}
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
+          />
+          {!imageLoaded && <div className="h-full w-full animate-shimmer" />}
+        </>
       ) : (
         /* Render Gradient Fallback */
         <div
