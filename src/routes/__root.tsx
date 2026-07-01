@@ -131,6 +131,68 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  // Background Sync: Generate covers for existing items with no thumbnails
+  useEffect(() => {
+    const syncMissingCovers = async () => {
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { generateNeuroShelfCover } = await import("@/lib/generateCover");
+
+        // Query database for library items lacking a thumbnail
+        const { data: items, error } = await supabase
+          .from("library_items")
+          .select("*")
+          .is("thumbnail_url", null);
+
+        if (error || !items || items.length === 0) return;
+
+        console.log(`[NeuroShelf Cover Sync] Found ${items.length} items missing covers.`);
+
+        // Process in batches of 2 to avoid rate limits
+        const limit = 2;
+        for (let i = 0; i < items.length; i += limit) {
+          const batch = items.slice(i, i + limit);
+          await Promise.all(
+            batch.map(async (item) => {
+              // YouTube cover extraction rule: use oEmbed thumbnail if it exists
+              const isYoutube = /youtube\.com|youtu\.be/i.test(item.url);
+              let coverUrl: string | null = null;
+              
+              if (isYoutube) {
+                // Fetch oEmbed or construct standard YT MQ/HQ URL directly
+                const videoId = item.url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i)?.[1];
+                if (videoId) {
+                  coverUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                }
+              }
+
+              if (!coverUrl) {
+                coverUrl = await generateNeuroShelfCover(item.title, item.type, "flux");
+              }
+
+              if (coverUrl) {
+                await supabase
+                  .from("library_items")
+                  .update({ thumbnail_url: coverUrl })
+                  .eq("id", item.id);
+                console.log(`[NeuroShelf Cover Sync] Updated cover for: "${item.title}"`);
+              }
+            })
+          );
+        }
+      } catch (err) {
+        console.error("[NeuroShelf Cover Sync] Error during background synchronization:", err);
+      }
+    };
+
+    // Small delay to let initial loads resolve
+    const timer = setTimeout(() => {
+      syncMissingCovers();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}

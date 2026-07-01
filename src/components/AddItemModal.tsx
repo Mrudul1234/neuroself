@@ -9,6 +9,7 @@ import {
   type ItemType,
 } from "@/lib/library";
 import { LibraryCard } from "./LibraryCard";
+import { generateNeuroShelfCover } from "@/lib/generateCover";
 
 interface Props {
   open: boolean;
@@ -32,6 +33,8 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [generatingCover, setGeneratingCover] = useState(false);
+  const [imageModel, setImageModel] = useState("flux");
   const fileInput = useRef<HTMLInputElement>(null);
 
   if (!open) return null;
@@ -56,14 +59,37 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
     if (!url.trim()) return;
     setError(null);
     setLoading(true);
+    setGeneratingCover(true);
     try {
       const result = await detectMetadata(url);
       setDraft(result);
-    } catch {
+      
+      // YT oEmbed Skip check
+      const isYoutube = /youtube\.com|youtu\.be/i.test(url);
+      if (isYoutube && result.thumbnail_url) {
+        // use YouTube thumbnail directly, don't run AI generation unless it fails
+        setGeneratingCover(false);
+        return;
+      }
+
+      // Trigger cover generation pipeline
+      const coverUrl = await generateNeuroShelfCover(result.title, result.type, imageModel);
+      if (coverUrl) {
+        setDraft(prev => prev ? { ...prev, thumbnail_url: coverUrl } : null);
+      }
+    } catch (err) {
       setError("Couldn't read that link. You can still save it manually.");
-      setDraft({ title: url, url, thumbnail_url: null, type: "article", domain: null });
+      const fallbackDraft: DraftItem = { title: url, url, thumbnail_url: null, type: "article", domain: null };
+      setDraft(fallbackDraft);
+      
+      // Generate cover for manual input
+      const coverUrl = await generateNeuroShelfCover(url, "article", imageModel);
+      if (coverUrl) {
+        setDraft(prev => prev ? { ...prev, thumbnail_url: coverUrl } : null);
+      }
     } finally {
       setLoading(false);
+      setGeneratingCover(false);
     }
   };
 
@@ -71,25 +97,40 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
     setError(null);
     setLoading(true);
     setProgress(0);
+    setGeneratingCover(true);
     try {
       const { path, size } = await uploadPdfFile(file, setProgress);
-      const title = file.name.replace(/\.pdf$/i, "").replace(/[-_]+/g, " ");
-      setDraft({
-        title,
+      // Clean up title: strip ext, strip spaces/hyphens/underscores, strip bracketed numbers
+      const cleanTitle = file.name
+        .replace(/\.pdf$/i, "")
+        .replace(/\[\d+\]/g, "")
+        .replace(/[-_]+/g, " ")
+        .trim();
+
+      const initialDraft: DraftItem = {
+        title: cleanTitle,
         url: `lovable://library-files/${path}`,
         thumbnail_url: null,
         type: "paper",
         domain: null,
         storage_path: path,
         file_size: size,
-      });
+      };
+      setDraft(initialDraft);
       toast.success("PDF uploaded — review and save.");
+
+      // Trigger cover generation pipeline
+      const coverUrl = await generateNeuroShelfCover(cleanTitle, "paper", imageModel);
+      if (coverUrl) {
+        setDraft(prev => prev ? { ...prev, thumbnail_url: coverUrl } : null);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed.";
       setError(msg);
       toast.error(`Upload failed: ${msg}`);
     } finally {
       setLoading(false);
+      setGeneratingCover(false);
     }
   };
 
@@ -229,14 +270,48 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
         {draft && (
           <div className="mt-6 space-y-5">
             <div className="flex items-start gap-5">
-              <LibraryCard
-                item={{
-                  ...draft,
-                  id: "preview",
-                  created_at: new Date().toISOString(),
-                }}
-                width={104}
-              />
+              <div className="relative shrink-0" style={{ width: 104 }}>
+                {generatingCover ? (
+                  <div className="w-full">
+                    {/* Shimmer Cover */}
+                    <div
+                      className="w-full rounded-[10px] border border-black/10 shadow-sm"
+                      style={{
+                        aspectRatio: "2 / 3",
+                        background: "linear-gradient(90deg, #e4e4d0 25%, #f0ebe0 50%, #e4e4d0 75%)",
+                        backgroundSize: "200% 100%",
+                        animation: "shimmer 1.5s infinite",
+                      }}
+                    />
+                    <style>{`
+                      @keyframes shimmer {
+                        0% { background-position: -200% 0 }
+                        100% { background-position: 200% 0 }
+                      }
+                      @keyframes pulseText {
+                        0%, 100% { opacity: 0.6 }
+                        50% { opacity: 1 }
+                      }
+                      .pulse-opacity {
+                        animation: pulseText 2s infinite ease-in-out;
+                      }
+                    `}</style>
+                    <div className="text-[11px] font-figtree italic text-[#5f5f59] mt-2 text-center pulse-opacity leading-tight">
+                      ✦ Claude is crafting your cover...
+                    </div>
+                  </div>
+                ) : (
+                  <LibraryCard
+                    item={{
+                      ...draft,
+                      id: "preview",
+                      created_at: new Date().toISOString(),
+                    }}
+                    width={104}
+                  />
+                )}
+              </div>
+
               <div className="min-w-0 flex-1 space-y-4">
                 <div>
                   <label
@@ -280,6 +355,27 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
                     })}
                   </div>
                 </div>
+
+                {/* Model Selector Dropdown */}
+                <div>
+                  <label
+                    className="mb-1.5 block uppercase text-smoke"
+                    style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em" }}
+                  >
+                    Cover Style Quality
+                  </label>
+                  <select
+                    name="imageModel"
+                    value={imageModel}
+                    onChange={(e) => setImageModel(e.target.value)}
+                    className="w-full rounded-[12px] border border-stone-mist bg-cream-paper px-3 py-2 text-midnight-ink outline-none focus:border-graphite-veil"
+                    style={{ fontSize: 13, fontWeight: 500 }}
+                  >
+                    <option value="flux">Fast (Flux)</option>
+                    <option value="gptimage-large">High Quality (GPT Image)</option>
+                    <option value="ideogram-v4-quality">Artistic (Ideogram)</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -295,7 +391,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={saving || !draft.title.trim()}
+                disabled={saving || generatingCover || !draft.title.trim()}
                 className="inline-flex items-center gap-2 rounded-full bg-midnight-ink px-5 py-2.5 text-white hover:opacity-90 disabled:opacity-50"
                 style={{ fontSize: 14, fontWeight: 600 }}
               >

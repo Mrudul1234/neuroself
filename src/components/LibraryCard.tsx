@@ -84,6 +84,15 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
       ? "translateY(-12px) rotate3d(1, 0.2, 0, 8deg) scale(1.02)"
       : "";
 
+  const [imageError, setImageError] = useState(false);
+
+  // Gradient fallbacks per item type
+  const typeGradients = {
+    paper: "linear-gradient(135deg, #f0ebe0, #e4ddd0)",
+    article: "linear-gradient(135deg, #e8f0eb, #d0e4d8)",
+    video: "linear-gradient(135deg, #e8e0f0, #d0c8e4)",
+  };
+
   const cover = (
     <div
       className="group/cover relative w-full overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_18px_-10px_rgba(26,26,26,0.55),0_2px_3px_-1px_rgba(26,26,26,0.25)] transition-all duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:rotate-[-0.6deg] group-hover:shadow-[0_28px_38px_-16px_rgba(26,26,26,0.55),0_6px_8px_-2px_rgba(26,26,26,0.28)]"
@@ -93,23 +102,40 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
         transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), shadow 0.25s ease-out",
       }}
     >
-      {thumb ? (
+      {regenerating ? (
+        /* Shimmer loading for regeneration */
+        <div
+          className="h-full w-full"
+          style={{
+            background: "linear-gradient(90deg, #e4e4d0 25%, #f0ebe0 50%, #e4e4d0 75%)",
+            backgroundSize: "200% 100%",
+            animation: "shimmer 1.5s infinite",
+          }}
+        />
+      ) : thumb && !imageError ? (
         <img
           src={thumb}
           alt=""
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          onError={() => setImageError(true)}
         />
       ) : (
-        <div className="flex h-full w-full flex-col justify-between bg-gradient-to-b from-cream-paper to-[#f7efd8] px-2 py-2 text-center">
+        /* Render Gradient Fallback */
+        <div
+          className="flex h-full w-full flex-col justify-between px-2 py-3 text-center"
+          style={{ background: typeGradients[item.type] || typeGradients.paper }}
+        >
           <div />
           <span
-            className="font-instrument italic text-midnight-ink line-clamp-5"
+            className="font-instrument italic text-midnight-ink line-clamp-5 px-1"
             style={{ fontSize: 13, lineHeight: 1.08, letterSpacing: "-0.02em" }}
           >
             {item.title}
           </span>
-          <div className="mx-auto h-[2px] w-6 rounded-full bg-midnight-ink/30" />
+          <div className="flex justify-center">
+            <Icon size={16} className="text-[#8a8a80] opacity-80" />
+          </div>
         </div>
       )}
       {/* paper grain */}
@@ -184,10 +210,17 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
     setRegenerating(true);
     toast.loading("Generating cover…", { id: `cover-${item.id}` });
     try {
-      const url = await generateCover(item);
-      setThumb(url);
-      toast.success("Cover ready.", { id: `cover-${item.id}` });
-      onChanged?.();
+      const url = await generateNeuroShelfCover(item.title, item.type, "flux");
+      if (url) {
+        setThumb(url);
+        // Save new thumbnail to database
+        const { supabase } = await import("@/integrations/supabase/client");
+        await supabase.from("library_items").update({ thumbnail_url: url }).eq("id", item.id);
+        toast.success("New cover generated ✓", { id: `cover-${item.id}` });
+        onChanged?.();
+      } else {
+        throw new Error("Generation returned empty URL");
+      }
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Cover generation failed.",
