@@ -103,6 +103,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
     ],
+    scripts: [
+      { src: "https://js.puter.com/v2/", defer: true },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,

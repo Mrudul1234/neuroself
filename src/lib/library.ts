@@ -208,9 +208,18 @@ export async function generateCover(item: LibraryItem): Promise<string> {
 
   // 1. Try Puter.js — free, runs in the browser, no API key needed
   try {
-    const { puter } = await import("@heyputer/puter.js");
+    // Puter is loaded via CDN script tag as a global — wait up to 3s for it
+    const puter = await new Promise<any>((resolve, reject) => {
+      if ((window as any).puter) { resolve((window as any).puter); return; }
+      let waited = 0;
+      const interval = setInterval(() => {
+        waited += 100;
+        if ((window as any).puter) { clearInterval(interval); resolve((window as any).puter); }
+        else if (waited >= 3000) { clearInterval(interval); reject(new Error("Puter.js not loaded")); }
+      }, 100);
+    });
     console.log("[Cover Gen] Trying Puter.js (free AI image generation)…");
-    const img = await (puter.ai as any).txt2img(prompt) as HTMLImageElement;
+    const img = await puter.ai.txt2img(prompt) as HTMLImageElement;
     const dataUrl = await imgElementToDataUrl(img);
     await updateItem(item.id, { thumbnail_url: dataUrl });
     return dataUrl;
