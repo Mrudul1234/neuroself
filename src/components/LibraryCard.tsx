@@ -46,6 +46,10 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
   const [deleting, setDeleting] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [thumb, setThumb] = useState(item.thumbnail_url);
+
+  useEffect(() => {
+    setThumb(item.thumbnail_url);
+  }, [item.thumbnail_url]);
   const [editing, setEditing] = useState(false);
   const router = useRouter();
 
@@ -249,7 +253,7 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
     }
   };
 
-  const showActions = "opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto";
+  const showActions = "opacity-100 md:opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto";
 
   return (
     <div

@@ -109,16 +109,8 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
         .replace(/[-_]+/g, " ")
         .trim();
 
-      // Extract text in background using PyMuPDF server-side
-      let extractedText: string | null = null;
-      try {
-        const res = await extractPdfPyMuPdfServer({ data: { storagePath: path } });
-        if (res && res.fullText) {
-          extractedText = res.fullText;
-        }
-      } catch (extractErr) {
-        console.warn("PyMuPDF pre-extraction failed:", extractErr);
-      }
+      // User requested NOT to extract text/iframe, just open PDF directly, so we skip PyMuPDF extraction
+      const extractedText: string | null = null;
 
       const initialDraft: DraftItem = {
         title: cleanTitle,

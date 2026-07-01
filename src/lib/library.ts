@@ -677,24 +677,18 @@ export async function uploadPdfFile(
   }, 300);
 
   const uploadPromise = async () => {
-    const { signedUrl, path } = await createUploadUrlServer({
-      data: {
-        contentType: file.type || "application/pdf",
-        fileSize: file.size,
-        fileName: file.name,
-      },
-    });
+    const ext = file.name.split(".").pop() || "pdf";
+    const path = `${crypto.randomUUID()}.${ext}`;
+    
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
 
-    const res = await fetch(signedUrl, {
-      method: "PUT",
-      body: file,
-      headers: {
-        "Content-Type": file.type || "application/pdf",
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error(`Upload failed with status ${res.status}`);
+    if (error) {
+      throw new Error(`Upload failed: ${error.message}`);
     }
 
     return { path };
