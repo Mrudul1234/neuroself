@@ -292,8 +292,22 @@ export function BookOverlay({ open, item, onClose }: Props) {
             )}
           </div>
 
-          {/* Floating Bottom Action Bar (Edit | Generate | Close) */}
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[250] flex items-center justify-between gap-3.5 bg-white/95 backdrop-blur-md border border-stone-mist/60 rounded-full py-2.5 px-6 shadow-[0_12px_32px_rgba(0,0,0,0.18)] w-[90%] max-w-[320px] animate-in slide-in-from-bottom-5 duration-300">
+          {/* Floating Bottom Action Bar (View | Edit | Generate | Close) */}
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[250] flex items-center justify-between gap-3 bg-white/95 backdrop-blur-md border border-stone-mist/60 rounded-full py-2.5 px-5 shadow-[0_12px_32px_rgba(0,0,0,0.18)] w-[92%] max-w-[340px] animate-in slide-in-from-bottom-5 duration-300">
+            {/* View Button */}
+            <button
+              type="button"
+              onClick={handleOpenOriginal}
+              className="flex items-center gap-1 text-[11px] font-bold text-[#034f46] active:scale-95 transition-transform"
+              aria-label="View Document"
+            >
+              <BookOpen size={13} />
+              <span>View</span>
+            </button>
+
+            {/* Separator */}
+            <div className="w-[1px] h-4 bg-stone-mist/75" />
+
             {/* Edit Button */}
             <button
               type="button"
