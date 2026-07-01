@@ -1,4 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
+import {
+  insertItemServer,
+  updateItemServer,
+  deleteItemServer,
+  createUploadUrlServer,
+} from "./library.functions";
 
 export type ItemType = "paper" | "article" | "video";
 
@@ -137,12 +143,7 @@ export async function getItem(id: string): Promise<LibraryItem | null> {
 }
 
 export async function insertItem(draft: DraftItem): Promise<LibraryItem> {
-  const { data, error } = await supabase
-    .from("library_items")
-    .insert(draft)
-    .select()
-    .single();
-  if (error) throw error;
+  const data = await insertItemServer({ data: draft });
   return data as LibraryItem;
 }
 
@@ -150,21 +151,21 @@ export async function updateItem(
   id: string,
   patch: Partial<DraftItem>,
 ): Promise<void> {
-  const { error } = await supabase.from("library_items").update(patch).eq("id", id);
-  if (error) throw error;
+  await updateItemServer({ data: { id, patch } });
 }
 
 export async function deleteItem(id: string): Promise<void> {
-  const { error } = await supabase.from("library_items").delete().eq("id", id);
-  if (error) throw error;
+  await deleteItemServer({ data: { id } });
 }
 
 /** Delete both the row and its uploaded PDF (if any). */
 export async function deleteItemWithFile(item: LibraryItem): Promise<void> {
-  if (item.storage_path) {
-    await supabase.storage.from(BUCKET).remove([item.storage_path]);
-  }
-  await deleteItem(item.id);
+  await deleteItemServer({
+    data: {
+      id: item.id,
+      storage_path: item.storage_path || null,
+    },
+  });
 }
 
 export async function generateCover(item: LibraryItem): Promise<string> {
@@ -190,9 +191,6 @@ export async function uploadPdfFile(
   file: File,
   onProgress?: (pct: number) => void,
 ): Promise<{ path: string; size: number }> {
-  const ext = file.name.split(".").pop() || "pdf";
-  const path = `${crypto.randomUUID()}.${ext}`;
-  
   // Emulate progressive loading
   let currentPct = 5;
   onProgress?.(currentPct);
@@ -204,19 +202,37 @@ export async function uploadPdfFile(
     }
   }, 300);
 
-  const uploadPromise = supabase.storage.from(BUCKET).upload(path, file, {
-    contentType: file.type || "application/pdf",
-    upsert: false,
-  });
+  const uploadPromise = async () => {
+    const { signedUrl, path } = await createUploadUrlServer({
+      data: {
+        contentType: file.type || "application/pdf",
+        fileSize: file.size,
+        fileName: file.name,
+      },
+    });
+
+    const res = await fetch(signedUrl, {
+      method: "PUT",
+      body: file,
+      headers: {
+        "Content-Type": file.type || "application/pdf",
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Upload failed with status ${res.status}`);
+    }
+
+    return { path };
+  };
 
   const timeoutPromise = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error("Upload timed out (30s). Please check your internet connection or verify that the 'library-files' storage bucket exists in your Supabase project.")), 30000)
   );
 
   try {
-    const { error } = await Promise.race([uploadPromise, timeoutPromise]);
+    const { path } = await Promise.race([uploadPromise(), timeoutPromise]);
     clearInterval(intervalId);
-    if (error) throw error;
     
     onProgress?.(100);
     return { path, size: file.size };
