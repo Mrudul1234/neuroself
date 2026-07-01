@@ -136,3 +136,71 @@ export const createUploadUrlServer = createServerFn({ method: "POST" })
       path,
     };
   });
+
+export const extractPdfPyMuPdfServer = createServerFn({ method: "POST" })
+  .validator((data) =>
+    z
+      .object({
+        storagePath: z.string().min(1),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data }) => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const { exec } = await import("child_process");
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+
+    // 1. Download file from storage
+    const { data: fileData, error } = await supabaseAdmin.storage
+      .from(BUCKET)
+      .download(data.storagePath);
+    if (error) throw new Error("Supabase download error: " + error.message);
+
+    const arrayBuffer = await fileData.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // 2. Write temp file inside the workspace
+    const tempFileName = `temp-pymupdf-${Date.now()}-${Math.random().toString(36).substring(7)}.pdf`;
+    const tempFilePath = path.join(process.cwd(), tempFileName);
+    await fs.promises.writeFile(tempFilePath, buffer);
+
+    // 3. Execute python PyMuPDF extraction script
+    const scriptPath = path.join(process.cwd(), "src", "lib", "extract_pdf.py");
+    try {
+      const result = await new Promise<any>((resolve, reject) => {
+        exec(
+          `python "${scriptPath}" "${tempFilePath}"`,
+          { maxBuffer: 10 * 1024 * 1024 },
+          (err, stdout, stderr) => {
+            // Delete file immediately
+            fs.unlink(tempFilePath, () => {});
+
+            if (err) {
+              reject(new Error(stderr || err.message));
+              return;
+            }
+            try {
+              const parsed = JSON.parse(stdout);
+              if (parsed.error) {
+                reject(new Error(parsed.error));
+              } else {
+                resolve(parsed);
+              }
+            } catch (jsonErr) {
+              reject(new Error("Failed to parse script output: " + stdout));
+            }
+          }
+        );
+      });
+      return result;
+    } catch (execErr: any) {
+      // Cleanup just in case
+      if (fs.existsSync(tempFilePath)) {
+        fs.unlinkSync(tempFilePath);
+      }
+      throw execErr;
+    }
+  });

@@ -10,6 +10,7 @@ import {
 } from "@/lib/library";
 import { LibraryCard } from "./LibraryCard";
 import { generateNeuroShelfCover } from "@/lib/generateCover";
+import { extractPdfPyMuPdfServer } from "@/lib/library.functions";
 
 interface Props {
   open: boolean;
@@ -108,6 +109,17 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
         .replace(/[-_]+/g, " ")
         .trim();
 
+      // Extract text in background using PyMuPDF server-side
+      let extractedText: string | null = null;
+      try {
+        const res = await extractPdfPyMuPdfServer({ data: { storagePath: path } });
+        if (res && res.fullText) {
+          extractedText = res.fullText;
+        }
+      } catch (extractErr) {
+        console.warn("PyMuPDF pre-extraction failed:", extractErr);
+      }
+
       const initialDraft: DraftItem = {
         title: cleanTitle,
         url: `lovable://library-files/${path}`,
@@ -116,9 +128,10 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
         domain: null,
         storage_path: path,
         file_size: size,
+        extracted_text: extractedText,
       };
       setDraft(initialDraft);
-      toast.success("PDF uploaded — review and save.");
+      toast.success("PDF uploaded and parsed with PyMuPDF — review and save.");
 
       // Trigger cover generation pipeline
       const coverUrl = await generateNeuroShelfCover(cleanTitle, "paper", imageModel);

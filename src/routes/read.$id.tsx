@@ -9,7 +9,7 @@ import {
   Type,
 } from "lucide-react";
 import { getItem, getSignedFileUrl, type LibraryItem } from "@/lib/library";
-import { cacheExtractedText } from "@/lib/library.functions";
+import { cacheExtractedText, extractPdfPyMuPdfServer } from "@/lib/library.functions";
 
 export const Route = createFileRoute("/read/$id")({
   component: ReaderPage,
@@ -75,14 +75,38 @@ function ReaderPage() {
 
         if (isPdf) {
           setStatus("Extracting PDF text…");
-          const { extractPdfText } = await import("@/lib/pdf");
-          const { fullText } = await extractPdfText(sourceUrl, (done, total) => {
-            if (!cancelled) setStatus(`Reading page ${done} of ${total}…`);
-          });
+          let extractedText = "";
+
+          // Prioritize server-side PyMuPDF extraction for stored PDFs
+          if (it.storage_path) {
+            try {
+              setStatus("Extracting PDF using PyMuPDF (server-side)…");
+              const pymupdfResult = await extractPdfPyMuPdfServer({
+                data: { storagePath: it.storage_path },
+              });
+              if (pymupdfResult && pymupdfResult.fullText) {
+                extractedText = pymupdfResult.fullText;
+              }
+            } catch (pymupdfErr) {
+              console.warn("[Reader] PyMuPDF server extraction failed, falling back to pdf.js:", pymupdfErr);
+            }
+          }
+
+          // Fallback to client-side pdf.js extraction
+          if (!extractedText) {
+            setStatus("Extracting PDF text (client-side fallback)…");
+            const { extractPdfText } = await import("@/lib/pdf");
+            const { fullText } = await extractPdfText(sourceUrl, (done, total) => {
+              if (!cancelled) setStatus(`Reading page ${done} of ${total}…`);
+            });
+            extractedText = fullText;
+          }
+
           if (cancelled) return;
-          setText(fullText);
+          setText(extractedText);
+          
           // Cache extracted text server-side so subsequent opens skip pdf.js.
-          cacheExtractedText({ data: { id: it.id, text: fullText } }).catch(
+          cacheExtractedText({ data: { id: it.id, text: extractedText } }).catch(
             (e) => console.warn("Failed to cache extracted text", e),
           );
         } else {
