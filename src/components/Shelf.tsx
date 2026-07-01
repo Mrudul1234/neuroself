@@ -54,13 +54,13 @@ export function Shelf({
       <div className="relative">
         {/* Books */}
         <div
-          className="flex overflow-x-auto gap-4 px-3 pt-2 pb-3 scrollbar-none snap-x snap-mandatory md:grid md:gap-x-4 md:gap-y-5 md:pb-0"
+          className="flex overflow-x-auto gap-4 px-3 pt-2 pb-3 scrollbar-none shelf-scroll-container md:grid md:gap-x-4 md:gap-y-5 md:pb-0 md:px-0"
           style={{
             gridTemplateColumns: `repeat(auto-fill, minmax(${cardWidth}px, 1fr))`,
           }}
         >
           {items.length === 0 ? (
-            <div className="snap-start flex justify-center w-full">
+            <div className="shelf-scroll-item flex justify-center w-full">
               <EmptyCard
                 label={searching ? "No matches" : "Add your first one"}
                 width={cardWidth}
@@ -68,7 +68,7 @@ export function Shelf({
             </div>
           ) : (
             items.map((item) => (
-              <div key={item.id} className="flex shrink-0 justify-center snap-start">
+              <div key={item.id} className="shelf-scroll-item flex shrink-0 justify-center">
                 <LibraryCard item={item} width={cardWidth} onChanged={onChanged} />
               </div>
             ))
@@ -76,8 +76,8 @@ export function Shelf({
         </div>
 
         {/* Mobile horizontal scroll edge fades */}
-        <div className="pointer-events-none absolute bottom-[32px] left-0 top-0 w-6 bg-gradient-to-r from-cream-paper to-transparent md:hidden" />
-        <div className="pointer-events-none absolute bottom-[32px] right-0 top-0 w-6 bg-gradient-to-l from-cream-paper to-transparent md:hidden" />
+        <div className="pointer-events-none absolute bottom-[32px] left-0 top-0 w-8 bg-gradient-to-r from-cream-paper to-transparent md:hidden" />
+        <div className="pointer-events-none absolute bottom-[32px] right-0 top-0 w-8 bg-gradient-to-l from-cream-paper to-transparent md:hidden" />
 
 
         {/* Wooden plank */}

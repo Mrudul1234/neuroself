@@ -19,6 +19,7 @@ import {
   type LibraryItem,
 } from "@/lib/library";
 import { EditItemModal } from "./EditItemModal";
+import { PdfReader } from "./PdfReader";
 
 const iconFor: Record<ItemType, typeof FileText> = {
   paper: FileText,
@@ -45,11 +46,52 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
   const [regenerating, setRegenerating] = useState(false);
   const [thumb, setThumb] = useState(item.thumbnail_url);
   const [editing, setEditing] = useState(false);
+  
+  // Mobile / Interaction Touch states
+  const [touched, setTouched] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const [signedPdfUrl, setSignedPdfUrl] = useState<string | null>(null);
+  const [pdfReaderOpen, setPdfReaderOpen] = useState(false);
+
+  const handleTouchStart = () => {
+    setPressed(true);
+    setTouched(true);
+    // Tactile press feeling: scale down, then spring lift after 80ms
+    setTimeout(() => {
+      setPressed(false);
+    }, 80);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    // Only dismiss actions after 1500ms to allow users time to tap top action bar buttons
+    setTimeout(() => {
+      setTouched(false);
+    }, 1500);
+  };
+
+  const handleMouseDown = () => {
+    setPressed(true);
+  };
+
+  const handleMouseUp = () => {
+    setPressed(false);
+  };
+
+  // Lift tilt configurations matching user spec
+  const cardTransformStyle = pressed
+    ? "scale(0.97)"
+    : touched
+      ? "translateY(-12px) rotate3d(1, 0.2, 0, 8deg) scale(1.02)"
+      : "";
 
   const cover = (
     <div
       className="group/cover relative w-full overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_18px_-10px_rgba(26,26,26,0.55),0_2px_3px_-1px_rgba(26,26,26,0.25)] transition-all duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:rotate-[-0.6deg] group-hover:shadow-[0_28px_38px_-16px_rgba(26,26,26,0.55),0_6px_8px_-2px_rgba(26,26,26,0.28)]"
-      style={{ aspectRatio: "2 / 3" }}
+      style={{
+        aspectRatio: "2 / 3",
+        transform: cardTransformStyle || undefined,
+        transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), shadow 0.25s ease-out",
+      }}
     >
       {thumb ? (
         <img
@@ -108,14 +150,14 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
     setOpening(true);
     try {
       const url = await getSignedFileUrl(item.storage_path!);
-      window.open(url, "_blank", "noopener,noreferrer");
+      setSignedPdfUrl(url);
+      setPdfReaderOpen(true);
     } catch (err) {
       toast.error(
         err instanceof Error ? `Couldn't open PDF: ${err.message}` : "Couldn't open PDF.",
       );
     } finally {
-      // Small delay so the user sees the spinner briefly.
-      setTimeout(() => setOpening(false), 400);
+      setOpening(false);
     }
   };
 
@@ -156,22 +198,32 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
     }
   };
 
+  const showActions = touched ? "opacity-100 pointer-events-auto" : "opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto";
+
   return (
-    <div className="group relative flex shrink-0 flex-col items-center" style={{ width }}>
+    <div
+      className="group relative flex shrink-0 flex-col items-center select-none"
+      style={{ width }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
       {/* Hover/Tap actions */}
-      <div className="pointer-events-none absolute -top-2 -right-1.5 z-10 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto">
+      <div className={`absolute -top-3 -right-2 z-20 flex gap-1.5 p-2 ${showActions}`}>
         <button
           type="button"
           onClick={handleRegenerate}
           disabled={regenerating}
-          className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full bg-white text-midnight-ink shadow-md ring-1 ring-black/10 transition-transform hover:scale-110 hover:bg-amber-pulse disabled:opacity-60"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-midnight-ink shadow-md ring-1 ring-black/10 transition-transform active:scale-95 md:h-7 md:w-7 hover:bg-amber-pulse disabled:opacity-60"
           title="Generate AI cover"
           aria-label="Generate AI cover"
         >
           {regenerating ? (
             <Loader2 size={12} className="animate-spin" />
           ) : (
-            <Sparkles size={12} />
+            <Sparkles size={13} />
           )}
         </button>
         <button
@@ -181,11 +233,11 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
             e.stopPropagation();
             setEditing(true);
           }}
-          className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full bg-white text-midnight-ink shadow-md ring-1 ring-black/10 transition-transform hover:scale-110 hover:bg-cream-paper"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-midnight-ink shadow-md ring-1 ring-black/10 transition-transform active:scale-95 md:h-7 md:w-7 hover:bg-cream-paper"
           title="Edit"
           aria-label="Edit item"
         >
-          <Pencil size={12} />
+          <Pencil size={13} />
         </button>
         <button
           type="button"
@@ -194,11 +246,11 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
             e.stopPropagation();
             setConfirming(true);
           }}
-          className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive shadow-md ring-1 ring-black/10 transition-transform hover:scale-110 hover:bg-destructive hover:text-white"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-destructive shadow-md ring-1 ring-black/10 transition-transform active:scale-95 md:h-7 md:w-7 hover:bg-destructive hover:text-white"
           title="Remove"
           aria-label="Remove item"
         >
-          <X size={12} strokeWidth={2.5} />
+          <X size={14} strokeWidth={2.5} />
         </button>
       </div>
 
@@ -221,6 +273,7 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
           {cover}
         </Link>
       )}
+
       <div
         className="mt-2 line-clamp-2 w-full text-center font-instrument text-midnight-ink transition-colors group-hover:text-deep-forest-teal"
         style={{ fontSize: 13, fontWeight: 400, lineHeight: 1.15, letterSpacing: "-0.01em" }}
@@ -290,6 +343,15 @@ export function LibraryCard({ item, width = 128, onChanged }: CardProps) {
         onClose={() => setEditing(false)}
         onSaved={onChanged}
       />
+
+      {/* Full screen PDF Reader overlay */}
+      {pdfReaderOpen && signedPdfUrl && (
+        <PdfReader
+          url={signedPdfUrl}
+          title={item.title}
+          onClose={() => setPdfReaderOpen(false)}
+        />
+      )}
     </div>
   );
 }
