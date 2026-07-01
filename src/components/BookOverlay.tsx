@@ -210,7 +210,11 @@ export function BookOverlay({ open, item, onClose }: Props) {
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-[200] flex flex-col items-center justify-center p-4 book-reader-overlay transition-opacity duration-500 backdrop-blur-md ${
+      className={`fixed inset-0 z-[200] flex flex-col items-center transition-all duration-300 p-4 ${
+        isMobile 
+          ? "justify-end bg-transparent pointer-events-auto" 
+          : "justify-center backdrop-blur-md bg-black/20 pointer-events-auto"
+      } ${
         closing ? "opacity-0" : "opacity-100"
       }`}
       onClick={(e) => {
@@ -218,23 +222,25 @@ export function BookOverlay({ open, item, onClose }: Props) {
       }}
     >
       {/* --- Ambient rotating gold spiral background --- */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden opacity-20">
-        <svg
-          className="rotating-spiral-glow h-[80vw] w-[80vw] max-w-[800px] max-h-[800px] text-amber-pulse/20"
-          viewBox="0 0 200 200"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="0.5"
-        >
-          <path
-            d="M100,100 C110,90 100,75 85,85 C70,95 75,120 100,115 C130,110 120,70 90,75 C60,80 70,140 115,130 C150,120 135,50 85,65 C35,80 55,160 130,145 C180,135 150,30 75,55 C0,80 30,180 145,160 C210,145 160,10 65,45 C-30,80 10,200 160,175"
-            strokeDasharray="2 3"
-          />
-        </svg>
-      </div>
+      {!isMobile && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden opacity-20">
+          <svg
+            className="rotating-spiral-glow h-[80vw] w-[80vw] max-w-[800px] max-h-[800px] text-amber-pulse/20"
+            viewBox="0 0 200 200"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="0.5"
+          >
+            <path
+              d="M100,100 C110,90 100,75 85,85 C70,95 75,120 100,115 C130,110 120,70 90,75 C60,80 70,140 115,130 C150,120 135,50 85,65 C35,80 55,160 130,145 C180,135 150,30 75,55 C0,80 30,180 145,160 C210,145 160,10 65,45 C-30,80 10,200 160,175"
+              strokeDasharray="2 3"
+            />
+          </svg>
+        </div>
+      )}
 
       {/* --- Tiny Floating Dust Particles --- */}
-      {dustParticles.map((dust) => (
+      {!isMobile && dustParticles.map((dust) => (
         <div
           key={dust.id}
           className="floating-dust animate-pulse"
@@ -247,111 +253,69 @@ export function BookOverlay({ open, item, onClose }: Props) {
         />
       ))}
 
-      {/* --- Mobile Layout --- */}
+      {/* --- Mobile Layout (Action Bar Only) --- */}
       {isMobile && (
         <div
-          className={`relative w-full max-w-sm flex flex-col items-center justify-center gap-8 px-6 transition-all duration-300 ${
-            closing ? "scale-95 opacity-0" : "scale-100 opacity-100"
-          }`}
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[250] flex items-center justify-between gap-3 bg-white/95 backdrop-blur-md border border-stone-mist/60 rounded-full py-2.5 px-5 shadow-[0_12px_32px_rgba(0,0,0,0.18)] w-[92%] max-w-[340px] animate-in slide-in-from-bottom-5 duration-300 pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Centered Premium Cover Image */}
-          <div 
+          {/* View Button */}
+          <button
+            type="button"
             onClick={handleOpenOriginal}
-            className="w-[200px] h-[300px] rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-stone-mist/40 cursor-pointer active:scale-98 transition-transform group relative bg-white"
+            className="flex items-center gap-1 text-[11px] font-bold text-[#034f46] active:scale-95 transition-transform"
+            aria-label="View Document"
           >
-            {localItem.thumbnail_url ? (
-              <img
-                src={localItem.thumbnail_url}
-                alt={localItem.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
+            <BookOpen size={13} />
+            <span>View</span>
+          </button>
+
+          {/* Separator */}
+          <div className="w-[1px] h-4 bg-stone-mist/75" />
+
+          {/* Edit Button */}
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="flex items-center gap-1 text-[11px] font-bold text-midnight-ink active:scale-95 transition-transform"
+            aria-label="Edit Item"
+          >
+            <Pencil size={13} />
+            <span>Edit</span>
+          </button>
+
+          {/* Separator */}
+          <div className="w-[1px] h-4 bg-stone-mist/75" />
+
+          {/* Generate Button */}
+          <button
+            type="button"
+            onClick={handleGenerateSummary}
+            disabled={generatingSummary}
+            className="flex items-center gap-1 text-[11px] font-bold text-midnight-ink active:scale-95 transition-transform disabled:opacity-50"
+            aria-label="Generate AI Summary"
+          >
+            {generatingSummary ? (
+              <Loader2 size={13} className="animate-spin" />
             ) : (
-              <div className="flex h-full w-full flex-col justify-between p-6 bg-[#fcf9f2] text-center">
-                <div />
-                <BookOpen size={36} className="mx-auto text-graphite-veil" />
-                <span className="font-instrument italic text-smoke text-sm">NeuroSelf Lib</span>
-                <div />
-              </div>
+              <Sparkles size={13} />
             )}
-            {/* Tap to open hint overlay */}
-            <div className="absolute inset-0 bg-black/45 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
-              <span className="text-white text-xs font-semibold tracking-wider uppercase">Tap to read</span>
-            </div>
-          </div>
+            <span>Generate</span>
+          </button>
 
-          {/* Title and metadata */}
-          <div className="text-center max-w-[280px]">
-            <h3 className="font-sans font-bold text-white text-lg leading-snug drop-shadow-md">
-              {localItem.title}
-            </h3>
-            {localItem.domain && (
-              <p className="text-[10px] text-white/60 font-bold uppercase tracking-wider mt-1.5 font-sans">
-                {localItem.domain}
-              </p>
-            )}
-          </div>
+          {/* Separator */}
+          <div className="w-[1px] h-4 bg-stone-mist/75" />
 
-          {/* Floating Bottom Action Bar (View | Edit | Generate | Close) */}
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[250] flex items-center justify-between gap-3 bg-white/95 backdrop-blur-md border border-stone-mist/60 rounded-full py-2.5 px-5 shadow-[0_12px_32px_rgba(0,0,0,0.18)] w-[92%] max-w-[340px] animate-in slide-in-from-bottom-5 duration-300">
-            {/* View Button */}
-            <button
-              type="button"
-              onClick={handleOpenOriginal}
-              className="flex items-center gap-1 text-[11px] font-bold text-[#034f46] active:scale-95 transition-transform"
-              aria-label="View Document"
-            >
-              <BookOpen size={13} />
-              <span>View</span>
-            </button>
-
-            {/* Separator */}
-            <div className="w-[1px] h-4 bg-stone-mist/75" />
-
-            {/* Edit Button */}
-            <button
-              type="button"
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-1 text-[11px] font-bold text-midnight-ink active:scale-95 transition-transform"
-              aria-label="Edit Item"
-            >
-              <Pencil size={13} />
-              <span>Edit</span>
-            </button>
-
-            {/* Separator */}
-            <div className="w-[1px] h-4 bg-stone-mist/75" />
-
-            {/* Generate Button */}
-            <button
-              type="button"
-              onClick={handleGenerateSummary}
-              disabled={generatingSummary}
-              className="flex items-center gap-1 text-[11px] font-bold text-midnight-ink active:scale-95 transition-transform disabled:opacity-50"
-              aria-label="Generate AI Summary"
-            >
-              {generatingSummary ? (
-                <Loader2 size={13} className="animate-spin" />
-              ) : (
-                <Sparkles size={13} />
-              )}
-              <span>Generate</span>
-            </button>
-
-            {/* Separator */}
-            <div className="w-[1px] h-4 bg-stone-mist/75" />
-
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={handleClose}
-              className="flex items-center gap-1 text-[11px] font-bold text-red-600 active:scale-95 transition-transform"
-              aria-label="Close Notebook"
-            >
-              <X size={13} strokeWidth={2.5} />
-              <span>Close</span>
-            </button>
-          </div>
+          {/* Close Button */}
+          <button
+            type="button"
+            onClick={handleClose}
+            className="flex items-center gap-1 text-[11px] font-bold text-red-600 active:scale-95 transition-transform"
+            aria-label="Close Notebook"
+          >
+            <X size={13} strokeWidth={2.5} />
+            <span>Close</span>
+          </button>
         </div>
       )}
 
