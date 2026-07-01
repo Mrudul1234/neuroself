@@ -244,7 +244,7 @@ export function PdfReader({ url, title, onClose }: PdfReaderProps) {
         .map(Number)
         .sort((a, b) => b - a);
 
-      // Paragraph grouping: if Y gap between adjacent lines > 15px, start a new paragraph block
+      // Reconstruct lines into paragraphs using sentence-ending punctuation checks + Y coordinate gaps
       let currentParagraph: string[] = [];
       const paragraphs: string[][] = [currentParagraph];
       let lastY: number | null = null;
@@ -255,12 +255,36 @@ export function PdfReader({ url, title, onClose }: PdfReaderProps) {
 
         if (!lineStr) return;
 
-        if (lastY !== null && Math.abs(lastY - y) > 15) {
-          currentParagraph = [];
-          paragraphs.push(currentParagraph);
+        // If this is the very first line, just push it
+        if (lastY === null) {
+          currentParagraph.push(lineStr);
+          lastY = y;
+          return;
         }
 
-        currentParagraph.push(lineStr);
+        const prevLine = currentParagraph[currentParagraph.length - 1] || "";
+        const yGap = Math.abs(lastY - y);
+
+        // Heuristic rules for paragraph division:
+        // 1. If there's a large gap (> 25px), it's a new paragraph.
+        // 2. If the previous line ends with sentence-ending punctuation (., ?, !), AND the gap is standard (> 12px), it's a new paragraph.
+        // 3. Otherwise, if the previous line doesn't end with punctuation or it's a small gap, it's a continuation of the same paragraph!
+        const endsWithPunctuation = /[.!?:"”]$/.test(prevLine);
+        const startsWithCapital = /^[A-Z“"']/.test(lineStr);
+        
+        const shouldStartNew = 
+          yGap > 25 || 
+          (endsWithPunctuation && yGap > 12) || 
+          (endsWithPunctuation && startsWithCapital);
+
+        if (shouldStartNew) {
+          currentParagraph = [lineStr];
+          paragraphs.push(currentParagraph);
+        } else {
+          // Merge line with current paragraph
+          currentParagraph.push(lineStr);
+        }
+        
         lastY = y;
       });
 
@@ -279,7 +303,7 @@ export function PdfReader({ url, title, onClose }: PdfReaderProps) {
         }
       });
 
-      // 2. IMAGE EXTRACTION (Best effort fallback logic)
+      // 2. IMAGE EXTRACTION (Asynchronously resolves unresolved pdf.js image objects)
       const images: string[] = [];
       try {
         const ops = await page.getOperatorList();
@@ -288,18 +312,37 @@ export function PdfReader({ url, title, onClose }: PdfReaderProps) {
         const argsArray = ops.argsArray;
 
         for (let i = 0; i < fnArray.length; i++) {
-          // Check for paintImage operators (e.g. PaintImageXObject = 85 or PaintImage = 82)
           if (fnArray[i] === win.pdfjsLib?.OPS?.paintImageXObject || fnArray[i] === win.pdfjsLib?.OPS?.paintImage) {
             const imgName = argsArray[i][0];
-            const imgObj = page.objs.get(imgName);
-            if (imgObj && imgObj.src) {
-              // Convert canvas-rendered image to blob URL
-              images.push(imgObj.src);
+            
+            // Safe resolver using pdf.js page.objs callback mechanism
+            try {
+              const imgObj = await new Promise<any>((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error("Timeout")), 1000);
+                page.objs.get(imgName, (obj: any) => {
+                  clearTimeout(timeout);
+                  resolve(obj);
+                });
+              });
+              
+              if (imgObj && imgObj.src) {
+                images.push(imgObj.src);
+              }
+            } catch (resolveErr) {
+              // If it timed out or callback failed, attempt synchronous fallback
+              try {
+                const imgObj = page.objs.get(imgName);
+                if (imgObj && imgObj.src) {
+                  images.push(imgObj.src);
+                }
+              } catch (syncErr) {
+                console.warn(`[PdfReader] Page ${pageNum} image ${imgName} skipped:`, syncErr);
+              }
             }
           }
         }
       } catch (imgErr) {
-        console.warn(`[PdfReader] Page ${pageNum} image extraction skipped:`, imgErr);
+        console.warn(`[PdfReader] Page ${pageNum} operator list image extraction skipped:`, imgErr);
       }
 
       return {

@@ -20,6 +20,7 @@ import {
 } from "@/lib/library";
 import { EditItemModal } from "./EditItemModal";
 import { PdfReader } from "./PdfReader";
+import { generateNeuroShelfCover } from "@/lib/generateCover";
 
 const iconFor: Record<ItemType, typeof FileText> = {
   paper: FileText,
