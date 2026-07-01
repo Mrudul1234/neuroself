@@ -103,7 +103,9 @@ export async function detectMetadata(rawUrl: string): Promise<DraftItem> {
       decodeURIComponent(url.split("/").pop() ?? "")
         .replace(/\.pdf.*$/i, "")
         .replace(/[-_]+/g, " ")
-        .trim() || domain || "Untitled PDF";
+        .trim() ||
+      domain ||
+      "Untitled PDF";
     return {
       title: og?.title || fileName,
       url,
@@ -126,7 +128,8 @@ Rules:
 
 Raw Title: "${initialTitle}"`;
 
-    const apiKey = import.meta.env.VITE_POLLINATIONS_API_KEY || "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
+    const apiKey =
+      import.meta.env.VITE_POLLINATIONS_API_KEY || "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (apiKey) {
       headers["Authorization"] = `Bearer ${apiKey}`;
@@ -138,12 +141,12 @@ Raw Title: "${initialTitle}"`;
       body: JSON.stringify({
         messages: [
           { role: "system", content: "You are a professional research librarian." },
-          { role: "user", content: prompt }
+          { role: "user", content: prompt },
         ],
         model: "claude-fast",
         seed: Math.floor(Math.random() * 9999),
-        jsonMode: false
-      })
+        jsonMode: false,
+      }),
     });
 
     if (res.ok) {
@@ -190,10 +193,7 @@ export async function insertItem(draft: DraftItem): Promise<LibraryItem> {
   return data as LibraryItem;
 }
 
-export async function updateItem(
-  id: string,
-  patch: Partial<DraftItem>,
-): Promise<void> {
+export async function updateItem(id: string, patch: Partial<DraftItem>): Promise<void> {
   await updateItemServer({ data: { id, patch } });
 }
 
@@ -221,7 +221,10 @@ async function imgElementToDataUrl(img: HTMLImageElement): Promise<string> {
         canvas.width = img.naturalWidth || 512;
         canvas.height = img.naturalHeight || 512;
         const ctx = canvas.getContext("2d");
-        if (!ctx) { reject(new Error("Canvas context unavailable")); return; }
+        if (!ctx) {
+          reject(new Error("Canvas context unavailable"));
+          return;
+        }
         ctx.drawImage(img, 0, 0);
         resolve(canvas.toDataURL("image/png"));
       } catch (e) {
@@ -246,7 +249,22 @@ const TOPIC_VISUALS: Array<{
   style: string;
 }> = [
   {
-    keywords: ["brain", "neural", "neuron", "neuro", "cortex", "synapse", "cognitive", "cerebral", "hippocampus", "axon", "dendrite", "thalamus", "amygdala", "prefrontal"],
+    keywords: [
+      "brain",
+      "neural",
+      "neuron",
+      "neuro",
+      "cortex",
+      "synapse",
+      "cognitive",
+      "cerebral",
+      "hippocampus",
+      "axon",
+      "dendrite",
+      "thalamus",
+      "amygdala",
+      "prefrontal",
+    ],
     scenes: [
       "a luminous human brain with electric synapses firing between neurons, glowing blue tendrils of light branching through dark space",
       "a cross-section of the brain with labelled regions glowing in distinct colors, like a medical atlas come to life",
@@ -257,7 +275,20 @@ const TOPIC_VISUALS: Array<{
     style: "vintage scientific illustration with dramatic bioluminescent glow",
   },
   {
-    keywords: ["muscle", "motor", "movement", "transcranial", "evoked", "response", "stimulation", "tms", "emg", "electromyography", "reflex", "spinal"],
+    keywords: [
+      "muscle",
+      "motor",
+      "movement",
+      "transcranial",
+      "evoked",
+      "response",
+      "stimulation",
+      "tms",
+      "emg",
+      "electromyography",
+      "reflex",
+      "spinal",
+    ],
     scenes: [
       "detailed anatomical illustration of muscle fibers with electrical impulse waves traveling through them",
       "a glowing human figure mid-movement with motor pathways lit up from brain to muscle",
@@ -268,7 +299,22 @@ const TOPIC_VISUALS: Array<{
     style: "hyper-detailed medical illustration, engraving style",
   },
   {
-    keywords: ["programming", "oop", "object", "software", "code", "algorithm", "data structure", "class", "function", "computer", "python", "java", "c++", "javascript"],
+    keywords: [
+      "programming",
+      "oop",
+      "object",
+      "software",
+      "code",
+      "algorithm",
+      "data structure",
+      "class",
+      "function",
+      "computer",
+      "python",
+      "java",
+      "c++",
+      "javascript",
+    ],
     scenes: [
       "cascading lines of glowing green code forming a 3D geometric structure in a dark terminal",
       "abstract floating geometric shapes connected by light beams — representing objects and inheritance",
@@ -279,7 +325,19 @@ const TOPIC_VISUALS: Array<{
     style: "cyberpunk digital art with glowing circuit aesthetics",
   },
   {
-    keywords: ["machine learning", "deep learning", "artificial intelligence", "ai", "neural network", "model", "training", "gradient", "transformer", "gpt", "llm"],
+    keywords: [
+      "machine learning",
+      "deep learning",
+      "artificial intelligence",
+      "ai",
+      "neural network",
+      "model",
+      "training",
+      "gradient",
+      "transformer",
+      "gpt",
+      "llm",
+    ],
     scenes: [
       "an abstract neural network with hundreds of layers glowing in gradient colors from blue to violet",
       "a robot hand reaching toward a human hand across a bridge of data streams",
@@ -290,7 +348,21 @@ const TOPIC_VISUALS: Array<{
     style: "digital concept art, Syd Mead inspired futurism",
   },
   {
-    keywords: ["physics", "quantum", "relativity", "particle", "wave", "field", "energy", "force", "gravity", "spacetime", "photon", "electron", "atom"],
+    keywords: [
+      "physics",
+      "quantum",
+      "relativity",
+      "particle",
+      "wave",
+      "field",
+      "energy",
+      "force",
+      "gravity",
+      "spacetime",
+      "photon",
+      "electron",
+      "atom",
+    ],
     scenes: [
       "a particle collision visualization with spiraling energy trails in a bubble chamber",
       "spacetime fabric warped around a massive glowing sphere, grid lines bending dramatically",
@@ -301,7 +373,22 @@ const TOPIC_VISUALS: Array<{
     style: "scientific poster art, Feynman diagram aesthetic",
   },
   {
-    keywords: ["biology", "cell", "dna", "genetics", "gene", "protein", "evolution", "organism", "species", "molecular", "biochem", "enzyme", "rna", "chromosome"],
+    keywords: [
+      "biology",
+      "cell",
+      "dna",
+      "genetics",
+      "gene",
+      "protein",
+      "evolution",
+      "organism",
+      "species",
+      "molecular",
+      "biochem",
+      "enzyme",
+      "rna",
+      "chromosome",
+    ],
     scenes: [
       "a glowing double helix of DNA unspooling against a microscopic cellular backdrop",
       "a single cell magnified 10,000x showing organelles as glowing islands in a transparent sea",
@@ -312,7 +399,21 @@ const TOPIC_VISUALS: Array<{
     style: "electron microscope aesthetic meets scientific watercolor",
   },
   {
-    keywords: ["chemistry", "reaction", "molecule", "compound", "element", "periodic", "bond", "organic", "synthesis", "catalyst", "polymer", "acid", "base"],
+    keywords: [
+      "chemistry",
+      "reaction",
+      "molecule",
+      "compound",
+      "element",
+      "periodic",
+      "bond",
+      "organic",
+      "synthesis",
+      "catalyst",
+      "polymer",
+      "acid",
+      "base",
+    ],
     scenes: [
       "glass laboratory flasks glowing with colorful chemical reactions, steam rising dramatically",
       "molecular bond structures floating in space like constellations, each atom a glowing sphere",
@@ -323,7 +424,20 @@ const TOPIC_VISUALS: Array<{
     style: "Art Nouveau scientific poster with ornamental borders",
   },
   {
-    keywords: ["psychology", "mental", "mind", "behavior", "emotion", "therapy", "cognitive", "perception", "memory", "consciousness", "freud", "jung"],
+    keywords: [
+      "psychology",
+      "mental",
+      "mind",
+      "behavior",
+      "emotion",
+      "therapy",
+      "cognitive",
+      "perception",
+      "memory",
+      "consciousness",
+      "freud",
+      "jung",
+    ],
     scenes: [
       "a human silhouette made of layered transparent glass, each layer showing a different emotional state",
       "a surreal landscape inside a human head — mountains of memory, rivers of thought",
@@ -334,7 +448,20 @@ const TOPIC_VISUALS: Array<{
     style: "surrealist collage in the style of René Magritte",
   },
   {
-    keywords: ["mathematics", "math", "calculus", "equation", "theorem", "proof", "geometry", "topology", "algebra", "statistics", "probability", "fractal"],
+    keywords: [
+      "mathematics",
+      "math",
+      "calculus",
+      "equation",
+      "theorem",
+      "proof",
+      "geometry",
+      "topology",
+      "algebra",
+      "statistics",
+      "probability",
+      "fractal",
+    ],
     scenes: [
       "the Mandelbrot fractal zooming infinitely inward, rendered in electric teal and gold",
       "a golden ratio spiral sweeping across the canvas with Fibonacci numbers as architectural arches",
@@ -345,7 +472,19 @@ const TOPIC_VISUALS: Array<{
     style: "Bauhaus geometric design meets mathematical visualization",
   },
   {
-    keywords: ["history", "ancient", "war", "empire", "civilization", "medieval", "century", "historical", "archaeology", "artifact", "monument"],
+    keywords: [
+      "history",
+      "ancient",
+      "war",
+      "empire",
+      "civilization",
+      "medieval",
+      "century",
+      "historical",
+      "archaeology",
+      "artifact",
+      "monument",
+    ],
     scenes: [
       "ancient ruins emerging from mist at dawn, golden light catching weathered stone columns",
       "a map of an ancient civilization with illustrated sea monsters, ships, and trade routes",
@@ -356,7 +495,20 @@ const TOPIC_VISUALS: Array<{
     style: "vintage cartographic illustration with ornate borders",
   },
   {
-    keywords: ["climate", "environment", "ecology", "nature", "earth", "atmosphere", "carbon", "energy", "renewable", "sustainability", "ocean", "forest"],
+    keywords: [
+      "climate",
+      "environment",
+      "ecology",
+      "nature",
+      "earth",
+      "atmosphere",
+      "carbon",
+      "energy",
+      "renewable",
+      "sustainability",
+      "ocean",
+      "forest",
+    ],
     scenes: [
       "the Earth from orbit with swirling storm systems lit by golden sunlight",
       "a split world: one half thriving green forest, the other barren industrial wasteland",
@@ -367,7 +519,20 @@ const TOPIC_VISUALS: Array<{
     style: "watercolor naturalist illustration, Audubon meets data visualization",
   },
   {
-    keywords: ["economics", "market", "finance", "trade", "business", "growth", "inflation", "gdp", "supply", "demand", "investment", "wealth"],
+    keywords: [
+      "economics",
+      "market",
+      "finance",
+      "trade",
+      "business",
+      "growth",
+      "inflation",
+      "gdp",
+      "supply",
+      "demand",
+      "investment",
+      "wealth",
+    ],
     scenes: [
       "stock market data streams rendered as a luminous cityscape at night",
       "abstract flowing curves of supply and demand intersecting like rivers from above",
@@ -378,7 +543,18 @@ const TOPIC_VISUALS: Array<{
     style: "Swiss modernist infographic poster with bold geometric shapes",
   },
   {
-    keywords: ["philosophy", "ethics", "logic", "existence", "consciousness", "truth", "knowledge", "reality", "metaphysics", "epistemology"],
+    keywords: [
+      "philosophy",
+      "ethics",
+      "logic",
+      "existence",
+      "consciousness",
+      "truth",
+      "knowledge",
+      "reality",
+      "metaphysics",
+      "epistemology",
+    ],
     scenes: [
       "a figure standing at the edge of a cliff overlooking an infinite starfield below",
       "Platonic cave with shadows on the wall and a blinding light at the entrance",
@@ -389,7 +565,20 @@ const TOPIC_VISUALS: Array<{
     style: "classical oil painting meets geometric abstraction",
   },
   {
-    keywords: ["astronomy", "space", "cosmos", "galaxy", "star", "planet", "universe", "black hole", "nebula", "orbit", "telescope", "solar"],
+    keywords: [
+      "astronomy",
+      "space",
+      "cosmos",
+      "galaxy",
+      "star",
+      "planet",
+      "universe",
+      "black hole",
+      "nebula",
+      "orbit",
+      "telescope",
+      "solar",
+    ],
     scenes: [
       "a nebula in the shape of a human eye looking back at the viewer, vivid in pinks and blues",
       "a black hole bending spacetime with accretion disk glowing in orange and gold",
@@ -400,7 +589,19 @@ const TOPIC_VISUALS: Array<{
     style: "NASA concept art meets retro space poster illustration",
   },
   {
-    keywords: ["language", "linguistics", "speech", "communication", "text", "writing", "literature", "poetry", "narrative", "grammar", "semantics"],
+    keywords: [
+      "language",
+      "linguistics",
+      "speech",
+      "communication",
+      "text",
+      "writing",
+      "literature",
+      "poetry",
+      "narrative",
+      "grammar",
+      "semantics",
+    ],
     scenes: [
       "thousands of letters from different alphabets swirling together to form a human face",
       "a quill pen writing on parchment with the ink transforming into a landscape",
@@ -411,7 +612,20 @@ const TOPIC_VISUALS: Array<{
     style: "elegant engraving with Art Nouveau letterform decoration",
   },
   {
-    keywords: ["medicine", "health", "disease", "anatomy", "clinical", "patient", "surgery", "diagnosis", "treatment", "pharmaceutical", "virus", "immune"],
+    keywords: [
+      "medicine",
+      "health",
+      "disease",
+      "anatomy",
+      "clinical",
+      "patient",
+      "surgery",
+      "diagnosis",
+      "treatment",
+      "pharmaceutical",
+      "virus",
+      "immune",
+    ],
     scenes: [
       "a transparent human body with glowing organs, arteries as rivers of light",
       "antibodies attacking a virus, rendered as medieval knights fighting abstract monsters",
@@ -498,14 +712,16 @@ function buildCoverPrompt(item: LibraryItem): { prompt: string; seed: number } {
   return { prompt, seed: seed % 99999 };
 }
 
-
 /** Paint a rich generative SVG cover — unique geometry every time */
 function generateClientSvgCover(title: string, type?: string): string {
   let hash = Date.now(); // use time so it differs on each click
   const titleHash = title.split("").reduce((h, c) => (h << 5) - h + c.charCodeAt(0), 0);
   hash ^= titleHash;
 
-  const rand = (n: number) => { hash = (hash * 1664525 + 1013904223) & 0xffffffff; return Math.abs(hash) % n; };
+  const rand = (n: number) => {
+    hash = (hash * 1664525 + 1013904223) & 0xffffffff;
+    return Math.abs(hash) % n;
+  };
   const randF = () => rand(1000) / 1000;
 
   // Pick a color scheme
@@ -525,51 +741,80 @@ function generateClientSvgCover(title: string, type?: string): string {
 
   // Background gradient-like layers
   shapes.push(`<rect width="320" height="480" fill="${s.bg}"/>`);
-  shapes.push(`<rect x="0" y="${rand(240)}" width="320" height="${80 + rand(120)}" fill="${s.mid}" opacity="0.6"/>`);
+  shapes.push(
+    `<rect x="0" y="${rand(240)}" width="320" height="${80 + rand(120)}" fill="${s.mid}" opacity="0.6"/>`,
+  );
 
   // Random geometric elements (circles, rects, lines)
   for (let i = 0; i < 5; i++) {
-    const x = rand(320); const y = rand(480); const r = 20 + rand(80);
-    shapes.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${i % 2 === 0 ? s.accent : s.fg}" opacity="${0.05 + randF() * 0.15}"/>`);
+    const x = rand(320);
+    const y = rand(480);
+    const r = 20 + rand(80);
+    shapes.push(
+      `<circle cx="${x}" cy="${y}" r="${r}" fill="${i % 2 === 0 ? s.accent : s.fg}" opacity="${0.05 + randF() * 0.15}"/>`,
+    );
   }
   for (let i = 0; i < 3; i++) {
-    const x1 = rand(320); const y1 = rand(480);
-    shapes.push(`<line x1="${x1}" y1="${y1}" x2="${rand(320)}" y2="${rand(480)}" stroke="${s.accent}" stroke-width="${1 + rand(3)}" opacity="${0.2 + randF() * 0.4}"/>`);
+    const x1 = rand(320);
+    const y1 = rand(480);
+    shapes.push(
+      `<line x1="${x1}" y1="${y1}" x2="${rand(320)}" y2="${rand(480)}" stroke="${s.accent}" stroke-width="${1 + rand(3)}" opacity="${0.2 + randF() * 0.4}"/>`,
+    );
   }
 
   // Central decorative element based on type
-  const cx = 160; const cy = 200;
+  const cx = 160;
+  const cy = 200;
   if (type === "video") {
-    shapes.push(`<polygon points="${cx},${cy - 50} ${cx + 45},${cy} ${cx},${cy + 50}" fill="${s.accent}" opacity="0.8"/>`);
-    shapes.push(`<circle cx="${cx}" cy="${cy}" r="60" fill="none" stroke="${s.accent}" stroke-width="2" opacity="0.5"/>`);
+    shapes.push(
+      `<polygon points="${cx},${cy - 50} ${cx + 45},${cy} ${cx},${cy + 50}" fill="${s.accent}" opacity="0.8"/>`,
+    );
+    shapes.push(
+      `<circle cx="${cx}" cy="${cy}" r="60" fill="none" stroke="${s.accent}" stroke-width="2" opacity="0.5"/>`,
+    );
   } else if (type === "article") {
-    for (let i = 0; i < 5; i++) shapes.push(`<rect x="${cx - 55}" y="${cy - 40 + i * 16}" width="${30 + rand(80)}" height="4" fill="${s.fg}" opacity="${0.3 + randF() * 0.4}" rx="2"/>`);
+    for (let i = 0; i < 5; i++)
+      shapes.push(
+        `<rect x="${cx - 55}" y="${cy - 40 + i * 16}" width="${30 + rand(80)}" height="4" fill="${s.fg}" opacity="${0.3 + randF() * 0.4}" rx="2"/>`,
+      );
   } else {
     // Paper/book — abstract open book shape
-    shapes.push(`<path d="M${cx - 50},${cy - 40} Q${cx},${cy - 60} ${cx + 50},${cy - 40} L${cx + 50},${cy + 40} Q${cx},${cy + 20} ${cx - 50},${cy + 40} Z" fill="${s.accent}" opacity="0.2"/>`);
-    shapes.push(`<line x1="${cx}" y1="${cy - 50}" x2="${cx}" y2="${cy + 45}" stroke="${s.fg}" stroke-width="1.5" opacity="0.6"/>`);
+    shapes.push(
+      `<path d="M${cx - 50},${cy - 40} Q${cx},${cy - 60} ${cx + 50},${cy - 40} L${cx + 50},${cy + 40} Q${cx},${cy + 20} ${cx - 50},${cy + 40} Z" fill="${s.accent}" opacity="0.2"/>`,
+    );
+    shapes.push(
+      `<line x1="${cx}" y1="${cy - 50}" x2="${cx}" y2="${cy + 45}" stroke="${s.fg}" stroke-width="1.5" opacity="0.6"/>`,
+    );
   }
 
   // Border
-  shapes.push(`<rect x="12" y="12" width="296" height="456" fill="none" stroke="${s.accent}" stroke-width="1" opacity="0.4" rx="2"/>`);
+  shapes.push(
+    `<rect x="12" y="12" width="296" height="456" fill="none" stroke="${s.accent}" stroke-width="1" opacity="0.4" rx="2"/>`,
+  );
 
   // Type label
-  shapes.push(`<text x="160" y="56" font-family="Georgia,serif" font-size="9" font-weight="bold" letter-spacing="0.2em" fill="${s.accent}" text-anchor="middle" opacity="0.9">${(type ?? "item").toUpperCase()}</text>`);
+  shapes.push(
+    `<text x="160" y="56" font-family="Georgia,serif" font-size="9" font-weight="bold" letter-spacing="0.2em" fill="${s.accent}" text-anchor="middle" opacity="0.9">${(type ?? "item").toUpperCase()}</text>`,
+  );
 
   // Title text — wrapped, bottom area
   const words = title.split(" ");
   const lines: string[] = [];
   let cur = "";
   for (const w of words) {
-    if ((cur + " " + w).trim().length > 18) { lines.push(cur.trim()); cur = w; }
-    else cur = (cur + " " + w).trim();
+    if ((cur + " " + w).trim().length > 18) {
+      lines.push(cur.trim());
+      cur = w;
+    } else cur = (cur + " " + w).trim();
   }
   if (cur) lines.push(cur.trim());
   const display = lines.slice(0, 4);
   const startY = 360;
   display.forEach((line, i) => {
-    const esc = line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    shapes.push(`<text x="160" y="${startY + i * 28}" font-family="Georgia,serif" font-size="${i === 0 ? 20 : 17}" fill="${s.fg}" text-anchor="middle" font-weight="${i === 0 ? 'bold' : 'normal'}">${esc}</text>`);
+    const esc = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    shapes.push(
+      `<text x="160" y="${startY + i * 28}" font-family="Georgia,serif" font-size="${i === 0 ? 20 : 17}" fill="${s.fg}" text-anchor="middle" font-weight="${i === 0 ? "bold" : "normal"}">${esc}</text>`,
+    );
   });
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 480" width="320" height="480">${shapes.join("")}</svg>`;
@@ -591,9 +836,14 @@ function loadImageViaTag(src: string): Promise<string> {
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(img, 0, 0);
         resolve(canvas.toDataURL("image/png"));
-      } catch { reject(new Error("Canvas tainted — CORS blocked")); }
+      } catch {
+        reject(new Error("Canvas tainted — CORS blocked"));
+      }
     };
-    img.onerror = () => { clearTimeout(timeout); reject(new Error("Image failed to load")); };
+    img.onerror = () => {
+      clearTimeout(timeout);
+      reject(new Error("Image failed to load"));
+    };
     img.src = src;
   });
 }
@@ -609,14 +859,18 @@ export async function generateCover(item: LibraryItem): Promise<string> {
 
   // 1. Try Puter.js with DALL-E-3 — free with Puter account, high quality
   try {
-    const puter = (window as any).puter;
+    const puter = (
+      window as Window & {
+        puter?: { ai?: { txt2img?: (...args: unknown[]) => Promise<HTMLImageElement> } };
+      }
+    ).puter;
     if (puter?.ai?.txt2img) {
       console.log("[Cover Gen] Trying Puter.js (dall-e-3)…");
-      const img = await puter.ai.txt2img({
+      const img = (await puter.ai.txt2img({
         prompt,
         model: "dall-e-3",
         provider: "openai",
-      }) as HTMLImageElement;
+      })) as HTMLImageElement;
       const dataUrl = await imgElementToDataUrl(img);
       await saveThumbnail(dataUrl);
       return dataUrl;
@@ -625,9 +879,13 @@ export async function generateCover(item: LibraryItem): Promise<string> {
     console.warn("[Cover Gen] Puter.js dall-e-3 failed, trying default:", e);
     // Try Puter with default model
     try {
-      const puter = (window as any).puter;
+      const puter = (
+        window as Window & {
+          puter?: { ai?: { txt2img?: (...args: unknown[]) => Promise<HTMLImageElement> } };
+        }
+      ).puter;
       if (puter?.ai?.txt2img) {
-        const img = await puter.ai.txt2img(prompt) as HTMLImageElement;
+        const img = (await puter.ai.txt2img(prompt)) as HTMLImageElement;
         const dataUrl = await imgElementToDataUrl(img);
         await saveThumbnail(dataUrl);
         return dataUrl;
@@ -659,8 +917,6 @@ export async function generateCover(item: LibraryItem): Promise<string> {
   return dataUrl;
 }
 
-
-
 export async function uploadPdfFile(
   file: File,
   onProgress?: (pct: number) => void,
@@ -668,7 +924,7 @@ export async function uploadPdfFile(
   // Emulate progressive loading
   let currentPct = 5;
   onProgress?.(currentPct);
-  
+
   const intervalId = setInterval(() => {
     if (currentPct < 90) {
       currentPct += Math.max(1, Math.floor((90 - currentPct) / 10)); // slower as it gets closer
@@ -679,13 +935,11 @@ export async function uploadPdfFile(
   const uploadPromise = async () => {
     const ext = file.name.split(".").pop() || "pdf";
     const path = `${crypto.randomUUID()}.${ext}`;
-    
-    const { error } = await supabase.storage
-      .from(BUCKET)
-      .upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
+
+    const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
 
     if (error) {
       throw new Error(`Upload failed: ${error.message}`);
@@ -695,13 +949,21 @@ export async function uploadPdfFile(
   };
 
   const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("Upload timed out (30s). Please check your internet connection or verify that the 'library-files' storage bucket exists in your Supabase project.")), 30000)
+    setTimeout(
+      () =>
+        reject(
+          new Error(
+            "Upload timed out (30s). Please check your internet connection or verify that the 'library-files' storage bucket exists in your Supabase project.",
+          ),
+        ),
+      30000,
+    ),
   );
 
   try {
     const { path } = await Promise.race([uploadPromise(), timeoutPromise]);
     clearInterval(intervalId);
-    
+
     onProgress?.(100);
     return { path, size: file.size };
   } catch (err) {
@@ -710,14 +972,8 @@ export async function uploadPdfFile(
   }
 }
 
-
-export async function getSignedFileUrl(
-  path: string,
-  expiresIn = 60 * 60,
-): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrl(path, expiresIn);
+export async function getSignedFileUrl(path: string, expiresIn = 60 * 60): Promise<string> {
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, expiresIn);
   if (error) throw error;
   return data.signedUrl;
 }

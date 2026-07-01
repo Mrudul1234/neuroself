@@ -30,8 +30,7 @@ function ReaderPage() {
         if (cancelled) return;
         setItem(it);
 
-        const isPdf =
-          /\.pdf(\?|$)/i.test(it.url) || it.type === "paper" || !!it.storage_path;
+        const isPdf = /\.pdf(\?|$)/i.test(it.url) || it.type === "paper" || !!it.storage_path;
 
         if (isPdf) {
           setStatus("Resolving PDF link…");
@@ -51,7 +50,7 @@ function ReaderPage() {
             } else {
               throw new Error("No HTML content returned");
             }
-          } catch (fetchErr: any) {
+          } catch (fetchErr: unknown) {
             console.warn("Failed to fetch proxy HTML, falling back to direct iframe:", fetchErr);
             // Fallback to direct URL if proxy fails
             setPdfUrl(it.url);
@@ -131,11 +130,7 @@ function ReaderPage() {
             )}
           </div>
         ) : pdfUrl ? (
-          <iframe
-            src={pdfUrl}
-            className="h-full w-full border-none bg-white"
-            title={item?.title}
-          />
+          <iframe src={pdfUrl} className="h-full w-full border-none bg-white" title={item?.title} />
         ) : articleHtml ? (
           <iframe
             srcDoc={articleHtml}
@@ -144,7 +139,10 @@ function ReaderPage() {
             sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
           />
         ) : (
-          <div className="flex h-full items-center justify-center opacity-70" style={{ fontSize: 14 }}>
+          <div
+            className="flex h-full items-center justify-center opacity-70"
+            style={{ fontSize: 14 }}
+          >
             Unable to load item.
           </div>
         )}

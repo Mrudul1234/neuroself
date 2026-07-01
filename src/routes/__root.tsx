@@ -79,17 +79,37 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Lovable App" },
-      { name: "description", content: "NeuroShelf is a personal web app for organizing brain and neuroscience research papers, articles, and videos." },
+      {
+        name: "description",
+        content:
+          "NeuroShelf is a personal web app for organizing brain and neuroscience research papers, articles, and videos.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "NeuroShelf is a personal web app for organizing brain and neuroscience research papers, articles, and videos." },
+      {
+        property: "og:description",
+        content:
+          "NeuroShelf is a personal web app for organizing brain and neuroscience research papers, articles, and videos.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Lovable App" },
-      { name: "twitter:description", content: "NeuroShelf is a personal web app for organizing brain and neuroscience research papers, articles, and videos." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f56cb8d7-3c60-406b-b009-fe1fdf3e0947/id-preview-a2b51bdc--852bf464-f142-4c9d-ad8c-ec1895a3d026.lovable.app-1782812549576.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f56cb8d7-3c60-406b-b009-fe1fdf3e0947/id-preview-a2b51bdc--852bf464-f142-4c9d-ad8c-ec1895a3d026.lovable.app-1782812549576.png" },
+      {
+        name: "twitter:description",
+        content:
+          "NeuroShelf is a personal web app for organizing brain and neuroscience research papers, articles, and videos.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f56cb8d7-3c60-406b-b009-fe1fdf3e0947/id-preview-a2b51bdc--852bf464-f142-4c9d-ad8c-ec1895a3d026.lovable.app-1782812549576.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f56cb8d7-3c60-406b-b009-fe1fdf3e0947/id-preview-a2b51bdc--852bf464-f142-4c9d-ad8c-ec1895a3d026.lovable.app-1782812549576.png",
+      },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -157,17 +177,23 @@ function RootComponent() {
               // YouTube cover extraction rule: use oEmbed thumbnail if it exists
               const isYoutube = /youtube\.com|youtu\.be/i.test(item.url);
               let coverUrl: string | null = null;
-              
+
               if (isYoutube) {
                 // Fetch oEmbed or construct standard YT MQ/HQ URL directly
-                const videoId = item.url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i)?.[1];
+                const videoId = item.url.match(
+                  /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i,
+                )?.[1];
                 if (videoId) {
                   coverUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
                 }
               }
 
               if (!coverUrl) {
-                coverUrl = await generateNeuroShelfCover(item.title, item.type as "paper" | "article" | "video", "flux");
+                coverUrl = await generateNeuroShelfCover(
+                  item.title,
+                  item.type as "paper" | "article" | "video",
+                  "flux",
+                );
               }
 
               if (coverUrl) {
@@ -177,7 +203,7 @@ function RootComponent() {
                   .eq("id", item.id);
                 console.log(`[NeuroShelf Cover Sync] Updated cover for: "${item.title}"`);
               }
-            })
+            }),
           );
         }
       } catch (err) {

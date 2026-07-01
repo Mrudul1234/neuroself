@@ -15,9 +15,7 @@ export const cacheExtractedText = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("library_items")
       .update({ extracted_text: data.text })
@@ -41,16 +39,14 @@ export const insertItemServer = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: inserted, error } = await supabaseAdmin
       .from("library_items")
       .insert(data)
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return inserted as any;
+    return inserted as Record<string, unknown>;
   });
 
 export const updateItemServer = createServerFn({ method: "POST" })
@@ -72,9 +68,7 @@ export const updateItemServer = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("library_items")
       .update(data.patch)
@@ -93,16 +87,11 @@ export const deleteItemServer = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.storage_path) {
       await supabaseAdmin.storage.from(BUCKET).remove([data.storage_path]);
     }
-    const { error } = await supabaseAdmin
-      .from("library_items")
-      .delete()
-      .eq("id", data.id);
+    const { error } = await supabaseAdmin.from("library_items").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -118,14 +107,11 @@ export const createUploadUrlServer = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const ext = data.fileName.split(".").pop() || "pdf";
     const path = `${crypto.randomUUID()}.${ext}`;
 
-    const { data: uploadData, error } = await supabaseAdmin
-      .storage
+    const { data: uploadData, error } = await supabaseAdmin.storage
       .from(BUCKET)
       .createSignedUploadUrl(path);
 
@@ -149,9 +135,7 @@ export const extractPdfPyMuPdfServer = createServerFn({ method: "POST" })
     const fs = await import("fs");
     const path = await import("path");
     const { exec } = await import("child_process");
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // 1. Download file from storage
     const { data: fileData, error } = await supabaseAdmin.storage
@@ -170,33 +154,35 @@ export const extractPdfPyMuPdfServer = createServerFn({ method: "POST" })
     // 3. Execute python PyMuPDF extraction script
     const scriptPath = path.join(process.cwd(), "src", "lib", "extract_pdf.py");
     try {
-      const result = await new Promise<any>((resolve, reject) => {
-        exec(
-          `python "${scriptPath}" "${tempFilePath}"`,
-          { maxBuffer: 10 * 1024 * 1024 },
-          (err, stdout, stderr) => {
-            // Delete file immediately
-            fs.unlink(tempFilePath, () => {});
+      const result = await new Promise<{ pages: unknown[]; fullText: string }>(
+        (resolve, reject) => {
+          exec(
+            `python "${scriptPath}" "${tempFilePath}"`,
+            { maxBuffer: 10 * 1024 * 1024 },
+            (err, stdout, stderr) => {
+              // Delete file immediately
+              fs.unlink(tempFilePath, () => {});
 
-            if (err) {
-              reject(new Error(stderr || err.message));
-              return;
-            }
-            try {
-              const parsed = JSON.parse(stdout);
-              if (parsed.error) {
-                reject(new Error(parsed.error));
-              } else {
-                resolve(parsed);
+              if (err) {
+                reject(new Error(stderr || err.message));
+                return;
               }
-            } catch (jsonErr) {
-              reject(new Error("Failed to parse script output: " + stdout));
-            }
-          }
-        );
-      });
+              try {
+                const parsed = JSON.parse(stdout);
+                if (parsed.error) {
+                  reject(new Error(parsed.error));
+                } else {
+                  resolve(parsed);
+                }
+              } catch (jsonErr) {
+                reject(new Error("Failed to parse script output: " + stdout));
+              }
+            },
+          );
+        },
+      );
       return result;
-    } catch (execErr: any) {
+    } catch (execErr: unknown) {
       // Cleanup just in case
       if (fs.existsSync(tempFilePath)) {
         fs.unlinkSync(tempFilePath);
@@ -236,7 +222,7 @@ export const fetchArticleHtml = createServerFn({ method: "POST" })
         html = baseTag + html;
       }
       return { html };
-    } catch (err: any) {
-      throw new Error(err.message || "Failed to fetch article HTML");
+    } catch (err: unknown) {
+      throw new Error(err instanceof Error ? err.message : "Failed to fetch article HTML");
     }
   });

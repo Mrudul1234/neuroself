@@ -40,7 +40,7 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
     if (!title.trim() || !url.trim()) return;
     setSaving(true);
     setError(null);
-    
+
     // Automatically parse domain if URL was edited
     let domain = item.domain;
     try {
@@ -68,20 +68,34 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
     }
   };
 
+  const handleClose = () => {
+    // Always explicitly reset editing state — never close via bubbling
+    onClose();
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4"
       style={{ backgroundColor: "rgba(26,26,26,0.45)" }}
-      onClick={onClose}
+      onClick={(e) => {
+        // Only close if clicking the backdrop itself, not children
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
+      }}
     >
       <div
-        className="relative my-8 w-full max-w-lg rounded-[28px] border border-stone-mist bg-white p-7 shadow-[0_24px_60px_-20px_rgba(26,26,26,0.45)]"
+        className="relative my-8 w-full max-w-lg rounded-[28px] border border-stone-mist bg-white p-7 shadow-[0_24px_60px_-20px_rgba(26,26,26,0.45)] animate-in fade-in zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close button — always 40px, high z-index, absolute positioned */}
         <button
           type="button"
-          onClick={onClose}
-          className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full border border-stone-mist text-midnight-ink transition-colors hover:bg-cream-paper"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleClose();
+          }}
+          className="absolute right-5 top-5 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-stone-mist text-midnight-ink transition-colors hover:bg-cream-paper"
           aria-label="Close"
         >
           <X size={16} />
@@ -164,7 +178,10 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
                       <button
                         key={t.value}
                         type="button"
-                        onClick={() => setType(t.value)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setType(t.value);
+                        }}
                         className={`rounded-full border px-4 py-1.5 ${
                           active
                             ? "border-midnight-ink bg-midnight-ink text-white"
@@ -184,7 +201,10 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClose();
+              }}
               className="rounded-full border border-stone-mist bg-white px-4 py-2.5 text-midnight-ink hover:bg-cream-paper"
               style={{ fontSize: 14, fontWeight: 600 }}
             >

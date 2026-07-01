@@ -17,14 +17,7 @@ interface ShelfProps {
  * - Each row sits on a rendered wooden plank with side supports, plus a
  *   thin reflection strip below.
  */
-export function Shelf({
-  label,
-  items,
-  searching,
-  accent,
-  cardWidth = 118,
-  onChanged,
-}: ShelfProps) {
+export function Shelf({ label, items, searching, accent, cardWidth = 118, onChanged }: ShelfProps) {
   return (
     <section className="space-y-4">
       {/* Row header */}
@@ -79,7 +72,6 @@ export function Shelf({
         <div className="pointer-events-none absolute bottom-[32px] left-0 top-0 w-8 bg-gradient-to-r from-cream-paper to-transparent md:hidden" />
         <div className="pointer-events-none absolute bottom-[32px] right-0 top-0 w-8 bg-gradient-to-l from-cream-paper to-transparent md:hidden" />
 
-
         {/* Wooden plank */}
         <div className="relative mt-1 px-0">
           {/* accent glow on plank */}
@@ -92,8 +84,7 @@ export function Shelf({
             style={{
               background:
                 "linear-gradient(180deg, #b6864e 0%, #a2703b 22%, #8a5a2b 55%, #5d3a1c 100%)",
-              boxShadow:
-                "inset 0 1px 0 rgba(255,220,170,0.55), inset 0 -2px 0 rgba(0,0,0,0.35)",
+              boxShadow: "inset 0 1px 0 rgba(255,220,170,0.55), inset 0 -2px 0 rgba(0,0,0,0.35)",
             }}
           >
             {/* wood grain streaks */}
@@ -109,16 +100,14 @@ export function Shelf({
               className="pointer-events-none absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full opacity-70"
               style={{
                 left: "22%",
-                background:
-                  "radial-gradient(circle, #5a3410 0%, #7a4a1e 55%, transparent 100%)",
+                background: "radial-gradient(circle, #5a3410 0%, #7a4a1e 55%, transparent 100%)",
               }}
             />
             <div
               className="pointer-events-none absolute top-1/2 h-2 w-2 -translate-y-1/2 rounded-full opacity-60"
               style={{
                 right: "31%",
-                background:
-                  "radial-gradient(circle, #4a2a08 0%, #6a3e18 60%, transparent 100%)",
+                background: "radial-gradient(circle, #4a2a08 0%, #6a3e18 60%, transparent 100%)",
               }}
             />
             {/* top glossy highlight */}
@@ -135,8 +124,7 @@ export function Shelf({
           <div
             className="mx-auto h-[6px] w-[96%] rounded-b-[10px] opacity-60"
             style={{
-              background:
-                "linear-gradient(180deg, rgba(93,58,28,0.55) 0%, rgba(93,58,28,0) 100%)",
+              background: "linear-gradient(180deg, rgba(93,58,28,0.55) 0%, rgba(93,58,28,0) 100%)",
               filter: "blur(2px)",
             }}
           />

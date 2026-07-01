@@ -14,14 +14,14 @@ function generateSvgCover(title: string, type?: string, domain?: string): string
     { bg: "#fffaf0", accent: "#a8d5e8", text: "#1a1a1a", secondary: "#5f5f59" },
     { bg: "#fffaf0", accent: "#dcc5f0", text: "#1a1a1a", secondary: "#5f5f59" },
   ];
-  
+
   // Hash title to pick color scheme
   let hash = 0;
   for (let i = 0; i < title.length; i++) {
     hash = title.charCodeAt(i) + ((hash << 5) - hash);
   }
   const scheme = colors[Math.abs(hash) % colors.length];
-  
+
   // Format title: wrap lines (approx 20 chars per line)
   const words = title.split(" ");
   const lines: string[] = [];
@@ -37,10 +37,10 @@ function generateSvgCover(title: string, type?: string, domain?: string): string
   if (currentLine) {
     lines.push(currentLine.trim());
   }
-  
+
   // Keep up to 6 lines
   const displayLines = lines.slice(0, 6);
-  
+
   // Build SVG
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600">
     <!-- Background -->
@@ -68,19 +68,27 @@ function generateSvgCover(title: string, type?: string, domain?: string): string
     </text>
     
     <!-- Domain Tag -->
-    ${domain ? `
+    ${
+      domain
+        ? `
     <text x="200" y="520" font-family="'Instrument Serif', serif" font-size="14" font-style="italic" fill="${scheme.secondary}" text-anchor="middle">
       ${domain}
     </text>
-    ` : ""}
+    `
+        : ""
+    }
     
     <!-- Title Lines (wrapped) -->
     <g transform="translate(0, 180)">
-      ${displayLines.map((line, idx) => `
+      ${displayLines
+        .map(
+          (line, idx) => `
         <text x="200" y="${idx * 40}" font-family="'Fraunces', serif" font-size="28" font-weight="500" fill="${scheme.text}" text-anchor="middle" letter-spacing="-0.02em">
           ${line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}
         </text>
-      `).join("")}
+      `,
+        )
+        .join("")}
     </g>
     
     <!-- Editorial brand mark at the very bottom -->
@@ -144,7 +152,7 @@ export const Route = createFileRoute("/api/generate-cover")({
                     aspectRatio: "2:3",
                   },
                 }),
-              }
+              },
             );
 
             if (!res.ok) {
@@ -158,10 +166,10 @@ export const Route = createFileRoute("/api/generate-cover")({
             const b64 = json.predictions?.[0]?.bytesBase64Encoded;
             if (!b64) throw new Error("No image data returned from Gemini");
 
-            return new Response(
-              JSON.stringify({ dataUrl: `data:image/jpeg;base64,${b64}` }),
-              { status: 200, headers: { "Content-Type": "application/json" } }
-            );
+            return new Response(JSON.stringify({ dataUrl: `data:image/jpeg;base64,${b64}` }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
           } catch (err) {
             console.error("[Cover Gen] Gemini Imagen failed, trying other keys or fallback:", err);
           }
@@ -189,7 +197,11 @@ export const Route = createFileRoute("/api/generate-cover")({
             const rawText = await res.text().catch(() => "");
             if (!res.ok) {
               let parsed: { error?: { message?: string } } = {};
-              try { parsed = JSON.parse(rawText); } catch { /* ignore */ }
+              try {
+                parsed = JSON.parse(rawText);
+              } catch {
+                /* ignore */
+              }
               const msg = parsed.error?.message ?? rawText ?? res.statusText;
               console.error(`[Cover Gen] OpenAI gpt-image-1 failed (${res.status}): ${msg}`);
               throw new Error(`OpenAI API error (${res.status}): ${msg}`);
@@ -201,35 +213,34 @@ export const Route = createFileRoute("/api/generate-cover")({
             const b64 = json.data?.[0]?.b64_json;
             if (!b64) throw new Error("No image data returned from gpt-image-1");
 
-            return new Response(
-              JSON.stringify({ dataUrl: `data:image/png;base64,${b64}` }),
-              { status: 200, headers: { "Content-Type": "application/json" } }
-            );
+            return new Response(JSON.stringify({ dataUrl: `data:image/png;base64,${b64}` }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
           } catch (err) {
-            console.error("[Cover Gen] OpenAI gpt-image-1 failed, trying other keys or fallback:", err);
+            console.error(
+              "[Cover Gen] OpenAI gpt-image-1 failed, trying other keys or fallback:",
+              err,
+            );
           }
         }
-
 
         // 3. Lovable AI Gateway (Nano Banana / Gemini 3.1 Image)
         if (lovableKey) {
           try {
             console.log("[Cover Gen] Using Lovable AI Gateway");
-            const res = await fetch(
-              "https://ai.gateway.lovable.dev/v1/images/generations",
-              {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${lovableKey}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  model: "google/gemini-3.1-flash-image",
-                  messages: [{ role: "user", content: prompt }],
-                  modalities: ["image", "text"],
-                }),
-              }
-            );
+            const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${lovableKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: "google/gemini-3.1-flash-image",
+                messages: [{ role: "user", content: prompt }],
+                modalities: ["image", "text"],
+              }),
+            });
 
             if (!res.ok) {
               const text = await res.text().catch(() => "");
@@ -243,7 +254,7 @@ export const Route = createFileRoute("/api/generate-cover")({
                         ? "AI credits exhausted."
                         : `Cover generation failed: ${text || res.statusText}`,
                 }),
-                { status, headers: { "Content-Type": "application/json" } }
+                { status, headers: { "Content-Type": "application/json" } },
               );
             }
 
@@ -253,22 +264,24 @@ export const Route = createFileRoute("/api/generate-cover")({
             const b64 = json.data?.[0]?.b64_json;
             if (!b64) throw new Error("No image returned from Lovable");
 
-            return new Response(
-              JSON.stringify({ dataUrl: `data:image/png;base64,${b64}` }),
-              { status: 200, headers: { "Content-Type": "application/json" } }
-            );
+            return new Response(JSON.stringify({ dataUrl: `data:image/png;base64,${b64}` }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
           } catch (err) {
             console.error("[Cover Gen] Lovable gateway failed, trying fallback:", err);
           }
         }
 
         // 4. Fallback: Elegant Procedural SVG Cover
-        console.warn("[Cover Gen] No valid API keys configured (LOVABLE_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY). Using procedural fallback.");
-        const svgBase64 = generateSvgCover(title, body.type, body.domain);
-        return new Response(
-          JSON.stringify({ dataUrl: `data:image/svg+xml;base64,${svgBase64}` }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
+        console.warn(
+          "[Cover Gen] No valid API keys configured (LOVABLE_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY). Using procedural fallback.",
         );
+        const svgBase64 = generateSvgCover(title, body.type, body.domain);
+        return new Response(JSON.stringify({ dataUrl: `data:image/svg+xml;base64,${svgBase64}` }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
       },
     },
   },

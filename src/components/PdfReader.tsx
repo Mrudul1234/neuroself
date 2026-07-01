@@ -71,11 +71,7 @@ export function PdfReader({ url, title, onClose }: PdfReaderProps) {
 
       {/* Embedded PDF Viewer */}
       <div className="flex-1 bg-[#e4e4d0]/20">
-        <iframe
-          src={url}
-          className="h-full w-full border-none bg-white"
-          title={title}
-        />
+        <iframe src={url} className="h-full w-full border-none bg-white" title={title} />
       </div>
     </div>
   );

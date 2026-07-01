@@ -26,8 +26,7 @@ export function FolderView({ items }: Props) {
         <div
           className="rounded-[22px] bg-white px-6 pb-6 pt-7 shadow-[0_10px_24px_-14px_rgba(26,26,26,0.35)]"
           style={{
-            clipPath:
-              "polygon(0 24px, 24px 24px, 40px 0, 100% 0, 100% 100%, 0 100%)",
+            clipPath: "polygon(0 24px, 24px 24px, 40px 0, 100% 0, 100% 100%, 0 100%)",
           }}
         >
           <h1
@@ -40,12 +39,12 @@ export function FolderView({ items }: Props) {
               letterSpacing: "-0.03em",
             }}
           >
-            My <span className="not-italic" style={{ fontWeight: 500 }}>Shelf</span>
+            My{" "}
+            <span className="not-italic" style={{ fontWeight: 500 }}>
+              Shelf
+            </span>
           </h1>
-          <p
-            className="mt-2 text-smoke"
-            style={{ fontSize: 13, fontStyle: "italic" }}
-          >
+          <p className="mt-2 text-smoke" style={{ fontSize: 13, fontStyle: "italic" }}>
             (in no particular order)
           </p>
         </div>

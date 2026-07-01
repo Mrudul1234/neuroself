@@ -28,13 +28,19 @@
   --color-amber-pulse: #ffa946;
 
   /* === Typography — families === */
-  --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans:
+    "Figtree", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
   --font-serif: "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-figtree: "Figtree", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-instrument: "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-figtree:
+    "Figtree", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  --font-instrument:
+    "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-fraunces: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   /* Backwards-compat alias for any leftover `font-eb-garamond` classes */
-  --font-eb-garamond: "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-eb-garamond:
+    "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 
   /* === Typography — scale === */
   --text-caption: 14px;
@@ -74,11 +80,11 @@
   --spacing-224: 224px;
 
   /* === Border radius === */
-  --radius-lg: 8px;          /* small tags */
-  --radius-xl: 14px;         /* nav, buttons */
-  --radius-3xl: 32px;        /* cards */
-  --radius-4xl: 40px;        /* images / thumbnails */
-  --radius-full: 1000px;     /* badges, pills */
+  --radius-lg: 8px; /* small tags */
+  --radius-xl: 14px; /* nav, buttons */
+  --radius-3xl: 32px; /* cards */
+  --radius-4xl: 40px; /* images / thumbnails */
+  --radius-full: 1000px; /* badges, pills */
 
   /* === shadcn semantic aliases (keep components functional) === */
   --color-background: var(--color-cream-paper);
@@ -156,16 +162,32 @@
   }
 
   /* Transitions & Interactive defaults */
-  button, a, input, select, textarea {
-    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s ease;
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease,
+      transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+      opacity 0.15s ease;
   }
 
   .btn-hover-transition {
-    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.2s ease;
+    transition:
+      background-color 0.18s ease,
+      color 0.18s ease,
+      border-color 0.18s ease,
+      transform 0.2s ease;
   }
 
   .icon-button-transition {
-    transition: opacity 0.15s ease, transform 0.15s ease, background-color 0.15s ease;
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease,
+      background-color 0.15s ease;
   }
 
   /* Custom horizontal scroll classes */
@@ -186,12 +208,112 @@
   }
 
   @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
   }
   .animate-shimmer {
     background: linear-gradient(90deg, #e4e4d0 25%, #f0ebe0 50%, #e4e4d0 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite linear;
+  }
+
+  /* Rotating Background Gradients */
+  @keyframes slowRotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes slowRotateReverse {
+    0% {
+      transform: rotate(360deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
+  }
+  .spiral-bg {
+    animation: slowRotate 90s linear infinite;
+  }
+
+  /* Content Entry Transition */
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+      filter: blur(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+  .content-card {
+    animation: fadeUp 0.4s ease-out forwards;
+  }
+
+  /* 3D Book-Opening Effect */
+  .book-container {
+    perspective: 1200px;
+  }
+  .book {
+    position: relative;
+    transform-style: preserve-3d;
+    transform-origin: left center;
+    transition:
+      transform 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+      box-shadow 0.6s ease;
+    transform: rotateY(-8deg);
+  }
+  .book.open {
+    transform: rotateY(-35deg) scale(1.02);
+    box-shadow:
+      -15px 20px 30px -10px rgba(0, 0, 0, 0.3),
+      5px 5px 15px -5px rgba(0, 0, 0, 0.1);
+  }
+  .book.closed {
+    transform: rotateY(-8deg);
+  }
+
+  /* Page layers stacked inside the book container */
+  .book-page {
+    position: absolute;
+    top: 1%;
+    bottom: 1%;
+    right: 2px;
+    width: calc(100% - 4px);
+    background-color: #faf8f5;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    transform-origin: left center;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    box-shadow: inset 3px 0 5px rgba(0, 0, 0, 0.05);
+  }
+  .page-1 {
+    z-index: -1;
+  }
+  .page-2 {
+    z-index: -2;
+  }
+  .page-3 {
+    z-index: -3;
+  }
+
+  .book.open .page-1 {
+    transform: rotateY(15deg);
+  }
+  .book.open .page-2 {
+    transform: rotateY(8deg);
+  }
+  .book.open .page-3 {
+    transform: rotateY(3deg);
   }
 }

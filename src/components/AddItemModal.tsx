@@ -65,7 +65,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
     try {
       const result = await detectMetadata(url);
       setDraft(result);
-      
+
       // YT oEmbed Skip check
       const isYoutube = /youtube\.com|youtu\.be/i.test(url);
       if (isYoutube && result.thumbnail_url) {
@@ -77,17 +77,23 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
       // Trigger cover generation pipeline
       const coverUrl = await generateNeuroShelfCover(result.title, result.type, imageModel);
       if (coverUrl) {
-        setDraft(prev => prev ? { ...prev, thumbnail_url: coverUrl } : null);
+        setDraft((prev) => (prev ? { ...prev, thumbnail_url: coverUrl } : null));
       }
     } catch (err) {
       setError("Couldn't read that link. You can still save it manually.");
-      const fallbackDraft: DraftItem = { title: url, url, thumbnail_url: null, type: "article", domain: null };
+      const fallbackDraft: DraftItem = {
+        title: url,
+        url,
+        thumbnail_url: null,
+        type: "article",
+        domain: null,
+      };
       setDraft(fallbackDraft);
-      
+
       // Generate cover for manual input
       const coverUrl = await generateNeuroShelfCover(url, "article", imageModel);
       if (coverUrl) {
-        setDraft(prev => prev ? { ...prev, thumbnail_url: coverUrl } : null);
+        setDraft((prev) => (prev ? { ...prev, thumbnail_url: coverUrl } : null));
       }
     } finally {
       setLoading(false);
@@ -128,7 +134,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
       // Trigger cover generation pipeline
       const coverUrl = await generateNeuroShelfCover(cleanTitle, "paper", imageModel);
       if (coverUrl) {
-        setDraft(prev => prev ? { ...prev, thumbnail_url: coverUrl } : null);
+        setDraft((prev) => (prev ? { ...prev, thumbnail_url: coverUrl } : null));
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed.";
@@ -161,16 +167,21 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4"
       style={{ backgroundColor: "rgba(26,26,26,0.45)" }}
-      onClick={handleClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
     >
       <div
-        className="relative my-8 w-full max-w-lg rounded-[28px] border border-stone-mist bg-white p-7 shadow-[0_24px_60px_-20px_rgba(26,26,26,0.45)]"
+        className="relative my-8 w-full max-w-lg rounded-[28px] border border-stone-mist bg-white p-7 shadow-[0_24px_60px_-20px_rgba(26,26,26,0.45)] animate-in fade-in zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
-          onClick={handleClose}
-          className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full border border-stone-mist text-midnight-ink transition-colors hover:bg-cream-paper"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleClose();
+          }}
+          className="absolute right-5 top-5 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-stone-mist text-midnight-ink transition-colors hover:bg-cream-paper"
           aria-label="Close"
         >
           <X size={16} />
@@ -195,9 +206,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
                 setError(null);
               }}
               className={`rounded-full px-4 py-1.5 transition-colors ${
-                mode === m
-                  ? "bg-midnight-ink text-white"
-                  : "text-smoke hover:text-midnight-ink"
+                mode === m ? "bg-midnight-ink text-white" : "text-smoke hover:text-midnight-ink"
               }`}
               style={{ fontSize: 13, fontWeight: 600 }}
             >

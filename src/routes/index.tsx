@@ -56,9 +56,7 @@ function LibraryPage() {
     const q = search.trim().toLowerCase();
     if (!q) return items;
     return items.filter(
-      (i) =>
-        i.title.toLowerCase().includes(q) ||
-        (i.domain ?? "").toLowerCase().includes(q),
+      (i) => i.title.toLowerCase().includes(q) || (i.domain ?? "").toLowerCase().includes(q),
     );
   }, [items, search]);
 
@@ -69,14 +67,60 @@ function LibraryPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-cream-paper">
-      <div className="mx-auto max-w-[1200px] px-5 pb-36 pt-5 sm:px-8 sm:pt-6">
-        {/* Top utility bar — minimal, like the reference */}
+    <div className="relative min-h-screen overflow-hidden" style={{ backgroundColor: "#f8f9ff" }}>
+      {/* ── Soft-luminous animated background ────────────────────── */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+        {/* Large rotating blue-violet radial — primary atmosphere */}
+        <div
+          className="spiral-bg absolute"
+          style={{
+            width: "120vw",
+            height: "120vw",
+            top: "-30vw",
+            left: "-10vw",
+            background:
+              "radial-gradient(ellipse at center, rgba(180, 200, 255, 0.18) 0%, rgba(200, 180, 255, 0.10) 40%, transparent 70%)",
+            borderRadius: "50%",
+          }}
+        />
+        {/* Secondary warm-amber pulse glow — bottom right */}
+        <div
+          className="absolute"
+          style={{
+            width: "70vw",
+            height: "70vw",
+            bottom: "-15vw",
+            right: "-10vw",
+            background:
+              "radial-gradient(ellipse at center, rgba(255, 169, 70, 0.10) 0%, rgba(240, 178, 101, 0.05) 50%, transparent 70%)",
+            borderRadius: "50%",
+            animation: "slowRotateReverse 120s linear infinite",
+          }}
+        />
+        {/* Soft violet accent — top right */}
+        <div
+          className="absolute"
+          style={{
+            width: "50vw",
+            height: "50vw",
+            top: "5vw",
+            right: "-5vw",
+            background:
+              "radial-gradient(ellipse at center, rgba(180, 140, 255, 0.12) 0%, transparent 70%)",
+            borderRadius: "50%",
+            animation: "slowRotate 150s linear infinite",
+          }}
+        />
+      </div>
+      {/* ──────────────────────────────────────────────────────────── */}
+
+      <div className="relative mx-auto max-w-[1200px] px-5 pb-36 pt-5 sm:px-8 sm:pt-6">
+        {/* Top utility bar */}
         <header className="flex items-center justify-between">
           <button
             type="button"
             onClick={() => setSearchOpen((v) => !v)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-mist bg-white text-midnight-ink transition-colors hover:bg-cream-paper"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-white/70 text-midnight-ink shadow-sm backdrop-blur-sm transition-colors hover:bg-white/90"
             aria-label="Search"
           >
             <Search size={15} />
@@ -85,7 +129,7 @@ function LibraryPage() {
             <button
               type="button"
               onClick={() => setFolderView((v) => !v)}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-mist bg-white text-midnight-ink transition-colors hover:bg-cream-paper md:hidden"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-white/70 text-midnight-ink shadow-sm backdrop-blur-sm transition-colors hover:bg-white/90 md:hidden"
               aria-label="Toggle folder view"
             >
               {folderView ? <LayoutGrid size={15} /> : <FolderClosed size={15} />}
@@ -99,8 +143,8 @@ function LibraryPage() {
           </div>
         ) : (
           <>
-            {/* Title block — small label over giant display serif */}
-            <div className="mt-6 text-center sm:mt-10">
+            {/* Title block */}
+            <div className="mt-6 text-center sm:mt-10 content-card">
               <div
                 className="uppercase text-graphite-veil"
                 style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.22em" }}
@@ -129,7 +173,7 @@ function LibraryPage() {
 
             {/* Collapsible search */}
             {searchOpen && (
-              <div className="mx-auto mt-5 max-w-md">
+              <div className="mx-auto mt-5 max-w-md content-card">
                 <div className="relative w-full">
                   <Search
                     size={14}
@@ -141,7 +185,7 @@ function LibraryPage() {
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search my library"
                     autoFocus
-                    className="w-full rounded-full border border-stone-mist bg-white py-2.5 pl-10 pr-4 text-midnight-ink outline-none placeholder:text-smoke focus:border-graphite-veil"
+                    className="w-full rounded-full border border-white/70 bg-white/80 py-2.5 pl-10 pr-4 text-midnight-ink shadow-sm outline-none placeholder:text-smoke backdrop-blur-sm focus:border-graphite-veil focus:bg-white"
                     style={{ fontSize: 13, fontWeight: 500 }}
                   />
                 </div>
@@ -152,21 +196,26 @@ function LibraryPage() {
             <div className="mt-8 space-y-9 sm:mt-12 sm:space-y-12">
               {loading ? (
                 <div
-                  className="text-center text-smoke"
+                  className="text-center text-smoke content-card"
                   style={{ fontSize: 13, fontWeight: 500 }}
                 >
                   Loading your shelves…
                 </div>
               ) : (
                 shelves.map((s, idx) => (
-                  <Shelf
+                  <div
                     key={s.label}
-                    label={s.label}
-                    items={s.items}
-                    searching={!!search}
-                    accent={ACCENTS[idx % ACCENTS.length]}
-                    onChanged={refresh}
-                  />
+                    className="content-card"
+                    style={{ animationDelay: `${idx * 80}ms` }}
+                  >
+                    <Shelf
+                      label={s.label}
+                      items={s.items}
+                      searching={!!search}
+                      accent={ACCENTS[idx % ACCENTS.length]}
+                      onChanged={refresh}
+                    />
+                  </div>
                 ))
               )}
             </div>
@@ -179,7 +228,7 @@ function LibraryPage() {
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-midnight-ink px-7 py-3.5 text-white shadow-[0_14px_30px_-12px_rgba(26,26,26,0.55)] transition-opacity hover:opacity-90"
+          className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-white/30 bg-midnight-ink/90 px-7 py-3.5 text-white shadow-[0_14px_30px_-12px_rgba(26,26,26,0.55)] backdrop-blur-md transition-opacity hover:opacity-90"
           style={{ fontSize: 15, fontWeight: 600 }}
         >
           <Plus size={15} strokeWidth={2.5} />
@@ -187,11 +236,7 @@ function LibraryPage() {
         </button>
       </div>
 
-      <AddItemModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSaved={refresh}
-      />
+      <AddItemModal open={modalOpen} onClose={() => setModalOpen(false)} onSaved={refresh} />
     </div>
   );
 }
