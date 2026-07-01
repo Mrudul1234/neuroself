@@ -1,5 +1,3 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef } from "react";
 import type { LibraryItem } from "@/lib/library";
 import { EmptyCard, LibraryCard } from "./LibraryCard";
 
@@ -7,171 +5,152 @@ interface ShelfProps {
   label: string;
   items: LibraryItem[];
   searching: boolean;
-  /** Hex color for the acrylic shelf bar */
+  /** Accent hue for row header underline / count chip */
   accent: string;
   cardWidth?: number;
+  onChanged?: () => void;
 }
 
+/**
+ * 3D wooden bookshelf row.
+ * - Books wrap across multiple rows (compact grid on desktop).
+ * - Each row sits on a rendered wooden plank with side supports, plus a
+ *   thin reflection strip below.
+ */
 export function Shelf({
   label,
   items,
   searching,
   accent,
-  cardWidth = 132,
+  cardWidth = 118,
+  onChanged,
 }: ShelfProps) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-
-  const scrollBy = (dir: 1 | -1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * (cardWidth + 16) * 2, behavior: "smooth" });
-  };
-
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       {/* Row header */}
       <div className="flex items-baseline justify-between gap-3 px-1">
-        <div className="flex items-baseline gap-2.5">
+        <div className="flex items-baseline gap-3">
           <span
             className="font-instrument italic text-midnight-ink"
-            style={{ fontSize: 26, lineHeight: 1, letterSpacing: "-0.02em" }}
+            style={{ fontSize: 30, lineHeight: 1, letterSpacing: "-0.02em" }}
           >
             {label}
           </span>
           <span
-            className="text-graphite-veil"
-            style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.14em" }}
+            className="inline-flex h-6 items-center rounded-full px-2 text-midnight-ink/80"
+            style={{
+              background: `${accent}55`,
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.14em",
+            }}
           >
             {String(items.length).padStart(2, "0")}
           </span>
         </div>
-        <div className="flex items-center gap-0.5 text-smoke">
-          <button
-            type="button"
-            onClick={() => scrollBy(-1)}
-            aria-label={`Scroll ${label} left`}
-            className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-mist bg-white/80 transition-colors hover:bg-stone-mist hover:text-midnight-ink"
-          >
-            <ChevronLeft size={13} />
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollBy(1)}
-            aria-label={`Scroll ${label} right`}
-            className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-mist bg-white/80 transition-colors hover:bg-stone-mist hover:text-midnight-ink"
-          >
-            <ChevronRight size={13} />
-          </button>
-        </div>
       </div>
 
-      {/* Cards + acrylic shelf bar */}
+      {/* Books + wooden plank */}
       <div className="relative">
+        {/* Left / right shelf supports (dark wood) */}
         <div
-          ref={scrollerRef}
-          className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          style={{ scrollSnapType: "x proximity" }}
+          className="pointer-events-none absolute -bottom-3 left-0 h-[calc(100%+6px)] w-2 rounded-l-md"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(90,58,32,0) 0%, rgba(90,58,32,0.35) 40%, rgba(60,36,18,0.9) 100%)",
+          }}
+        />
+        <div
+          className="pointer-events-none absolute -bottom-3 right-0 h-[calc(100%+6px)] w-2 rounded-r-md"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(90,58,32,0) 0%, rgba(90,58,32,0.35) 40%, rgba(60,36,18,0.9) 100%)",
+          }}
+        />
+
+        {/* Books */}
+        <div
+          className="grid items-end gap-x-4 gap-y-5 px-3 pt-2"
+          style={{
+            gridTemplateColumns: `repeat(auto-fill, minmax(${cardWidth}px, 1fr))`,
+          }}
         >
-          <div className="flex items-end gap-5 pr-2">
-            {items.length === 0 ? (
-              <EmptyCard
-                label={searching ? "No matches" : "Add your first one"}
-                width={cardWidth}
-              />
-            ) : (
-              items.map((item) => (
-                <div key={item.id} style={{ scrollSnapAlign: "start" }}>
-                  <LibraryCard item={item} width={cardWidth} />
-                </div>
-              ))
-            )}
-          </div>
+          {items.length === 0 ? (
+            <EmptyCard
+              label={searching ? "No matches" : "Add your first one"}
+              width={cardWidth}
+            />
+          ) : (
+            items.map((item) => (
+              <div key={item.id} className="flex justify-center">
+                <LibraryCard item={item} width={cardWidth} onChanged={onChanged} />
+              </div>
+            ))
+          )}
         </div>
 
-        {/* Acrylic shelf bar (cards visually rest on it) */}
-        <div className="relative -mt-2 px-1">
-          {/* ambient color glow under bar */}
+        {/* Wooden plank */}
+        <div className="relative mt-1 px-0">
+          {/* accent glow on plank */}
           <div
-            className="pointer-events-none absolute inset-x-8 -top-2 h-6 rounded-full opacity-60 blur-xl"
+            className="pointer-events-none absolute inset-x-16 -top-2 h-4 rounded-full opacity-70 blur-xl"
             style={{ background: accent }}
           />
           <div
-            className="relative h-[22px] w-full rounded-[12px] shadow-[0_14px_22px_-12px_rgba(26,26,26,0.55),0_2px_3px_rgba(26,26,26,0.18)]"
+            className="relative h-[26px] w-full overflow-hidden rounded-[6px] shadow-[0_18px_28px_-14px_rgba(60,36,18,0.7),0_3px_5px_rgba(0,0,0,0.28)]"
             style={{
-              background: `linear-gradient(180deg, ${tint(accent, 18)} 0%, ${tint(accent, 4)} 35%, ${accent} 60%, ${shade(accent, -22)} 100%)`,
+              background:
+                "linear-gradient(180deg, #b6864e 0%, #a2703b 22%, #8a5a2b 55%, #5d3a1c 100%)",
               boxShadow:
-                "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.18)",
+                "inset 0 1px 0 rgba(255,220,170,0.55), inset 0 -2px 0 rgba(0,0,0,0.35)",
             }}
           >
-            {/* glossy top highlight */}
+            {/* wood grain streaks */}
             <div
-              className="pointer-events-none absolute inset-x-4 top-[3px] h-[4px] rounded-full"
+              className="pointer-events-none absolute inset-0 opacity-40 mix-blend-overlay"
               style={{
-                background:
-                  "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0) 100%)",
+                backgroundImage:
+                  "repeating-linear-gradient(90deg, rgba(60,30,10,0.35) 0 1px, transparent 1px 7px), repeating-linear-gradient(90deg, rgba(255,230,190,0.18) 0 1px, transparent 1px 23px)",
               }}
             />
-            {/* lower translucent rim */}
+            {/* knot */}
             <div
-              className="pointer-events-none absolute inset-x-3 bottom-[3px] h-[2px] rounded-full"
-              style={{ background: "rgba(255,255,255,0.22)" }}
+              className="pointer-events-none absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full opacity-70"
+              style={{
+                left: "22%",
+                background:
+                  "radial-gradient(circle, #5a3410 0%, #7a4a1e 55%, transparent 100%)",
+              }}
             />
-            {/* end bolts */}
-            <Bolt position="left" />
-            <Bolt position="right" />
+            <div
+              className="pointer-events-none absolute top-1/2 h-2 w-2 -translate-y-1/2 rounded-full opacity-60"
+              style={{
+                right: "31%",
+                background:
+                  "radial-gradient(circle, #4a2a08 0%, #6a3e18 60%, transparent 100%)",
+              }}
+            />
+            {/* top glossy highlight */}
+            <div
+              className="pointer-events-none absolute inset-x-4 top-[3px] h-[3px] rounded-full"
+              style={{
+                background:
+                  "linear-gradient(90deg, rgba(255,240,210,0) 0%, rgba(255,240,210,0.7) 50%, rgba(255,240,210,0) 100%)",
+              }}
+            />
           </div>
-          {/* drop shadow beneath shelf */}
+
+          {/* thin front-edge reflection strip */}
           <div
-            className="absolute inset-x-8 -bottom-2 h-3 rounded-full opacity-40 blur-md"
-            style={{ background: "rgba(26,26,26,0.55)" }}
+            className="mx-auto h-[6px] w-[96%] rounded-b-[10px] opacity-60"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(93,58,28,0.55) 0%, rgba(93,58,28,0) 100%)",
+              filter: "blur(2px)",
+            }}
           />
         </div>
       </div>
     </section>
   );
-}
-
-function Bolt({ position }: { position: "left" | "right" }) {
-  return (
-    <div
-      className={`absolute top-1/2 -translate-y-1/2 ${
-        position === "left" ? "left-2.5" : "right-2.5"
-      } flex h-3.5 w-3.5 items-center justify-center rounded-full`}
-      style={{
-        background:
-          "radial-gradient(circle at 30% 28%, #888 0%, #2a2a2a 55%, #050505 100%)",
-        boxShadow:
-          "inset 0 0 0 0.5px rgba(255,255,255,0.35), 0 1px 2px rgba(0,0,0,0.55)",
-      }}
-    >
-      <div
-        className="h-[1.5px] w-2 rounded-full"
-        style={{ background: "rgba(255,255,255,0.35)" }}
-      />
-    </div>
-  );
-}
-
-function shade(hex: string, percent: number): string {
-  return adjust(hex, percent);
-}
-function tint(hex: string, percent: number): string {
-  return adjust(hex, percent);
-}
-function adjust(hex: string, percent: number): string {
-  const m = hex.replace("#", "");
-  const num = parseInt(
-    m.length === 3 ? m.split("").map((c) => c + c).join("") : m,
-    16,
-  );
-  let r = (num >> 16) & 0xff;
-  let g = (num >> 8) & 0xff;
-  let b = num & 0xff;
-  const t = percent / 100;
-  const a = (c: number) =>
-    Math.max(0, Math.min(255, Math.round(c + (t < 0 ? c * t : (255 - c) * t))));
-  r = a(r);
-  g = a(g);
-  b = a(b);
-  return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
