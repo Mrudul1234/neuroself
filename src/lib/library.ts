@@ -194,57 +194,106 @@ async function imgElementToDataUrl(img: HTMLImageElement): Promise<string> {
   });
 }
 
+/** Generate an elegant SVG cover client-side — always works, no API key needed */
+function generateClientSvgCover(title: string, type?: string): string {
+  const palettes = [
+    { bg: "#fffaf0", accent: "#c8a96e", text: "#1c1410" },
+    { bg: "#f0f4ff", accent: "#6e8ec8", text: "#0e1420" },
+    { bg: "#f0fff4", accent: "#6ec8a9", text: "#0e2018" },
+    { bg: "#fff0f4", accent: "#c86e8e", text: "#200e14" },
+  ];
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  const p = palettes[Math.abs(hash) % palettes.length];
+  const words = title.split(" ");
+  const lines: string[] = [];
+  let cur = "";
+  for (const w of words) {
+    if ((cur + " " + w).trim().length > 16) { lines.push(cur.trim()); cur = w; }
+    else cur = (cur + " " + w).trim();
+  }
+  if (cur) lines.push(cur.trim());
+  const display = lines.slice(0, 5);
+  const totalH = display.length * 36;
+  const startY = 280 - totalH / 2;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 480" width="320" height="480">
+    <rect width="320" height="480" fill="${p.bg}"/>
+    <rect x="16" y="16" width="288" height="448" fill="none" stroke="${p.accent}" stroke-width="1.5" opacity="0.5"/>
+    <rect x="22" y="22" width="276" height="436" fill="none" stroke="${p.accent}" stroke-width="0.5" opacity="0.3"/>
+    <circle cx="160" cy="380" r="40" fill="${p.accent}" opacity="0.12"/>
+    <text x="160" y="64" font-family="Georgia,serif" font-size="9" font-weight="bold" letter-spacing="0.18em" fill="${p.accent}" text-anchor="middle" opacity="0.8">${(type ?? "item").toUpperCase()}</text>
+    ${display.map((line, i) => `<text x="160" y="${startY + i * 36}" font-family="Georgia,serif" font-size="22" font-weight="normal" fill="${p.text}" text-anchor="middle">${line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</text>`).join("")}
+    <line x1="140" y1="440" x2="180" y2="440" stroke="${p.accent}" stroke-width="1" opacity="0.4"/>
+  </svg>`;
+  return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+}
+
+/** Load an image via <img> tag (bypasses CORS fetch restrictions) and convert to dataUrl */
+function loadImageViaTag(src: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    const timeout = setTimeout(() => reject(new Error("Image load timeout")), 20000);
+    img.onload = () => {
+      clearTimeout(timeout);
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || 512;
+        canvas.height = img.naturalHeight || 768;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      } catch { reject(new Error("Canvas tainted — CORS blocked")); }
+    };
+    img.onerror = () => { clearTimeout(timeout); reject(new Error("Image failed to load")); };
+    img.src = src;
+  });
+}
+
 export async function generateCover(item: LibraryItem): Promise<string> {
   const kind =
-    item.type === "video"
-      ? "cinematic minimalist thumbnail"
-      : item.type === "article"
-        ? "editorial magazine cover"
-        : "scholarly book cover";
+    item.type === "video" ? "cinematic minimalist thumbnail"
+    : item.type === "article" ? "editorial magazine cover"
+    : "scholarly book cover";
 
-  const prompt = `Design a ${kind} for a saved item titled "${item.title}"${
-    item.domain ? ` from ${item.domain}` : ""
-  }. Vertical 2:3 portrait aspect. Warm cream paper background, soft grain texture, muted amber and deep teal accents, elegant italic serif typography with the title visible and legible. Editorial, tactile, understated, no logos, no watermarks, no photorealistic faces.`;
+  const prompt = `${kind}: "${item.title}"${item.domain ? ` from ${item.domain}` : ""}. Warm cream background, serif typography, editorial minimal style, no text overlays, no logos`;
 
-  // 1. Try Pollinations.ai — 100% free, no API key, no login, no credits needed
+  // 1. Try Pollinations.ai via img tag (free, no API key, bypasses CORS)
   try {
-    console.log("[Cover Gen] Trying Pollinations.ai (free image generation)…");
+    console.log("[Cover Gen] Trying Pollinations.ai…");
     const encodedPrompt = encodeURIComponent(prompt);
     const seed = Math.floor(Math.random() * 99999);
-    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=768&seed=${seed}&nologo=true&model=flux`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Pollinations HTTP ${res.status}`);
-    const blob = await res.blob();
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=768&seed=${seed}&nologo=true&model=flux`;
+    const dataUrl = await loadImageViaTag(pollinationsUrl);
     await updateItem(item.id, { thumbnail_url: dataUrl });
     return dataUrl;
-  } catch (pollinationsErr) {
-    console.warn("[Cover Gen] Pollinations.ai failed, falling back to server API:", pollinationsErr);
+  } catch (e) {
+    console.warn("[Cover Gen] Pollinations failed:", e);
   }
 
-  // 2. Fall back to server-side API (OpenAI / Gemini / Lovable / SVG)
-  const res = await fetch("/api/generate-cover", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      title: item.title,
-      type: item.type,
-      domain: item.domain,
-    }),
-  });
-  if (!res.ok) {
-    const j = (await res.json().catch(() => ({}))) as { error?: string };
-    throw new Error(j.error ?? `Cover generation failed (${res.status})`);
+  // 2. Try server-side API (OpenAI / Gemini / Lovable)
+  try {
+    const res = await fetch("/api/generate-cover", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: item.title, type: item.type, domain: item.domain }),
+    });
+    if (res.ok) {
+      const { dataUrl } = (await res.json()) as { dataUrl: string };
+      await updateItem(item.id, { thumbnail_url: dataUrl });
+      return dataUrl;
+    }
+  } catch (e) {
+    console.warn("[Cover Gen] Server API failed:", e);
   }
-  const { dataUrl } = (await res.json()) as { dataUrl: string };
+
+  // 3. Guaranteed client-side SVG fallback — always works
+  console.log("[Cover Gen] Using client-side SVG fallback");
+  const dataUrl = generateClientSvgCover(item.title, item.type);
   await updateItem(item.id, { thumbnail_url: dataUrl });
   return dataUrl;
 }
+
 
 
 export async function uploadPdfFile(
