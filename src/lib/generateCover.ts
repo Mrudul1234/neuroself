@@ -118,13 +118,11 @@ export const generateNeuroShelfCover = async (
 ): Promise<string | null> => {
   const cleanedTitle = cleanTitleForPrompt(title);
 
-  // 5 premium artistic styles, rotated randomly
+  // 3 premium aesthetic styles (simple, not fancy), rotated randomly
   const STYLES = [
-    "Pop Art / Warhol Silk Screen style, with flat vibrant solid colors, bold outlines, and clean simple aesthetic",
-    "Papercut Layered Paper Art style, with clean cut paper edges, 3D layered drop shadows, simple shapes, and tactile papercraft aesthetic",
-    "Vintage Comic Halftone Sticker style, retro comic book print, bold ink outlines, halftone dot shading, die-cut white sticker border, simple graphic design",
-    "Diffusion Tensor Imaging (DTI) Fiber Tractography style, minimalist glowing abstract neural tracts and pathways, neon lines on a clean simple background, scientific art",
-    "Fauvist Expressionist Oil Painting style, bold expressive brushstrokes, vibrant non-naturalistic flat color fields, simple shapes, high contrast artistic aesthetic"
+    "Aesthetic simple Papercut Layered Paper Art style, with clean cut paper edges, 3D layered drop shadows, simple shapes, and tactile papercraft aesthetic, not fancy",
+    "Aesthetic simple Vintage Comic Halftone Sticker style, retro comic book print, bold ink outlines, halftone dot shading, die-cut white sticker border, simple graphic design, not fancy",
+    "Aesthetic simple Diffusion Tensor Imaging (DTI) Fiber Tractography style, minimalist glowing abstract neural tracts and pathways, neon lines on a clean simple background, scientific art, not fancy"
   ];
   const selectedStyle = STYLES[Math.floor(Math.random() * STYLES.length)];
 

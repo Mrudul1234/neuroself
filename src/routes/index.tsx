@@ -5,6 +5,7 @@ import { AddItemModal } from "@/components/AddItemModal";
 import { FolderView } from "@/components/FolderView";
 import { Shelf } from "@/components/Shelf";
 import { listItems, type LibraryItem } from "@/lib/library";
+import { motion } from "framer-motion";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -257,10 +258,12 @@ function LibraryPage() {
                 </div>
               ) : (
                 shelves.map((s, idx) => (
-                  <div
+                  <motion.div
                     key={s.label}
+                    initial={{ opacity: 0, y: 25 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: idx * 0.12, ease: "easeOut" }}
                     className="content-card"
-                    style={{ animationDelay: `${idx * 80}ms` }}
                   >
                     <Shelf
                       label={s.label}
@@ -269,7 +272,7 @@ function LibraryPage() {
                       accent={ACCENTS[idx % ACCENTS.length]}
                       onChanged={refresh}
                     />
-                  </div>
+                  </motion.div>
                 ))
               )}
             </div>

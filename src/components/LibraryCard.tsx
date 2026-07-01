@@ -23,6 +23,7 @@ import {
 } from "@/lib/library";
 import { EditItemModal } from "./EditItemModal";
 import { BookOverlay } from "./BookOverlay";
+import { motion } from "framer-motion";
 import { VideoModal } from "./VideoModal";
 import { generateNeuroShelfCover } from "@/lib/generateCover";
 
@@ -159,56 +160,11 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly }: CardP
   }, [isSelected]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    const target = e.target as HTMLElement;
-    // Do not intercept events meant for action controls or open modals
-    if (
-      target.closest("button") ||
-      target.closest(".mobile-glass-capsule") ||
-      target.closest(".book-reader-overlay")
-    ) {
-      return;
-    }
-    const t = e.touches[0];
-    setTouchStartPos({ x: t.clientX, y: t.clientY, time: Date.now() });
-    setPressed(true);
-    setTimeout(() => {
-      setPressed(false);
-    }, 80);
+    // Standard browser tap/click handlers are preferred to prevent open lag
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    const target = e.target as HTMLElement;
-    if (
-      target.closest("button") ||
-      target.closest(".mobile-glass-capsule") ||
-      target.closest(".book-reader-overlay")
-    ) {
-      return;
-    }
-    const t = e.changedTouches[0];
-    const diffX = Math.abs(t.clientX - touchStartPos.x);
-    const diffY = Math.abs(t.clientY - touchStartPos.y);
-    const diffTime = Date.now() - touchStartPos.time;
-
-    // Only detect tap if touch didn't slide and was short
-    if (diffX < 8 && diffY < 8 && diffTime < 300) {
-      if (isEditing || confirming) return;
-
-      // On mobile: first tap selects card (shows action bar), second opens overlay
-      if (!isSelected) {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsSelected(true);
-      } else {
-        e.preventDefault();
-        e.stopPropagation();
-        if (isVideo) {
-          setIsVideoOpen(true);
-        } else {
-          setIsBookOpen(true);
-        }
-      }
-    }
+    // Standard browser tap/click handlers are preferred to prevent open lag
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -470,8 +426,11 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly }: CardP
   }
 
   return (
-    <div
+    <motion.div
       ref={cardRef}
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
       className="group relative flex shrink-0 flex-col items-center select-none overflow-visible"
       style={{ width }}
       onTouchStart={handleTouchStart}
@@ -533,11 +492,6 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly }: CardP
           e.stopPropagation();
           if (isEditing || confirming) return;
 
-          // On mobile, taps are handled in touchEnd; only handle click on desktop
-          if (window.innerWidth < 768) {
-            return;
-          }
-
           if (isVideo) {
             setIsVideoOpen(true);
           } else {
@@ -574,103 +528,50 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly }: CardP
         })()}
       </div>
 
-      {/* Mobile Floating Action Bar Capsule — Portaled to Body to prevent layout overlap */}
-      {isSelected &&
-        createPortal(
-          <div
-            className="fixed bottom-6 left-1/2 z-[200] -translate-x-1/2 flex items-center gap-3 rounded-full border border-white/20 bg-white/80 px-4 py-2.5 shadow-[0_12px_40px_-8px_rgba(26,26,26,0.35)] backdrop-blur-xl md:hidden mobile-glass-capsule"
-            onClick={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
-          >
-            {/* Generate cover */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                void handleRegenerate(e);
-              }}
-              disabled={regenerating}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-pulse/10 text-amber-pulse transition-all active:scale-90 disabled:opacity-50 cursor-pointer"
-              aria-label="Generate AI cover"
-              title="Generate cover"
-            >
-              {regenerating ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Sparkles size={16} />
-              )}
-            </button>
+      {/* Mobile Card Actions (Generate Cover, Edit, Remove) */}
+      <div className="flex md:hidden items-center justify-center gap-4 mt-3 z-20">
+        {/* Generate cover */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            void handleRegenerate(e);
+          }}
+          disabled={regenerating}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-pulse/10 text-amber-pulse shadow-sm border border-amber-pulse/20 active:scale-90 disabled:opacity-50 cursor-pointer"
+          aria-label="Generate cover"
+        >
+          {regenerating ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+        </button>
 
-            {/* Open overlay */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsSelected(false);
-                if (isVideo) {
-                  setIsVideoOpen(true);
-                } else {
-                  setIsBookOpen(true);
-                }
-              }}
-              className="flex h-11 items-center gap-1.5 rounded-full bg-[#034f46] px-5 text-white transition-all active:scale-95 cursor-pointer shadow-md"
-              aria-label="Open item"
-              style={{ fontSize: 13, fontWeight: 600 }}
-            >
-              <BookOpen size={14} />
-              Open
-            </button>
+        {/* Edit */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsEditing(true);
+          }}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-[#fbf9f6] text-midnight-ink shadow-sm border border-stone-mist active:scale-90 cursor-pointer"
+          aria-label="Edit item"
+        >
+          <Pencil size={13} />
+        </button>
 
-            {/* Edit */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsSelected(false);
-                setIsEditing(true);
-              }}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-stone-mist/50 text-midnight-ink transition-all active:scale-90 cursor-pointer"
-              aria-label="Edit item"
-              title="Edit"
-            >
-              <Pencil size={16} />
-            </button>
-
-            {/* Delete */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsSelected(false);
-                setConfirming(true);
-              }}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-destructive border border-red-100 transition-all active:scale-90 cursor-pointer"
-              aria-label="Remove item"
-              title="Remove"
-            >
-              <Trash2 size={16} />
-            </button>
-
-            {/* Close bar */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsSelected(false);
-              }}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-stone-mist/30 text-smoke transition-all active:scale-90 cursor-pointer"
-              aria-label="Close"
-              title="Close"
-            >
-              <X size={16} strokeWidth={2.5} />
-            </button>
-          </div>,
-          document.body,
-        )}
+        {/* Remove */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setConfirming(true);
+          }}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-destructive shadow-sm border border-red-100 active:scale-90 cursor-pointer"
+          aria-label="Remove item"
+        >
+          <X size={13} strokeWidth={2.5} />
+        </button>
+      </div>
 
       {/* Confirm delete dialog — Portaled to body */}
       {confirming &&
@@ -734,7 +635,7 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly }: CardP
 
       {/* Premium Video Modal */}
       <VideoModal open={isVideoOpen} item={item} onClose={() => setIsVideoOpen(false)} />
-    </div>
+    </motion.div>
   );
 }
 
