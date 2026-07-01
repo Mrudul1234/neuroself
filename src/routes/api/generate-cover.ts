@@ -167,10 +167,10 @@ export const Route = createFileRoute("/api/generate-cover")({
           }
         }
 
-        // 2. OpenAI DALL-E 3
+        // 2. OpenAI gpt-image-1
         if (openaiKey) {
           try {
-            console.log("[Cover Gen] Using OpenAI DALL-E 3 API");
+            console.log("[Cover Gen] Using OpenAI gpt-image-1 API");
             const res = await fetch("https://api.openai.com/v1/images/generations", {
               method: "POST",
               headers: {
@@ -178,33 +178,38 @@ export const Route = createFileRoute("/api/generate-cover")({
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                model: "dall-e-3",
+                model: "gpt-image-1",
                 prompt,
                 n: 1,
-                size: "1024x1024",
-                response_format: "b64_json",
+                size: "1024x1536",
+                output_format: "png",
               }),
             });
 
+            const rawText = await res.text().catch(() => "");
             if (!res.ok) {
-              const text = await res.text().catch(() => "");
-              throw new Error(`OpenAI API error: ${text || res.statusText}`);
+              let parsed: { error?: { message?: string } } = {};
+              try { parsed = JSON.parse(rawText); } catch { /* ignore */ }
+              const msg = parsed.error?.message ?? rawText ?? res.statusText;
+              console.error(`[Cover Gen] OpenAI gpt-image-1 failed (${res.status}): ${msg}`);
+              throw new Error(`OpenAI API error (${res.status}): ${msg}`);
             }
 
-            const json = (await res.json()) as {
-              data?: Array<{ b64_json?: string }>;
+            const json = JSON.parse(rawText) as {
+              data?: Array<{ b64_json?: string; url?: string }>;
             };
             const b64 = json.data?.[0]?.b64_json;
-            if (!b64) throw new Error("No image data returned from DALL-E 3");
+            if (!b64) throw new Error("No image data returned from gpt-image-1");
 
             return new Response(
               JSON.stringify({ dataUrl: `data:image/png;base64,${b64}` }),
               { status: 200, headers: { "Content-Type": "application/json" } }
             );
           } catch (err) {
-            console.error("[Cover Gen] OpenAI DALL-E 3 failed, trying other keys or fallback:", err);
+            console.error("[Cover Gen] OpenAI gpt-image-1 failed, trying other keys or fallback:", err);
           }
         }
+
 
         // 3. Lovable AI Gateway (Nano Banana / Gemini 3.1 Image)
         if (lovableKey) {
