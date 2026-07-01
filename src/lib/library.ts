@@ -206,25 +206,25 @@ export async function generateCover(item: LibraryItem): Promise<string> {
     item.domain ? ` from ${item.domain}` : ""
   }. Vertical 2:3 portrait aspect. Warm cream paper background, soft grain texture, muted amber and deep teal accents, elegant italic serif typography with the title visible and legible. Editorial, tactile, understated, no logos, no watermarks, no photorealistic faces.`;
 
-  // 1. Try Puter.js — free, runs in the browser, no API key needed
+  // 1. Try Pollinations.ai — 100% free, no API key, no login, no credits needed
   try {
-    // Puter is loaded via CDN script tag as a global — wait up to 3s for it
-    const puter = await new Promise<any>((resolve, reject) => {
-      if ((window as any).puter) { resolve((window as any).puter); return; }
-      let waited = 0;
-      const interval = setInterval(() => {
-        waited += 100;
-        if ((window as any).puter) { clearInterval(interval); resolve((window as any).puter); }
-        else if (waited >= 3000) { clearInterval(interval); reject(new Error("Puter.js not loaded")); }
-      }, 100);
+    console.log("[Cover Gen] Trying Pollinations.ai (free image generation)…");
+    const encodedPrompt = encodeURIComponent(prompt);
+    const seed = Math.floor(Math.random() * 99999);
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=768&seed=${seed}&nologo=true&model=flux`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Pollinations HTTP ${res.status}`);
+    const blob = await res.blob();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
     });
-    console.log("[Cover Gen] Trying Puter.js (free AI image generation)…");
-    const img = await puter.ai.txt2img(prompt) as HTMLImageElement;
-    const dataUrl = await imgElementToDataUrl(img);
     await updateItem(item.id, { thumbnail_url: dataUrl });
     return dataUrl;
-  } catch (puterErr) {
-    console.warn("[Cover Gen] Puter.js failed, falling back to server API:", puterErr);
+  } catch (pollinationsErr) {
+    console.warn("[Cover Gen] Pollinations.ai failed, falling back to server API:", pollinationsErr);
   }
 
   // 2. Fall back to server-side API (OpenAI / Gemini / Lovable / SVG)
