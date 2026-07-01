@@ -856,4 +856,39 @@
   .bg-float-wave {
     animation: floatWave 18s infinite ease-in-out;
   }
+
+  /* --- 3D BOOK HOVER ANIMATION FOR LIBRARY CARDS (LAPTOP) --- */
+  @media (min-width: 768px) {
+    .book-container-3d {
+      perspective: 1000px;
+    }
+
+    .book-container-3d:hover .book-3d {
+      transform: rotate3d(0, 1, 0, 28deg) translateY(-4px) !important;
+      box-shadow: 15px 15px 25px rgba(0, 0, 0, 0.22) !important;
+    }
+
+    /* Transition for smooth return */
+    .book-3d {
+      transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.5s ease-out;
+    }
+  }
+
+  /* --- MOBILE SCALE-IN AND ENTRANCE EFFECT --- */
+  @keyframes notebookEntranceMobile {
+    from {
+      opacity: 0;
+      transform: scale(0.65) rotateY(25deg) translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) rotateY(0deg) translateY(0);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .notebook-wrapper {
+      animation: notebookEntranceMobile 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }
+  }
 }

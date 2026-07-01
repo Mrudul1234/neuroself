@@ -302,83 +302,113 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly }: CardP
     </div>
   ) : (
     /* --- ARTICLE & PAPER 3D BOOK LAYOUT --- */
-    <div className="book-container group/cover relative w-full">
-      <div
-        className={`book ${isSelected ? "open" : "closed"} relative w-full overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_18px_-10px_rgba(26,26,26,0.55),0_2px_3px_-1px_rgba(26,26,26,0.25)] transition-all duration-300 ease-out will-change-transform group-hover/cover:-translate-y-2 group-hover/cover:rotate-[-0.6deg] group-hover/cover:shadow-[0_28px_38px_-16px_rgba(26,26,26,0.55),0_6px_8px_-2px_rgba(26,26,26,0.28)]`}
-        style={{
-          aspectRatio: "2 / 3",
-          transform: cardTransformStyle || undefined,
-          transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), shadow 0.25s ease-out",
-        }}
-      >
-        {/* 8 fanning pages stacked */}
-        <div className="book-page page-1" />
-        <div className="book-page page-2" />
-        <div className="book-page page-3" />
-        <div className="book-page page-4" />
-        <div className="book-page page-5" />
-        <div className="book-page page-6" />
-        <div className="book-page page-7" />
-        <div className="book-page page-8" />
+    (() => {
+      const W = width;
+      const H = Math.round(width * 1.5);
+      const spineW = Math.round(width * 0.12);
 
-        {regenerating ? (
-          <div className="h-full w-full animate-shimmer" />
-        ) : thumb && !imageError ? (
-          <>
-            <img
-              src={thumb}
-              alt=""
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-500 group-hover/cover:scale-[1.04]"
-              style={{
-                objectPosition: "center top",
-                opacity: imageLoaded ? 1 : 0,
-                position: imageLoaded ? "static" : "absolute",
-                pointerEvents: imageLoaded ? "auto" : "none",
-              }}
-              onLoad={() => setImageLoaded(true)}
-              onError={() => setImageError(true)}
-            />
-            {!imageLoaded && <div className="h-full w-full animate-shimmer" />}
-          </>
-        ) : (
+      return (
+        <div 
+          className="book-container-3d group/cover relative overflow-visible"
+          style={{ width: W, height: H, perspective: "1000px" }}
+        >
           <div
-            className="flex h-full w-full flex-col justify-between px-2 py-3 text-center"
-            style={{ background: typeGradients[item.type] || typeGradients.paper }}
+            className="book-3d relative w-full h-full rounded-[4px] transition-all duration-500 ease-out"
+            style={{
+              transformStyle: "preserve-3d",
+              boxShadow: "5px 5px 12px rgba(0,0,0,0.25)",
+            }}
           >
-            <div />
-            <span className="font-instrument italic text-midnight-ink line-clamp-5 px-1 text-[13px] leading-tight">
-              {item.title}
-            </span>
-            <div className="flex justify-center">
-              <Icon size={16} className="text-[#8a8a80] opacity-80" />
+            {/* Front side of the book (translated forward by spineW/2) */}
+            <div
+              className="absolute inset-0 rounded-[4px] overflow-hidden border border-black/10 bg-white"
+              style={{
+                transform: `translate3d(0, 0, ${spineW / 2}px)`,
+                transformStyle: "preserve-3d",
+                zIndex: 10,
+              }}
+            >
+              {regenerating ? (
+                <div className="h-full w-full animate-shimmer" />
+              ) : thumb && !imageError ? (
+                <>
+                  <img
+                    src={thumb}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover/cover:scale-[1.04]"
+                    style={{
+                      objectPosition: "center top",
+                      opacity: imageLoaded ? 1 : 0,
+                      position: imageLoaded ? "static" : "absolute",
+                      pointerEvents: imageLoaded ? "auto" : "none",
+                    }}
+                    onLoad={() => setImageLoaded(true)}
+                    onError={() => setImageError(true)}
+                  />
+                  {!imageLoaded && <div className="h-full w-full animate-shimmer" />}
+                </>
+              ) : (
+                <div
+                  className="flex h-full w-full flex-col justify-between px-2 py-3 text-center"
+                  style={{ background: typeGradients[item.type] || typeGradients.paper }}
+                >
+                  <div />
+                  <span className="font-instrument italic text-midnight-ink line-clamp-5 px-1 text-[13px] leading-tight">
+                    {item.title}
+                  </span>
+                  <div className="flex justify-center">
+                    <Icon size={16} className="text-[#8a8a80] opacity-80" />
+                  </div>
+                </div>
+              )}
+
+              {/* Paper grain */}
+              <div
+                className="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-multiply"
+                style={{
+                  backgroundImage: "radial-gradient(rgba(0,0,0,0.7) 1px, transparent 1px)",
+                  backgroundSize: "3px 3px",
+                }}
+              />
+              {/* Type pill */}
+              <div className="absolute left-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white/95 shadow-sm">
+                <Icon size={8} className="text-midnight-ink" strokeWidth={2.5} />
+              </div>
+              {/* Glossy sheen */}
+              <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover/cover:translate-x-full" />
+            </div>
+
+            {/* Left side of the book (spine) */}
+            <div
+              className="absolute top-0 bottom-0 overflow-hidden flex items-center justify-center border-y border-black/10"
+              style={{
+                width: spineW,
+                left: -spineW / 2,
+                backgroundColor: "#e2dee4",
+                transform: "rotate3d(0, 1, 0, -90deg)",
+                zIndex: 5,
+                boxShadow: "inset -2px 0 5px rgba(0,0,0,0.15)",
+              }}
+            >
+              <div
+                className="whitespace-nowrap font-instrument text-midnight-ink opacity-70 font-medium select-none"
+                style={{
+                  transform: "rotate(90deg)",
+                  fontSize: Math.max(8, Math.round(W * 0.075)),
+                  width: H,
+                  textAlign: "center",
+                }}
+              >
+                <span>{item.domain || "Archive"}</span>
+                <span className="mx-2 opacity-40">|</span>
+                <span className="font-semibold truncate max-w-[80px] inline-block align-middle">{item.title}</span>
+              </div>
             </div>
           </div>
-        )}
-
-        {/* Paper grain */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-multiply"
-          style={{
-            backgroundImage: "radial-gradient(rgba(0,0,0,0.7) 1px, transparent 1px)",
-            backgroundSize: "3px 3px",
-          }}
-        />
-        {/* Type pill */}
-        <div className="absolute left-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white/95 shadow-sm">
-          <Icon size={8} className="text-midnight-ink" strokeWidth={2.5} />
         </div>
-        {/* Spine shadow */}
-        <div
-          className="pointer-events-none absolute inset-y-0 left-0 w-[3px]"
-          style={{
-            background: "linear-gradient(to right, rgba(0,0,0,0.32), rgba(0,0,0,0))",
-          }}
-        />
-        {/* Glossy sheen */}
-        <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover/cover:translate-x-full" />
-      </div>
-    </div>
+      );
+    })()
   );
 
   const handleDelete = async () => {

@@ -129,10 +129,13 @@ export const generateNeuroShelfCover = async (
   const selectedStyle = STYLES[Math.floor(Math.random() * STYLES.length)];
 
   // The new Pollinations AI Master Prompt
-  const imagePrompt = `Create a gorgeous, simple, and highly aesthetic neuroscience illustration using the following style: ${selectedStyle}
+  const imagePrompt = `Create a gorgeous, simple, and highly aesthetic conceptual graphic illustration directly representing the subject matter: "${cleanedTitle}".
 
-Subject:
-${cleanedTitle}
+Visual Style:
+Use the following artistic style: ${selectedStyle}. Keep it simple and clean.
+
+Core Mandate:
+The illustration must be directly relevant and metaphorically representative of the title: "${cleanedTitle}". Translate the cognitive, neurological, or scientific concepts in the title into a clear, single symbolic visual.
 
 Requirements:
 No humans.

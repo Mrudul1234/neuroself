@@ -56,32 +56,42 @@ export function BookOverlay({ open, item, onClose }: Props) {
       setLocalItem(item);
       setShouldRender(true);
       setClosing(false);
-      setStage("closed");
       setShowReader(false);
       setPdfUrl(null);
       setAiSummary(item.extracted_text || null);
       document.body.style.overflow = "hidden";
 
-      // 3D Animation Sequence Timings
-      const t1 = setTimeout(() => setStage("lifting"), 50);
-      const t2 = setTimeout(() => setStage("cover-open"), 300);
-      const t3 = setTimeout(() => setStage("page-turn"), 900);
-      const t4 = setTimeout(() => {
+      const isMobile = window.innerWidth < 768;
+      if (!isMobile) {
+        // Laptop/Desktop: Skip the 3D opening animations and show settled state instantly
         setStage("settled");
-        // Automatically open reader for papers/stored PDFs
         const isPdf = /\.pdf(\?|$)/i.test(item.url) || item.type === "paper" || !!item.storage_path;
         if (isPdf) {
           setShowReader(true);
           void loadReaderContent(item);
         }
-      }, 1500);
+      } else {
+        // Mobile: Run the 3D flipping animation sequence
+        setStage("closed");
+        const t1 = setTimeout(() => setStage("lifting"), 50);
+        const t2 = setTimeout(() => setStage("cover-open"), 300);
+        const t3 = setTimeout(() => setStage("page-turn"), 900);
+        const t4 = setTimeout(() => {
+          setStage("settled");
+          const isPdf = /\.pdf(\?|$)/i.test(item.url) || item.type === "paper" || !!item.storage_path;
+          if (isPdf) {
+            setShowReader(true);
+            void loadReaderContent(item);
+          }
+        }, 1500);
 
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        clearTimeout(t3);
-        clearTimeout(t4);
-      };
+        return () => {
+          clearTimeout(t1);
+          clearTimeout(t2);
+          clearTimeout(t3);
+          clearTimeout(t4);
+        };
+      }
     }
   }, [open, item]);
 
@@ -210,6 +220,11 @@ export function BookOverlay({ open, item, onClose }: Props) {
 
   // Determine stage-dependent 3D transforms for the notebook container
   const getContainerStyle = () => {
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    if (!isMobile) {
+      return { transform: "none" };
+    }
+
     switch (stage) {
       case "closed":
         return { transform: "rotateX(20deg) rotateY(0deg) scale(0.7) translateZ(-100px)" };
@@ -540,20 +555,22 @@ export function BookOverlay({ open, item, onClose }: Props) {
               <span>Edit</span>
             </button>
 
-            {/* Read PDF / Reader Toggle Button */}
-            <button
-              type="button"
-              onClick={handleToggleReader}
-              className={`flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-bold transition-all cursor-pointer min-h-[48px] ${
-                showReader
-                  ? "bg-midnight-ink border-midnight-ink text-white"
-                  : "border-stone-mist bg-white text-midnight-ink hover:bg-cream-paper"
-              }`}
-              aria-label="Toggle Reader View"
-            >
-              <BookOpen size={14} />
-              <span>{showReader ? "View Abstract" : "Read PDF"}</span>
-            </button>
+            {/* Read PDF / Reader Toggle Button - Desktop Only */}
+            <div className="hidden md:block">
+              <button
+                type="button"
+                onClick={handleToggleReader}
+                className={`flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-bold transition-all cursor-pointer min-h-[48px] ${
+                  showReader
+                    ? "bg-midnight-ink border-midnight-ink text-white"
+                    : "border-stone-mist bg-white text-midnight-ink hover:bg-cream-paper"
+                }`}
+                aria-label="Toggle Reader View"
+              >
+                <BookOpen size={14} />
+                <span>{showReader ? "View Abstract" : "Read PDF"}</span>
+              </button>
+            </div>
 
             {/* Generate Summary Button */}
             <button
@@ -571,17 +588,19 @@ export function BookOverlay({ open, item, onClose }: Props) {
               <span>Generate Summary</span>
             </button>
 
-            {/* Save Summary Button (Active when summary is generated but not identical to localItem text) */}
-            <button
-              type="button"
-              onClick={handleSaveSummary}
-              disabled={!aiSummary || aiSummary === localItem.extracted_text}
-              className="flex items-center gap-1.5 rounded-full bg-midnight-ink text-white px-3.5 py-2 text-xs font-bold disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer min-h-[48px]"
-              aria-label="Save Summary to Notebook"
-            >
-              <Save size={14} />
-              <span>Save</span>
-            </button>
+            {/* Save Summary Button - Desktop Only */}
+            <div className="hidden md:block">
+              <button
+                type="button"
+                onClick={handleSaveSummary}
+                disabled={!aiSummary || aiSummary === localItem.extracted_text}
+                className="flex items-center gap-1.5 rounded-full bg-midnight-ink text-white px-3.5 py-2 text-xs font-bold disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer min-h-[48px]"
+                aria-label="Save Summary to Notebook"
+              >
+                <Save size={14} />
+                <span>Save</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
