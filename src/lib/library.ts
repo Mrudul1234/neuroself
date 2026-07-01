@@ -256,43 +256,47 @@ export async function generateCover(item: LibraryItem): Promise<string> {
     : item.type === "article" ? "editorial magazine cover"
     : "scholarly book cover";
 
-  const prompt = `${kind}: "${item.title}"${item.domain ? ` from ${item.domain}` : ""}. Warm cream background, serif typography, editorial minimal style, no text overlays, no logos`;
+  const prompt = `${kind}: "${item.title}"${item.domain ? ` from ${item.domain}` : ""}. Warm cream paper background, elegant serif typography, editorial minimal style, no logos`;
 
-  // 1. Try Pollinations.ai via img tag (free, no API key, bypasses CORS)
+  /** Save thumbnail directly with anon client (no service role key needed) */
+  const saveThumbnail = async (dataUrl: string) => {
+    await supabase.from("library_items").update({ thumbnail_url: dataUrl }).eq("id", item.id);
+  };
+
+  // 1. Try Puter.js — free, user signs in once via popup
+  try {
+    const puter = (window as any).puter;
+    if (puter?.ai?.txt2img) {
+      console.log("[Cover Gen] Trying Puter.js…");
+      const img = await puter.ai.txt2img(prompt) as HTMLImageElement;
+      const dataUrl = await imgElementToDataUrl(img);
+      await saveThumbnail(dataUrl);
+      return dataUrl;
+    }
+  } catch (e) {
+    console.warn("[Cover Gen] Puter.js failed:", e);
+  }
+
+  // 2. Try Pollinations.ai via img tag (free, no API key)
   try {
     console.log("[Cover Gen] Trying Pollinations.ai…");
     const encodedPrompt = encodeURIComponent(prompt);
     const seed = Math.floor(Math.random() * 99999);
     const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=768&seed=${seed}&nologo=true&model=flux`;
     const dataUrl = await loadImageViaTag(pollinationsUrl);
-    await updateItem(item.id, { thumbnail_url: dataUrl });
+    await saveThumbnail(dataUrl);
     return dataUrl;
   } catch (e) {
     console.warn("[Cover Gen] Pollinations failed:", e);
   }
 
-  // 2. Try server-side API (OpenAI / Gemini / Lovable)
-  try {
-    const res = await fetch("/api/generate-cover", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: item.title, type: item.type, domain: item.domain }),
-    });
-    if (res.ok) {
-      const { dataUrl } = (await res.json()) as { dataUrl: string };
-      await updateItem(item.id, { thumbnail_url: dataUrl });
-      return dataUrl;
-    }
-  } catch (e) {
-    console.warn("[Cover Gen] Server API failed:", e);
-  }
-
-  // 3. Guaranteed client-side SVG fallback — always works
-  console.log("[Cover Gen] Using client-side SVG fallback");
+  // 3. Guaranteed client-side SVG — always works, no API key needed
+  console.log("[Cover Gen] Using SVG fallback");
   const dataUrl = generateClientSvgCover(item.title, item.type);
-  await updateItem(item.id, { thumbnail_url: dataUrl });
+  await saveThumbnail(dataUrl);
   return dataUrl;
 }
+
 
 
 
