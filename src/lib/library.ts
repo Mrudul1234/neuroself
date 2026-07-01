@@ -114,8 +114,44 @@ export async function detectMetadata(rawUrl: string): Promise<DraftItem> {
   }
 
   const og = await fetchOpenGraph(url);
+  let initialTitle = og?.title || domain || url;
+
+  // Use Claude via Pollinations Text API to craft a short, elegant, academic title based on initial scrapped title
+  try {
+    const prompt = `You are a professional research librarian. Clean and refine the following web title/header into a beautiful, short, readable content title suitable for an academic library database. Focus on capturing the core subject (especially neuroscience, brain structure, medicine, or technology). 
+Rules:
+- Remove site names, prefixes (e.g. "YouTube", "Medium", blog author names).
+- Maximum 8-12 words, elegant phrasing.
+- Return ONLY the clean, refined title. No explanation, no quotes.
+
+Raw Title: "${initialTitle}"`;
+
+    const res = await fetch("https://text.pollinations.ai/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [
+          { role: "system", content: "You are a professional research librarian." },
+          { role: "user", content: prompt }
+        ],
+        model: "claude-fast",
+        seed: Math.floor(Math.random() * 9999),
+        jsonMode: false
+      })
+    });
+
+    if (res.ok) {
+      const refinedTitle = await res.text();
+      if (refinedTitle && refinedTitle.trim()) {
+        initialTitle = refinedTitle.trim().replace(/^"|"$/g, "");
+      }
+    }
+  } catch (err) {
+    console.warn("[detectMetadata] Title refinement with Claude skipped:", err);
+  }
+
   return {
-    title: og?.title || domain || url,
+    title: initialTitle,
     url,
     thumbnail_url: og?.thumbnail_url ?? null,
     type: "article",
