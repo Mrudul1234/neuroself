@@ -194,83 +194,267 @@ async function imgElementToDataUrl(img: HTMLImageElement): Promise<string> {
   });
 }
 
-// ─── Art style pools for maximum variety ───────────────────────────────────
-const ART_STYLES = [
-  "risograph print, grainy texture, two-tone color separation",
-  "vintage scientific illustration, ink etching, cross-hatching, aged paper",
-  "Japanese woodblock print style, flat bold colors, decorative borders",
-  "Swiss modernist poster, geometric shapes, bold typography, clean layout",
-  "watercolor wash, loose brushstrokes, soft bleeding edges, textured paper",
-  "Soviet constructivist poster, diagonal composition, stark contrast",
-  "Art Nouveau ornamental, flowing organic lines, botanical motifs",
-  "brutalist editorial, raw concrete textures, high contrast black and white",
-  "Dutch Golden Age still life lighting, dramatic chiaroscuro, rich oil texture",
-  "Memphis design movement, geometric patterns, pastel and neon colors",
-  "Penguin Books vintage cover style, horizontal bands, bold typography",
-  "Bauhaus design, primary colors, geometric abstraction, industrial feel",
-  "linocut print, rough edges, bold black lines, limited color palette",
-  "surrealist collage, dreamlike imagery, unexpected juxtapositions",
-  "cyberpunk neon aesthetic, glowing lines, dark background, electric colors",
+// ─── Topic → Visual concept mapping ────────────────────────────────────────
+// Each entry: keywords that trigger it → [visual scene, color mood, art style]
+const TOPIC_VISUALS: Array<{
+  keywords: string[];
+  scenes: string[];
+  mood: string;
+  style: string;
+}> = [
+  {
+    keywords: ["brain", "neural", "neuron", "neuro", "cortex", "synapse", "cognitive", "cerebral", "hippocampus", "axon", "dendrite", "thalamus", "amygdala", "prefrontal"],
+    scenes: [
+      "a luminous human brain with electric synapses firing between neurons, glowing blue tendrils of light branching through dark space",
+      "a cross-section of the brain with labelled regions glowing in distinct colors, like a medical atlas come to life",
+      "an abstract neural network of pulsing nodes and silver threads forming the shape of a human head",
+      "neurons firing in slow-motion, each synapse sparking gold against deep indigo darkness",
+    ],
+    mood: "deep indigo and electric cyan, luminous and scientific",
+    style: "vintage scientific illustration with dramatic bioluminescent glow",
+  },
+  {
+    keywords: ["muscle", "motor", "movement", "transcranial", "evoked", "response", "stimulation", "tms", "emg", "electromyography", "reflex", "spinal"],
+    scenes: [
+      "detailed anatomical illustration of muscle fibers with electrical impulse waves traveling through them",
+      "a glowing human figure mid-movement with motor pathways lit up from brain to muscle",
+      "electromagnetic waves emanating from a coil above a cross-section of the skull into brain tissue below",
+      "a network of spinal cord neurons connecting to muscle bundles, rendered as flowing light threads",
+    ],
+    mood: "warm amber and gold on deep charcoal, clinical yet dramatic",
+    style: "hyper-detailed medical illustration, engraving style",
+  },
+  {
+    keywords: ["programming", "oop", "object", "software", "code", "algorithm", "data structure", "class", "function", "computer", "python", "java", "c++", "javascript"],
+    scenes: [
+      "cascading lines of glowing green code forming a 3D geometric structure in a dark terminal",
+      "abstract floating geometric shapes connected by light beams — representing objects and inheritance",
+      "a circuit board landscape stretching to the horizon, with logic gates as glowing monuments",
+      "binary streams flowing like rivers through a neon-lit digital cityscape",
+    ],
+    mood: "neon green on pitch black, matrix-inspired",
+    style: "cyberpunk digital art with glowing circuit aesthetics",
+  },
+  {
+    keywords: ["machine learning", "deep learning", "artificial intelligence", "ai", "neural network", "model", "training", "gradient", "transformer", "gpt", "llm"],
+    scenes: [
+      "an abstract neural network with hundreds of layers glowing in gradient colors from blue to violet",
+      "a robot hand reaching toward a human hand across a bridge of data streams",
+      "a vast digital space filled with floating geometric shapes being sorted by invisible forces",
+      "a glowing matrix of connections forming the shape of a human brain mid-computation",
+    ],
+    mood: "electric purple and cerulean blue, futuristic",
+    style: "digital concept art, Syd Mead inspired futurism",
+  },
+  {
+    keywords: ["physics", "quantum", "relativity", "particle", "wave", "field", "energy", "force", "gravity", "spacetime", "photon", "electron", "atom"],
+    scenes: [
+      "a particle collision visualization with spiraling energy trails in a bubble chamber",
+      "spacetime fabric warped around a massive glowing sphere, grid lines bending dramatically",
+      "an atom with electron clouds as soft glowing halos orbiting a luminous nucleus",
+      "quantum wave interference patterns radiating outward in concentric rings of color",
+    ],
+    mood: "cosmic midnight blue with atomic gold, vast and precise",
+    style: "scientific poster art, Feynman diagram aesthetic",
+  },
+  {
+    keywords: ["biology", "cell", "dna", "genetics", "gene", "protein", "evolution", "organism", "species", "molecular", "biochem", "enzyme", "rna", "chromosome"],
+    scenes: [
+      "a glowing double helix of DNA unspooling against a microscopic cellular backdrop",
+      "a single cell magnified 10,000x showing organelles as glowing islands in a transparent sea",
+      "an evolutionary tree branching outward from a central glowing node into species silhouettes",
+      "proteins folding in space like origami, each crease glowing with molecular energy",
+    ],
+    mood: "bioluminescent green and cobalt on deep black",
+    style: "electron microscope aesthetic meets scientific watercolor",
+  },
+  {
+    keywords: ["chemistry", "reaction", "molecule", "compound", "element", "periodic", "bond", "organic", "synthesis", "catalyst", "polymer", "acid", "base"],
+    scenes: [
+      "glass laboratory flasks glowing with colorful chemical reactions, steam rising dramatically",
+      "molecular bond structures floating in space like constellations, each atom a glowing sphere",
+      "a periodic table element magnified into an abstract landscape of protons and neutrons",
+      "chemical reaction equations transforming into flowing rivers of colored liquid light",
+    ],
+    mood: "vivid jewel tones — emerald, amber, crimson — on dark slate",
+    style: "Art Nouveau scientific poster with ornamental borders",
+  },
+  {
+    keywords: ["psychology", "mental", "mind", "behavior", "emotion", "therapy", "cognitive", "perception", "memory", "consciousness", "freud", "jung"],
+    scenes: [
+      "a human silhouette made of layered transparent glass, each layer showing a different emotional state",
+      "a surreal landscape inside a human head — mountains of memory, rivers of thought",
+      "a Rorschach-inspired symmetrical ink pattern revealing hidden faces and figures",
+      "two faces in profile forming a vase between them, rendered in dramatic chiaroscuro",
+    ],
+    mood: "deep burgundy and ivory, psychoanalytic and mysterious",
+    style: "surrealist collage in the style of René Magritte",
+  },
+  {
+    keywords: ["mathematics", "math", "calculus", "equation", "theorem", "proof", "geometry", "topology", "algebra", "statistics", "probability", "fractal"],
+    scenes: [
+      "the Mandelbrot fractal zooming infinitely inward, rendered in electric teal and gold",
+      "a golden ratio spiral sweeping across the canvas with Fibonacci numbers as architectural arches",
+      "a 3D graph of a complex equation forming a mountain range of mathematical beauty",
+      "geometric Platonic solids floating and rotating in a misty space, perfectly lit",
+    ],
+    mood: "gold and midnight blue, elegant and infinite",
+    style: "Bauhaus geometric design meets mathematical visualization",
+  },
+  {
+    keywords: ["history", "ancient", "war", "empire", "civilization", "medieval", "century", "historical", "archaeology", "artifact", "monument"],
+    scenes: [
+      "ancient ruins emerging from mist at dawn, golden light catching weathered stone columns",
+      "a map of an ancient civilization with illustrated sea monsters, ships, and trade routes",
+      "artifacts from a lost civilization arranged as a still life, dramatically lit",
+      "a timeline rendered as a flowing river through different historical eras",
+    ],
+    mood: "sepia, parchment, aged gold — timeless and weathered",
+    style: "vintage cartographic illustration with ornate borders",
+  },
+  {
+    keywords: ["climate", "environment", "ecology", "nature", "earth", "atmosphere", "carbon", "energy", "renewable", "sustainability", "ocean", "forest"],
+    scenes: [
+      "the Earth from orbit with swirling storm systems lit by golden sunlight",
+      "a split world: one half thriving green forest, the other barren industrial wasteland",
+      "deep ocean currents visualized as glowing blue rivers flowing through dark water",
+      "a single towering tree whose roots are the planet and whose canopy is the sky",
+    ],
+    mood: "rich emerald and ocean blue, urgent and alive",
+    style: "watercolor naturalist illustration, Audubon meets data visualization",
+  },
+  {
+    keywords: ["economics", "market", "finance", "trade", "business", "growth", "inflation", "gdp", "supply", "demand", "investment", "wealth"],
+    scenes: [
+      "stock market data streams rendered as a luminous cityscape at night",
+      "abstract flowing curves of supply and demand intersecting like rivers from above",
+      "a world map with glowing trade routes connecting continents like a living circuit",
+      "golden coins and abstract financial graphs forming a geometric still life",
+    ],
+    mood: "gold and deep navy, powerful and precise",
+    style: "Swiss modernist infographic poster with bold geometric shapes",
+  },
+  {
+    keywords: ["philosophy", "ethics", "logic", "existence", "consciousness", "truth", "knowledge", "reality", "metaphysics", "epistemology"],
+    scenes: [
+      "a figure standing at the edge of a cliff overlooking an infinite starfield below",
+      "Platonic cave with shadows on the wall and a blinding light at the entrance",
+      "an Escher-like impossible staircase leading to a glowing portal of understanding",
+      "two mirrors facing each other creating infinite reflections of a single candle flame",
+    ],
+    mood: "deep charcoal and ivory, contemplative and timeless",
+    style: "classical oil painting meets geometric abstraction",
+  },
+  {
+    keywords: ["astronomy", "space", "cosmos", "galaxy", "star", "planet", "universe", "black hole", "nebula", "orbit", "telescope", "solar"],
+    scenes: [
+      "a nebula in the shape of a human eye looking back at the viewer, vivid in pinks and blues",
+      "a black hole bending spacetime with accretion disk glowing in orange and gold",
+      "multiple planets in orbital alignment, each with distinct atmospheric color bands",
+      "a telescope pointed at a galaxy, with the galaxy reflected in the lens",
+    ],
+    mood: "cosmic midnight blue, violet, and stellar gold",
+    style: "NASA concept art meets retro space poster illustration",
+  },
+  {
+    keywords: ["language", "linguistics", "speech", "communication", "text", "writing", "literature", "poetry", "narrative", "grammar", "semantics"],
+    scenes: [
+      "thousands of letters from different alphabets swirling together to form a human face",
+      "a quill pen writing on parchment with the ink transforming into a landscape",
+      "overlapping speech bubbles from different languages forming a mosaic portrait",
+      "a book open to pages that transform into a flock of birds taking flight",
+    ],
+    mood: "warm sepia and deep ink blue, literary and rich",
+    style: "elegant engraving with Art Nouveau letterform decoration",
+  },
+  {
+    keywords: ["medicine", "health", "disease", "anatomy", "clinical", "patient", "surgery", "diagnosis", "treatment", "pharmaceutical", "virus", "immune"],
+    scenes: [
+      "a transparent human body with glowing organs, arteries as rivers of light",
+      "antibodies attacking a virus, rendered as medieval knights fighting abstract monsters",
+      "a cross-section of human anatomy drawn as a gorgeous scientific diagram",
+      "medical instruments arranged as a still life with dramatic Rembrandt lighting",
+    ],
+    mood: "clinical white and arterial red with deep shadow",
+    style: "hyper-detailed medical engraving in Vesalius style",
+  },
 ];
 
-const VISUAL_SUBJECTS: Record<string, string[]> = {
-  paper: [
-    "an open book with glowing pages floating in cosmic space",
-    "stacked academic journals on a wooden desk with warm lamplight",
-    "a brain made of interconnected luminous nodes",
-    "abstract geometric shapes forming a scientific diagram",
-    "microscopic cellular structures magnified to fill the frame",
-    "mathematical equations spiraling into fractal patterns",
-    "an hourglass filled with swirling knowledge symbols",
-    "a tree whose roots are circuits and branches are ideas",
-  ],
-  article: [
-    "a newspaper unfolding in mid-air revealing a vivid scene inside",
-    "a magnifying glass over a world map with glowing highlights",
-    "ink splashes forming the silhouette of a city skyline",
-    "a typewriter surrounded by floating letters and symbols",
-    "a spotlight illuminating a single word on a dark stage",
-    "collage of abstract news imagery layered over each other",
-  ],
-  video: [
-    "a film reel unspooling into a galaxy of stars",
-    "a vintage cinema screen glowing in a dark theater",
-    "a clapperboard surrounded by cinematic light beams",
-    "abstract motion blur of colorful light trails",
-    "a projector casting geometric shapes onto fog",
-    "a television showing static that morphs into a landscape",
-  ],
-};
+const FALLBACK_ART_STYLES = [
+  "risograph print, grainy two-tone texture",
+  "vintage scientific illustration, ink etching on aged paper",
+  "Japanese woodblock print, flat bold colors",
+  "watercolor wash, soft bleeding edges on textured paper",
+  "Bauhaus geometric design, primary colors, industrial feel",
+  "surrealist collage, dreamlike unexpected imagery",
+  "linocut print, bold black lines, limited palette",
+  "cyberpunk neon, glowing lines on dark background",
+];
 
-/** Pick a random element from an array using a seed for reproducibility */
-function seededPick<T>(arr: T[], seed: number): T {
-  return arr[Math.abs(seed) % arr.length];
-}
-
-/** Build a rich, unique image generation prompt */
+/**
+ * Smart prompt builder — analyses the title word-by-word, finds the best
+ * matching topic cluster, picks a vivid scene, and crafts a cinematically
+ * rich prompt that is unique every call (timestamp-seeded).
+ */
 function buildCoverPrompt(item: LibraryItem): { prompt: string; seed: number } {
-  const seed = Date.now() ^ (Math.random() * 0xffffffff);
-  const style = seededPick(ART_STYLES, seed);
-  const subjects = VISUAL_SUBJECTS[item.type] ?? VISUAL_SUBJECTS.paper;
-  const subject = seededPick(subjects, seed >> 3);
+  const seed = Math.abs((Date.now() ^ (Math.random() * 0xffffffff)) | 0);
+  const rng = (n: number, s = seed) => Math.abs(s) % n;
 
-  const titleKeywords = item.title
-    .replace(/[^a-zA-Z0-9 ]/g, " ")
-    .split(" ")
-    .filter((w) => w.length > 4)
-    .slice(0, 3)
-    .join(", ");
+  const titleLower = item.title.toLowerCase();
+  const domainLower = (item.domain ?? "").toLowerCase();
+  const combined = `${titleLower} ${domainLower}`;
+
+  // Score each topic cluster by how many keywords match the title
+  let bestMatch = { score: 0, idx: -1 };
+  TOPIC_VISUALS.forEach((topic, idx) => {
+    const score = topic.keywords.filter((kw) => combined.includes(kw)).length;
+    if (score > bestMatch.score) bestMatch = { score, idx };
+  });
+
+  let scene: string;
+  let mood: string;
+  let style: string;
+
+  if (bestMatch.idx >= 0) {
+    const topic = TOPIC_VISUALS[bestMatch.idx];
+    scene = topic.scenes[rng(topic.scenes.length, seed ^ 0xdeadbeef)];
+    mood = topic.mood;
+    style = topic.style;
+  } else {
+    // Generic fallback — still content-aware via title keywords
+    const keyWords = item.title
+      .replace(/[^a-zA-Z ]/g, " ")
+      .split(" ")
+      .filter((w) => w.length > 4)
+      .slice(0, 4)
+      .join(", ");
+    scene = keyWords
+      ? `an abstract symbolic artwork representing the concept of ${keyWords}`
+      : "an open book radiating light in a dramatic dark space";
+    mood = "rich and editorial, deep contrast";
+    style = FALLBACK_ART_STYLES[rng(FALLBACK_ART_STYLES.length)];
+  }
+
+  // Add type-specific framing
+  const typeFrame =
+    item.type === "video"
+      ? "Cinematic widescreen composition, film grain overlay."
+      : item.type === "article"
+        ? "Editorial magazine cover layout, strong focal point."
+        : "Academic book cover composition, portrait 2:3 ratio.";
 
   const prompt = [
-    `Book cover art: ${subject}.`,
-    style + ".",
-    titleKeywords ? `Themes: ${titleKeywords}.` : "",
-    "Vertical 2:3 portrait format.",
-    "High detail, award-winning cover design, no text, no letters, no words, no title, no watermarks.",
-  ].filter(Boolean).join(" ");
+    `${scene}.`,
+    `Art style: ${style}.`,
+    `Color palette: ${mood}.`,
+    typeFrame,
+    "Extremely detailed, award-winning illustration.",
+    "No text, no letters, no words, no watermarks, no logos.",
+  ].join(" ");
 
-  return { prompt, seed: Math.abs(seed) % 99999 };
+  return { prompt, seed: seed % 99999 };
 }
+
 
 /** Paint a rich generative SVG cover — unique geometry every time */
 function generateClientSvgCover(title: string, type?: string): string {
