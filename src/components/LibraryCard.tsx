@@ -468,7 +468,7 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
         className="relative flex flex-col justify-between rounded-[2px] p-3.5 shadow-[4px_6px_12px_rgba(0,0,0,0.22)] select-none cursor-pointer group active:scale-[0.97] transition-all border border-white/20"
         style={{
           width,
-          minHeight: 180,
+          minHeight: 120,
           background: bg,
         }}
         onClick={(e) => {
@@ -496,7 +496,7 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
         <div className="flex flex-col gap-2 pt-2.5 z-10">
           {/* Title */}
           <div 
-            className="font-sans font-semibold text-midnight-ink line-clamp-5 leading-snug tracking-tight"
+            className="font-sans font-semibold text-midnight-ink whitespace-normal leading-snug tracking-tight"
             style={{ 
               fontSize: "11.5px", 
               fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" 

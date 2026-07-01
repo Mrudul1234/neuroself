@@ -63,11 +63,6 @@ export function BookOverlay({ open, item, onClose }: Props) {
 
       // Skip the 3D opening animations and show settled state instantly for all screen sizes
       setStage("settled");
-      const isPdf = /\.pdf(\?|$)/i.test(item.url) || item.type === "paper" || !!item.storage_path;
-      if (isPdf) {
-        setShowReader(true);
-        void loadReaderContent(item);
-      }
     }
   }, [open, item]);
 
@@ -173,15 +168,21 @@ export function BookOverlay({ open, item, onClose }: Props) {
     }
   };
 
-  // Toggles the Reader view inside the book
-  const handleToggleReader = () => {
-    if (!showReader) {
-      setShowReader(true);
-      if (!pdfUrl) {
-        void loadReaderContent(localItem);
+  // Opens the PDF/Article original content directly in a new tab
+  const handleOpenOriginal = async () => {
+    try {
+      let targetUrl = localItem.url;
+      if (localItem.storage_path) {
+        const { getSignedFileUrl } = await import("@/lib/library");
+        targetUrl = await getSignedFileUrl(localItem.storage_path);
       }
-    } else {
-      setShowReader(false);
+      if (targetUrl) {
+        window.open(targetUrl, "_blank", "noopener,noreferrer");
+      } else {
+        toast.error("Document link not available.");
+      }
+    } catch {
+      toast.error("Could not resolve document link.");
     }
   };
 
@@ -466,10 +467,10 @@ export function BookOverlay({ open, item, onClose }: Props) {
                     {localItem.storage_path || localItem.url ? (
                       <button
                         type="button"
-                        onClick={handleToggleReader}
+                        onClick={handleOpenOriginal}
                         className="inline-flex items-center gap-1.5 rounded-full bg-[#034f46] px-5 py-2.5 text-xs font-semibold text-[#ffffeb] hover:bg-[#023c35] transition-all shadow-md cursor-pointer min-h-[44px]"
                       >
-                        {showReader ? "Show Abstract" : "Read Full Document"}
+                        <span>Read Full Document</span>
                         <ExternalLink size={12} />
                       </button>
                     ) : null}
@@ -516,20 +517,16 @@ export function BookOverlay({ open, item, onClose }: Props) {
                 <span>Edit</span>
               </button>
 
-              {/* Read PDF / Reader Toggle Button */}
+              {/* Read PDF Button */}
               <div className="hidden md:block">
                 <button
                   type="button"
-                  onClick={handleToggleReader}
-                  className={`flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-bold transition-all cursor-pointer min-h-[48px] ${
-                    showReader
-                      ? "bg-midnight-ink border-midnight-ink text-white"
-                      : "border-stone-mist bg-white text-midnight-ink hover:bg-cream-paper"
-                  }`}
-                  aria-label="Toggle Reader View"
+                  onClick={handleOpenOriginal}
+                  className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper transition-all cursor-pointer min-h-[48px]"
+                  aria-label="Read PDF"
                 >
                   <BookOpen size={14} />
-                  <span>{showReader ? "View Abstract" : "Read PDF"}</span>
+                  <span>Read PDF</span>
                 </button>
               </div>
 

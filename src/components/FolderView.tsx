@@ -44,13 +44,16 @@ export function FolderView({ items, onChanged }: Props) {
             </svg>
           </div>
           <h1 
-            className="font-fraunces text-midnight-ink font-semibold tracking-tight leading-none"
-            style={{ fontSize: 24 }}
+            className="font-sans text-midnight-ink font-bold tracking-tight leading-none"
+            style={{ fontSize: 22, fontFamily: "system-ui, -apple-system, sans-serif" }}
           >
             My Shelf
           </h1>
-          <p className="text-[10px] text-smoke italic font-instrument font-medium mt-0.5">
-            (pinned in no particular order)
+          <p 
+            className="text-[9px] text-smoke mt-1 font-medium font-sans tracking-wide uppercase"
+            style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+          >
+            pinned items
           </p>
         </div>
       </div>

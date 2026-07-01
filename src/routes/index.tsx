@@ -51,9 +51,6 @@ function LibraryPage() {
 
   useEffect(() => {
     void refresh();
-    if (window.innerWidth < 768) {
-      setFolderView(true);
-    }
   }, []);
 
   const filtered = useMemo(() => {

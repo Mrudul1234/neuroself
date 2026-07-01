@@ -242,7 +242,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
               ref={fileInput}
               type="file"
               accept="application/pdf,.pdf"
-              hidden
+              className="opacity-0 absolute pointer-events-none w-0 h-0"
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) void handleFile(f);
