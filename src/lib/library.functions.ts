@@ -204,3 +204,39 @@ export const extractPdfPyMuPdfServer = createServerFn({ method: "POST" })
       throw execErr;
     }
   });
+
+export const fetchArticleHtml = createServerFn({ method: "POST" })
+  .validator((data) =>
+    z
+      .object({
+        url: z.string().min(1),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data }) => {
+    try {
+      const res = await fetch(data.url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to fetch article: ${res.statusText}`);
+      }
+      let html = await res.text();
+
+      // Inject <base href="..."> so relative paths resolve against the original domain
+      const baseTag = `<base href="${data.url}">`;
+      if (html.includes("<head>")) {
+        html = html.replace("<head>", `<head>${baseTag}`);
+      } else if (html.includes("<HEAD>")) {
+        html = html.replace("<HEAD>", `<HEAD>${baseTag}`);
+      } else {
+        html = baseTag + html;
+      }
+      return { html };
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to fetch article HTML");
+    }
+  });

@@ -1,42 +1,21 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowLeft,
-  ChevronDown,
-  Loader2,
-  Moon,
-  Sun,
-  Type,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { getItem, getSignedFileUrl, type LibraryItem } from "@/lib/library";
-import { cacheExtractedText, extractPdfPyMuPdfServer } from "@/lib/library.functions";
+import { fetchArticleHtml } from "@/lib/library.functions";
 
 export const Route = createFileRoute("/read/$id")({
   component: ReaderPage,
 });
 
-type Theme = "light" | "sepia" | "dark";
-
-const THEME_BG: Record<Theme, string> = {
-  light: "#ffffeb",
-  sepia: "#f3e7c9",
-  dark: "#1a1a1a",
-};
-const THEME_FG: Record<Theme, string> = {
-  light: "#1a1a1a",
-  sepia: "#3a2f1a",
-  dark: "#f3efe1",
-};
-
 function ReaderPage() {
   const { id } = useParams({ from: "/read/$id" });
   const [item, setItem] = useState<LibraryItem | null>(null);
-  const [text, setText] = useState<string>("");
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [articleHtml, setArticleHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<string>("Loading…");
+  const [status, setStatus] = useState("Loading…");
   const [error, setError] = useState<string | null>(null);
-  const [theme, setTheme] = useState<Theme>("light");
-  const [fontSize, setFontSize] = useState(19);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,78 +30,31 @@ function ReaderPage() {
         if (cancelled) return;
         setItem(it);
 
-        // Already cached?
-        if (it.extracted_text && it.extracted_text.length > 0) {
-          setText(it.extracted_text);
-          setLoading(false);
-          return;
-        }
-
-        // Resolve source URL
-        let sourceUrl = it.url;
-        if (it.storage_path) {
-          sourceUrl = await getSignedFileUrl(it.storage_path);
-        }
-
-        if (it.type === "video") {
-          setError("Videos open in their original platform.");
-          setLoading(false);
-          return;
-        }
-
         const isPdf =
-          /\.pdf(\?|$)/i.test(sourceUrl) || it.type === "paper" || !!it.storage_path;
+          /\.pdf(\?|$)/i.test(it.url) || it.type === "paper" || !!it.storage_path;
 
         if (isPdf) {
-          setStatus("Extracting PDF text…");
-          let extractedText = "";
-
-          // Prioritize server-side PyMuPDF extraction for stored PDFs
+          setStatus("Resolving PDF link…");
+          let sourceUrl = it.url;
           if (it.storage_path) {
-            try {
-              setStatus("Extracting PDF using PyMuPDF (server-side)…");
-              const pymupdfResult = await extractPdfPyMuPdfServer({
-                data: { storagePath: it.storage_path },
-              });
-              if (pymupdfResult && pymupdfResult.fullText) {
-                extractedText = pymupdfResult.fullText;
-              }
-            } catch (pymupdfErr) {
-              console.warn("[Reader] PyMuPDF server extraction failed, falling back to pdf.js:", pymupdfErr);
-            }
+            sourceUrl = await getSignedFileUrl(it.storage_path);
           }
-
-          // Fallback to client-side pdf.js extraction
-          if (!extractedText) {
-            setStatus("Extracting PDF text (client-side fallback)…");
-            const { extractPdfText } = await import("@/lib/pdf");
-            const { fullText } = await extractPdfText(sourceUrl, (done, total) => {
-              if (!cancelled) setStatus(`Reading page ${done} of ${total}…`);
-            });
-            extractedText = fullText;
-          }
-
           if (cancelled) return;
-          setText(extractedText);
-          
-          // Cache extracted text server-side so subsequent opens skip pdf.js.
-          cacheExtractedText({ data: { id: it.id, text: extractedText } }).catch(
-            (e) => console.warn("Failed to cache extracted text", e),
-          );
+          setPdfUrl(sourceUrl);
         } else {
-          // Article: fetch readable text via microlink
-          setStatus("Fetching article…");
+          setStatus("Preparing article iframe view…");
           try {
-            const res = await fetch(
-              `https://api.microlink.io/?url=${encodeURIComponent(it.url)}&palette=true&audio=false&video=false&iframe=false&meta=true`,
-            );
-            const json = (await res.json()) as {
-              data?: { description?: string; title?: string };
-            };
-            const body = json.data?.description ?? "";
-            setText(body || "We couldn't extract readable text. Open the original link.");
-          } catch {
-            setText("We couldn't fetch this article's text.");
+            const res = await fetchArticleHtml({ data: { url: it.url } });
+            if (cancelled) return;
+            if (res && res.html) {
+              setArticleHtml(res.html);
+            } else {
+              throw new Error("No HTML content returned");
+            }
+          } catch (fetchErr: any) {
+            console.warn("Failed to fetch proxy HTML, falling back to direct iframe:", fetchErr);
+            // Fallback to direct URL if proxy fails
+            setPdfUrl(it.url);
           }
         }
         setLoading(false);
@@ -136,132 +68,87 @@ function ReaderPage() {
     };
   }, [id]);
 
-  const minutes = useMemo(() => {
-    if (!text) return 0;
-    const words = text.trim().split(/\s+/).length;
-    return Math.max(1, Math.round(words / 220));
-  }, [text]);
-
-  const paragraphs = useMemo(
-    () => text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean),
-    [text],
-  );
-
   return (
-    <div
-      className="min-h-screen transition-colors"
-      style={{ backgroundColor: THEME_BG[theme], color: THEME_FG[theme] }}
-    >
-      {/* Back */}
-      <div className="px-5 pt-5 sm:px-10">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 opacity-70 transition-opacity hover:opacity-100"
-          style={{ fontSize: 13, fontWeight: 500 }}
-        >
-          <ArrowLeft size={15} />
-          Back
-        </Link>
-      </div>
-
-      {/* Reader */}
-      <article className="mx-auto max-w-[640px] px-5 pb-40 pt-8 sm:px-8 sm:pt-12">
-        {item && (
-          <h1
-            className="font-instrument text-center"
-            style={{
-              fontSize: "clamp(28px, 5vw, 44px)",
-              lineHeight: 1.05,
-              letterSpacing: "-0.03em",
-              marginBottom: 32,
-            }}
+    <div className="flex h-screen flex-col bg-[#ffffeb] text-[#1a1a1a] overflow-hidden">
+      {/* Top Navbar */}
+      <header className="flex h-16 items-center justify-between border-b border-stone-mist/40 bg-white/80 px-6 backdrop-blur-md">
+        <div className="flex items-center gap-4">
+          <Link
+            to="/"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-mist text-midnight-ink transition-colors hover:bg-cream-paper"
+            title="Go Back"
           >
-            {item.title}
-          </h1>
-        )}
-        {item?.domain && (
-          <div
-            className="mb-10 text-center opacity-60"
-            style={{ fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase" }}
-          >
-            {item.domain}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex flex-col items-center gap-3 py-16 opacity-70">
-            <Loader2 size={20} className="animate-spin" />
-            <span style={{ fontSize: 13 }}>{status}</span>
-          </div>
-        ) : error ? (
-          <div className="text-center opacity-70" style={{ fontSize: 14 }}>
-            {error}
-            {item && (
-              <div className="mt-4">
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline"
-                  style={{ fontSize: 13 }}
-                >
-                  Open original ↗
-                </a>
-              </div>
+            <ArrowLeft size={16} />
+          </Link>
+          <div className="flex flex-col">
+            <span
+              className="font-instrument italic text-midnight-ink line-clamp-1 max-w-[180px] sm:max-w-[450px]"
+              style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.1 }}
+            >
+              {item?.title || "Reader"}
+            </span>
+            {item?.domain && (
+              <span className="text-[10px] uppercase tracking-wider text-graphite-veil font-semibold">
+                {item.domain}
+              </span>
             )}
           </div>
-        ) : (
-          <div
-            className="font-instrument"
-            style={{ fontSize, lineHeight: 1.65 }}
-          >
-            {paragraphs.map((p, i) => (
-              <p key={i} style={{ marginBottom: "1.1em" }}>
-                {p}
-              </p>
-            ))}
-          </div>
-        )}
-
-        {!loading && !error && (
-          <div className="mt-16 flex justify-center opacity-50">
-            <ChevronDown size={20} />
-          </div>
-        )}
-      </article>
-
-      {/* Bottom floating control bar */}
-      <div className="fixed bottom-5 left-1/2 z-30 -translate-x-1/2">
-        <div
-          className="flex items-center gap-3 rounded-full px-3 py-2 text-white shadow-[0_18px_36px_-12px_rgba(0,0,0,0.55)]"
-          style={{ backgroundColor: "#1a1a1a" }}
-        >
-          <span className="pl-2" style={{ fontSize: 12, fontWeight: 600 }}>
-            {loading ? "…" : `${minutes}:00`}
-          </span>
-          <span className="rounded-full bg-white/15 px-3 py-1" style={{ fontSize: 12, fontWeight: 600 }}>
-            Read
-          </span>
-          <button
-            type="button"
-            onClick={() =>
-              setTheme((t) => (t === "light" ? "sepia" : t === "sepia" ? "dark" : "light"))
-            }
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-          </button>
-          <button
-            type="button"
-            onClick={() => setFontSize((s) => (s >= 24 ? 16 : s + 2))}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
-            aria-label="Cycle font size"
-          >
-            <Type size={14} />
-          </button>
         </div>
-      </div>
+
+        {item && (
+          <a
+            href={item.url}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-1.5 text-midnight-ink hover:bg-cream-paper"
+            style={{ fontSize: 12, fontWeight: 600 }}
+          >
+            Open original ↗
+          </a>
+        )}
+      </header>
+
+      {/* Main Viewport Container */}
+      <main className="flex-1 bg-[#ffffeb] relative">
+        {loading ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 opacity-70">
+            <Loader2 size={24} className="animate-spin text-deep-forest-teal" />
+            <span style={{ fontSize: 13, fontWeight: 500 }}>{status}</span>
+          </div>
+        ) : error ? (
+          <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center opacity-70">
+            <span style={{ fontSize: 14 }}>{error}</span>
+            {item && (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+                style={{ fontSize: 13 }}
+              >
+                Open original link ↗
+              </a>
+            )}
+          </div>
+        ) : pdfUrl ? (
+          <iframe
+            src={pdfUrl}
+            className="h-full w-full border-none bg-white"
+            title={item?.title}
+          />
+        ) : articleHtml ? (
+          <iframe
+            srcDoc={articleHtml}
+            className="h-full w-full border-none bg-white"
+            title={item?.title}
+            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center opacity-70" style={{ fontSize: 14 }}>
+            Unable to load item.
+          </div>
+        )}
+      </main>
     </div>
   );
 }
