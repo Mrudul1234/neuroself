@@ -912,9 +912,14 @@
   }
 
   .pinboard-note {
-    animation: noteWobble linear both;
-    animation-timeline: scroll();
     transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+
+  @media (hover: hover) and (min-width: 768px) {
+    .pinboard-note {
+      animation: noteWobble linear both;
+      animation-timeline: scroll();
+    }
   }
 
   .pinboard-note:hover {

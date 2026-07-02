@@ -97,8 +97,7 @@ Rules:
 
 Raw Content/File Name: "${rawTitle}"`;
 
-    const apiKey =
-      import.meta.env.VITE_POLLINATIONS_API_KEY || "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
+    const apiKey = import.meta.env.VITE_POLLINATIONS_API_KEY;
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (apiKey) {
       headers["Authorization"] = `Bearer ${apiKey}`;

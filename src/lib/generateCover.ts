@@ -90,8 +90,7 @@ Now generate the prompt for this title.`;
   const userMessage = `Title: "${title}"`;
 
   const apiKey =
-    (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_POLLINATIONS_API_KEY ||
-    "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
+    (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_POLLINATIONS_API_KEY;
 
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (apiKey) {
@@ -131,10 +130,9 @@ const generateCoverImage = async (
 
   // Use the user's secret API key
   const apiKey =
-    (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_POLLINATIONS_API_KEY ||
-    "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
+    (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_POLLINATIONS_API_KEY;
 
-  const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=400&height=600&model=${selectedModel}&seed=${seed}&nologo=true&enhance=false&key=${apiKey}`;
+  const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=400&height=600&model=${selectedModel}&seed=${seed}&nologo=true&enhance=false${apiKey ? `&key=${apiKey}` : ""}`;
 
   console.log("[NeuroShelf Cover] Requesting Pollinations Image API:", {
     imagePrompt,
