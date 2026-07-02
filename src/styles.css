@@ -425,14 +425,7 @@
     bottom: 6px;
     width: 24px;
     transform: translateX(-50%) translateZ(4px);
-    background: linear-gradient(
-      90deg,
-      #160f0a 0%,
-      #2b1d14 30%,
-      #543b2b 50%,
-      #2b1d14 70%,
-      #160f0a 100%
-    );
+    background: linear-gradient(90deg, #160f0a 0%, #2b1d14 30%, #543b2b 50%, #2b1d14 70%, #160f0a 100%);
     box-shadow:
       inset 0 0 10px rgba(0, 0, 0, 0.8),
       0 4px 10px rgba(0, 0, 0, 0.3);
@@ -555,10 +548,7 @@
     width: calc(50% - 12px);
     transform-origin: left center;
     transform-style: preserve-3d;
-    transition:
-      transform 1.1s cubic-bezier(0.25, 1, 0.5, 1),
-      z-index 1.1s,
-      opacity 0.8s ease-in-out;
+    transition: transform 1.1s cubic-bezier(0.25, 1, 0.5, 1), z-index 1.1s, opacity 0.8s ease-in-out;
     z-index: 45;
     pointer-events: none;
   }
@@ -887,9 +877,7 @@
 
   /* Transition for smooth return */
   .book-3d {
-    transition:
-      transform 0.5s cubic-bezier(0.25, 1, 0.5, 1),
-      box-shadow 0.5s ease-out;
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.5s ease-out;
   }
 
   /* --- MOBILE SCALE-IN AND ENTRANCE EFFECT --- */
@@ -924,9 +912,7 @@
   }
 
   .pinboard-note {
-    transition:
-      transform 0.2s ease-out,
-      box-shadow 0.2s ease-out;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   }
 
   @media (hover: hover) and (min-width: 768px) {
@@ -938,9 +924,7 @@
 
   .pinboard-note:hover {
     transform: rotate(calc(var(--note-rotate, 0deg) * 0.3)) scale(1.02) translateY(-2px) !important;
-    box-shadow:
-      6px 10px 20px rgba(0, 0, 0, 0.32),
-      1px 2px 6px rgba(0, 0, 0, 0.15);
+    box-shadow: 6px 10px 20px rgba(0, 0, 0, 0.32), 1px 2px 6px rgba(0, 0, 0, 0.15);
     z-index: 30;
   }
 
@@ -965,11 +949,7 @@
     opacity: 1 !important;
     pointer-events: auto !important;
     transform: scale(1) !important;
-    background: linear-gradient(
-      180deg,
-      rgba(26, 26, 26, 0.3) 0%,
-      rgba(26, 26, 26, 0.48) 100%
-    ) !important;
+    background: linear-gradient(180deg, rgba(26,26,26,0.3) 0%, rgba(26,26,26,0.48) 100%) !important;
     backdrop-filter: blur(4px) !important;
   }
 

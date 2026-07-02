@@ -46,7 +46,7 @@ export const insertItemServer = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return inserted as any;
+    return inserted as Record<string, unknown>;
   });
 
 export const updateItemServer = createServerFn({ method: "POST" })
@@ -154,7 +154,7 @@ export const extractPdfPyMuPdfServer = createServerFn({ method: "POST" })
     // 3. Execute python PyMuPDF extraction script
     const scriptPath = path.join(process.cwd(), "src", "lib", "extract_pdf.py");
     try {
-      const result = await new Promise<{ pages: any[]; fullText: string }>(
+      const result = await new Promise<{ pages: unknown[]; fullText: string }>(
         (resolve, reject) => {
           exec(
             `python "${scriptPath}" "${tempFilePath}"`,

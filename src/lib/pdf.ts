@@ -1,7 +1,7 @@
 // Client-side PDF text extraction using pdf.js.
 // Worker is loaded as a URL via Vite's ?url import.
 import * as pdfjsLib from "pdfjs-dist";
-// Vite asset URL import
+// @ts-expect-error - Vite asset URL import
 import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc as string;

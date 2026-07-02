@@ -984,7 +984,9 @@ export async function uploadPdfFile(
             resolve();
           } else {
             reject(
-              new Error(`Upload failed (HTTP ${xhr.status}): ${xhr.statusText || "server error"}`),
+              new Error(
+                `Upload failed (HTTP ${xhr.status}): ${xhr.statusText || "server error"}`,
+              ),
             );
           }
         });

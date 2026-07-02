@@ -129,15 +129,15 @@ function LibraryPage() {
   ];
 
   return (
-    <div
-      className="relative min-h-screen overflow-x-hidden"
+    <div 
+      className="relative min-h-screen overflow-x-hidden" 
       style={{ backgroundColor: "#f8f9ff" }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       {/* Pull-to-refresh Indicator */}
-      <div
+      <div 
         className="fixed left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none transition-all duration-150"
         style={{
           top: `${Math.min(pullDistance - 40, 16)}px`,
@@ -151,21 +151,21 @@ function LibraryPage() {
           zIndex: 50,
         }}
       >
-        <div
+        <div 
           className={`flex items-center justify-center ${refreshing ? "animate-spin" : ""}`}
           style={{
             transform: refreshing ? undefined : `rotate(${pullDistance * 6}deg)`,
-            transition: refreshing ? "none" : "transform 0.1s ease-out",
+            transition: refreshing ? "none" : "transform 0.1s ease-out"
           }}
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#5c3a21"
-            strokeWidth="3"
-            strokeLinecap="round"
+          <svg 
+            width="18" 
+            height="18" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="#5c3a21" 
+            strokeWidth="3" 
+            strokeLinecap="round" 
             strokeLinejoin="round"
           >
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
@@ -272,11 +272,11 @@ function LibraryPage() {
       </div>
       {/* ──────────────────────────────────────────────────────────── */}
 
-      <div
+      <div 
         className="relative mx-auto max-w-[1080px] px-4 pb-24 pt-4 sm:px-6 sm:pb-28 sm:pt-5"
         style={{
           transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : undefined,
-          transition: isPulling ? "none" : "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+          transition: isPulling ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
         }}
       >
         {/* Top utility bar */}
