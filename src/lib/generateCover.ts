@@ -45,12 +45,16 @@ profile as the subject — do not leave the subject vague and do not invent
 something unrelated to neuroscience.
 
 STEP 2 — Apply this exact visual style, every time, regardless of subject:
-Bold flat-color pop-art anatomical illustration style. Thick, slightly uneven
-hand-inked outlines, like a rough brush or marker line rather than a smooth
-vector line. Completely flat color fills — no gradients, no shading, no soft
-blending. Saturated poster-bright palette limited to five or six colors: hot
-magenta/pink, golden yellow, red, cobalt blue, green, and a lime accent. High
-contrast, screen-print or riso-print poster aesthetic. Clean white background.
+Soft gradient-mesh illustration style. The main subject rendered as a smooth,
+rounded, semi-abstract object with gentle airbrushed shading and soft gradient
+transitions between tones — no hard outlines, no flat color blocking, no line
+art. Composed over simple abstract wave or rolling-hill shapes in the
+background, layered in soft flowing bands. Warm, muted, earthy color palette:
+sage green, terracotta orange, and cream, with soft blended transitions between
+them. Gentle, calm, minimal composition with generous negative space. Textured
+paper-grain background feel. No face, no head, no human figure, no anatomical
+skull or cross-section context — the subject stands alone against the
+background shapes.
 
 STEP 3 — Always end the prompt with this exact clause:
 No text, no words, no letters, no numbers, no labels, no captions, no logos, no
@@ -59,31 +63,35 @@ watermark.
 EXAMPLES:
 
 Title: "Frontal Lobe"
-Prompt: A bold flat-color pop-art anatomical illustration of a human head in
-side profile, sagittal cross-section, with the frontal lobe region of the brain
-highlighted in a distinct color from the rest of the brain tissue. Thick uneven
-hand-inked outlines, completely flat color fills with no gradients or shading,
-saturated poster-bright palette of magenta, golden yellow, red, cobalt blue, and
-green, high contrast screen-print poster aesthetic, clean white background. No
-text, no words, no letters, no numbers, no labels, no captions, no logos, no
-watermark.
+Prompt: A soft gradient-mesh illustration of a human brain rendered as a smooth,
+rounded semi-abstract object with gentle airbrushed shading, the frontal lobe
+region distinguished by a subtle warm color shift within the brain form, no
+hard outlines, no flat color blocking. Composed over simple abstract rolling
+wave shapes in soft flowing bands. Warm muted palette of sage green, terracotta
+orange, and cream with soft blended transitions. Calm, minimal composition,
+generous negative space, subtle paper-grain texture background. No face, no
+head, no human figure, no skull, no text, no words, no letters, no numbers, no
+labels, no captions, no logos, no watermark.
 
 Title: "Neurons: Structure and Function"
-Prompt: A bold flat-color pop-art illustration of a single neuron cell — cell
-body, branching dendrites, and a long axon with terminal branches — rendered in
-thick uneven hand-inked outlines with completely flat, saturated color fills of
-magenta, golden yellow, red, cobalt blue, and green, no gradients or shading,
-high contrast screen-print poster aesthetic, clean white background. No text, no
-words, no letters, no numbers, no labels, no captions, no logos, no watermark.
+Prompt: A soft gradient-mesh illustration of a single neuron rendered as a
+smooth, rounded semi-abstract form with branching dendrites and a flowing axon,
+gentle airbrushed shading, no hard outlines, no flat color blocking. Composed
+over simple abstract wave shapes in soft flowing bands. Warm muted palette of
+sage green, terracotta orange, and cream with soft blended transitions. Calm,
+minimal composition, generous negative space, subtle paper-grain texture
+background. No face, no head, no human figure, no text, no words, no letters,
+no numbers, no labels, no captions, no logos, no watermark.
 
 Title: "Report"
-Prompt: A bold flat-color pop-art anatomical illustration of a human head in
-side profile, sagittal cross-section, showing the brain and upper spinal cord in
-flat saturated color blocks, thick uneven hand-inked outlines, no gradients or
-shading, saturated poster-bright palette of magenta, golden yellow, red, cobalt
-blue, and green, high contrast screen-print poster aesthetic, clean white
-background. No text, no words, no letters, no numbers, no labels, no captions,
-no logos, no watermark.
+Prompt: A soft gradient-mesh illustration of a human brain rendered as a smooth,
+rounded semi-abstract object with gentle airbrushed shading, no hard outlines,
+no flat color blocking. Composed over simple abstract rolling wave shapes in
+soft flowing bands. Warm muted palette of sage green, terracotta orange, and
+cream with soft blended transitions. Calm, minimal composition, generous
+negative space, subtle paper-grain texture background. No face, no head, no
+human figure, no skull, no text, no words, no letters, no numbers, no labels,
+no captions, no logos, no watermark.
 
 Now generate the prompt for this title.`;
 

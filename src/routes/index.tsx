@@ -38,6 +38,67 @@ function LibraryPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [folderView, setFolderView] = useState(false);
 
+  // Pull-to-refresh state
+  const [pullStart, setPullStart] = useState<number | null>(null);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (window.scrollY === 0 && !refreshing && !loading) {
+      setPullStart(e.touches[0].clientY);
+      setIsPulling(true);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (pullStart === null || refreshing || loading) return;
+
+    if (window.scrollY > 0) {
+      setPullStart(null);
+      setPullDistance(0);
+      setIsPulling(false);
+      return;
+    }
+
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - pullStart;
+
+    if (deltaY > 0) {
+      const dist = Math.min(deltaY * 0.4, 75);
+      setPullDistance(dist);
+
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    } else {
+      setPullDistance(0);
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (pullStart === null || refreshing || loading) return;
+
+    const wasOverThreshold = pullDistance >= 45;
+    setIsPulling(false);
+
+    if (wasOverThreshold) {
+      setRefreshing(true);
+      setPullDistance(60);
+      try {
+        await refresh();
+      } catch (err) {
+        console.error("Refresh failed during pull", err);
+      } finally {
+        setRefreshing(false);
+        setPullDistance(0);
+      }
+    } else {
+      setPullDistance(0);
+    }
+    setPullStart(null);
+  };
+
   const refresh = async () => {
     try {
       const data = await listItems();
@@ -68,7 +129,49 @@ function LibraryPage() {
   ];
 
   return (
-    <div className="relative min-h-screen overflow-hidden" style={{ backgroundColor: "#f8f9ff" }}>
+    <div 
+      className="relative min-h-screen overflow-x-hidden" 
+      style={{ backgroundColor: "#f8f9ff" }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull-to-refresh Indicator */}
+      <div 
+        className="fixed left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none transition-all duration-150"
+        style={{
+          top: `${Math.min(pullDistance - 40, 16)}px`,
+          height: "40px",
+          width: "40px",
+          borderRadius: "50%",
+          backgroundColor: "#fcfbfa",
+          border: "1px solid rgba(92, 58, 33, 0.15)",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          opacity: pullDistance > 15 ? 1 : 0,
+          zIndex: 50,
+        }}
+      >
+        <div 
+          className={`flex items-center justify-center ${refreshing ? "animate-spin" : ""}`}
+          style={{
+            transform: refreshing ? undefined : `rotate(${pullDistance * 6}deg)`,
+            transition: refreshing ? "none" : "transform 0.1s ease-out"
+          }}
+        >
+          <svg 
+            width="18" 
+            height="18" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="#5c3a21" 
+            strokeWidth="3" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+          </svg>
+        </div>
+      </div>
       {/* ── Soft-luminous animated background ────────────────────── */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
         {/* Large rotating blue-violet radial — primary atmosphere */}
@@ -169,7 +272,13 @@ function LibraryPage() {
       </div>
       {/* ──────────────────────────────────────────────────────────── */}
 
-      <div className="relative mx-auto max-w-[1080px] px-4 pb-24 pt-4 sm:px-6 sm:pb-28 sm:pt-5">
+      <div 
+        className="relative mx-auto max-w-[1080px] px-4 pb-24 pt-4 sm:px-6 sm:pb-28 sm:pt-5"
+        style={{
+          transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : undefined,
+          transition: isPulling ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+        }}
+      >
         {/* Top utility bar */}
         <header className="flex items-center justify-between">
           <button
