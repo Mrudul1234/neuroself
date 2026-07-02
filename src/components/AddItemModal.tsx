@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import {
   detectMetadata,
   insertItem,
+  refineTitleWithAI,
   uploadPdfFile,
   type DraftItem,
   type ItemType,
@@ -110,12 +111,15 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
     setGeneratingCover(true);
     try {
       const { path, size } = await uploadPdfFile(file, setProgress);
-      // Clean up title: strip ext, strip spaces/hyphens/underscores, strip bracketed numbers
-      const cleanTitle = file.name
+      // Clean up file name first
+      const cleanFileName = file.name
         .replace(/\.pdf$/i, "")
         .replace(/\[\d+\]/g, "")
         .replace(/[-_]+/g, " ")
         .trim();
+
+      // Refine using OpenAI model
+      const cleanTitle = await refineTitleWithAI(cleanFileName);
 
       // User requested NOT to extract text/iframe, just open PDF directly, so we skip PyMuPDF extraction
       const extractedText: string | null = null;

@@ -87,6 +87,50 @@ async function fetchOpenGraph(url: string): Promise<Partial<DraftItem> | null> {
   }
 }
 
+export async function refineTitleWithAI(rawTitle: string): Promise<string> {
+  try {
+    const prompt = `You are a professional research librarian. Clean and refine the following content title, web header, or file name into a beautiful, short, readable content title suitable for an academic library database. Focus on capturing the core subject (especially neuroscience, brain structure, medicine, or technology). 
+Rules:
+- Remove file extensions, site names, prefixes (like "YouTube", "Medium", blog author names), numbers, or bracketed codes.
+- Maximum 8-12 words, elegant phrasing.
+- Return ONLY the clean, refined title. No explanation, no quotes.
+
+Raw Content/File Name: "${rawTitle}"`;
+
+    const apiKey =
+      import.meta.env.VITE_POLLINATIONS_API_KEY || "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (apiKey) {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    }
+
+    const res = await fetch("https://gen.pollinations.ai/v1/chat/completions", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        messages: [
+          { role: "system", content: "You are a professional research librarian." },
+          { role: "user", content: prompt },
+        ],
+        model: "openai",
+        seed: Math.floor(Math.random() * 9999),
+        jsonMode: false,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const refinedTitle = data?.choices?.[0]?.message?.content;
+      if (refinedTitle && refinedTitle.trim()) {
+        return refinedTitle.trim().replace(/^"|"$/g, "");
+      }
+    }
+  } catch (err) {
+    console.warn("[refineTitleWithAI] Title refinement with OpenAI failed/skipped:", err);
+  }
+  return rawTitle;
+}
+
 export async function detectMetadata(rawUrl: string): Promise<DraftItem> {
   const url = rawUrl.trim();
   const domain = getDomain(url);
@@ -106,8 +150,9 @@ export async function detectMetadata(rawUrl: string): Promise<DraftItem> {
         .trim() ||
       domain ||
       "Untitled PDF";
+    const cleanTitle = await refineTitleWithAI(og?.title || fileName);
     return {
-      title: og?.title || fileName,
+      title: cleanTitle,
       url,
       thumbnail_url: og?.thumbnail_url ?? null,
       type: "paper",
@@ -118,47 +163,8 @@ export async function detectMetadata(rawUrl: string): Promise<DraftItem> {
   const og = await fetchOpenGraph(url);
   let initialTitle = og?.title || domain || url;
 
-  // Use Claude via Pollinations Text API to craft a short, elegant, academic title based on initial scrapped title
-  try {
-    const prompt = `You are a professional research librarian. Clean and refine the following web title/header into a beautiful, short, readable content title suitable for an academic library database. Focus on capturing the core subject (especially neuroscience, brain structure, medicine, or technology). 
-Rules:
-- Remove site names, prefixes (e.g. "YouTube", "Medium", blog author names).
-- Maximum 8-12 words, elegant phrasing.
-- Return ONLY the clean, refined title. No explanation, no quotes.
-
-Raw Title: "${initialTitle}"`;
-
-    const apiKey =
-      import.meta.env.VITE_POLLINATIONS_API_KEY || "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (apiKey) {
-      headers["Authorization"] = `Bearer ${apiKey}`;
-    }
-
-    const res = await fetch("https://gen.pollinations.ai/v1/chat/completions", {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        messages: [
-          { role: "system", content: "You are a professional research librarian." },
-          { role: "user", content: prompt },
-        ],
-        model: "claude-fast",
-        seed: Math.floor(Math.random() * 9999),
-        jsonMode: false,
-      }),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      const refinedTitle = data?.choices?.[0]?.message?.content;
-      if (refinedTitle && refinedTitle.trim()) {
-        initialTitle = refinedTitle.trim().replace(/^"|"$/g, "");
-      }
-    }
-  } catch (err) {
-    console.warn("[detectMetadata] Title refinement with Claude skipped:", err);
-  }
+  // Use OpenAI via Pollinations Text API to craft a short, elegant, academic title based on initial scrapped title
+  initialTitle = await refineTitleWithAI(initialTitle);
 
   return {
     title: initialTitle,

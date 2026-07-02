@@ -10,13 +10,13 @@ import { motion } from "framer-motion";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "NeuroShelf — Your brain library" },
+      { title: "neuroself" },
       {
         name: "description",
         content:
           "A personal digital library for saving research papers, articles, and videos about the brain and neuroscience.",
       },
-      { property: "og:title", content: "NeuroShelf — Your brain library" },
+      { property: "og:title", content: "neuroself" },
       {
         property: "og:description",
         content:
