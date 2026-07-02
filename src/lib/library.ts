@@ -1026,7 +1026,6 @@ export async function uploadPdfFile(
 }
 
 export async function getSignedFileUrl(path: string, expiresIn = 60 * 60): Promise<string> {
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, expiresIn);
-  if (error) throw error;
-  return data.signedUrl;
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
 }
