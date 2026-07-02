@@ -385,15 +385,25 @@ function LibraryPage() {
 
       {/* Bottom centered Add Item pill (mobile + desktop) */}
       <div className="pointer-events-none fixed inset-x-0 bottom-6 z-30 flex justify-center">
-        <button
+        <motion.button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-white/30 bg-midnight-ink/90 px-7 py-3.5 text-white shadow-[0_14px_30px_-12px_rgba(26,26,26,0.55)] backdrop-blur-md transition-opacity hover:opacity-90"
+          initial={{ opacity: 0, scale: 0.8, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{
+            type: "spring",
+            stiffness: 260,
+            damping: 18,
+            delay: 0.3,
+          }}
+          className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-white/30 bg-midnight-ink/90 px-7 py-3.5 text-white shadow-[0_14px_30px_-12px_rgba(26,26,26,0.55)] backdrop-blur-md transition-opacity hover:opacity-90 cursor-pointer"
           style={{ fontSize: 15, fontWeight: 600 }}
         >
           <Plus size={15} strokeWidth={2.5} />
           Add Item
-        </button>
+        </motion.button>
       </div>
 
       <AddItemModal open={modalOpen} onClose={() => setModalOpen(false)} onSaved={refresh} />

@@ -22,7 +22,7 @@ import {
   type LibraryItem,
 } from "@/lib/library";
 import { EditItemModal } from "./EditItemModal";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { generateNeuroShelfCover } from "@/lib/generateCover";
 
 const iconFor: Record<ItemType, typeof FileText> = {
@@ -116,19 +116,40 @@ interface CardProps {
 }
 
 function PushPin({ color = "#ef4444" }: { color?: string }) {
+  const gradientId = `pin-grad-${color.replace("#", "")}`;
+  const darkerColors: Record<string, string> = {
+    "#ef4444": "#991b1b",
+    "#f59e0b": "#92400e",
+    "#3b82f6": "#1e3a8a",
+    "#10b981": "#065f46",
+    "#9c27b0": "#4a0072",
+  };
+  const darker = darkerColors[color] || "#2b2b2b";
+
   return (
-    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 filter drop-shadow-[1.5px_3px_2px_rgba(0,0,0,0.35)] pointer-events-none">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Pin head */}
-        <ellipse cx="12" cy="7" rx="5.5" ry="4.5" fill={color} />
-        {/* Highlight */}
-        <ellipse cx="10.5" cy="5.5" rx="1.8" ry="1.3" fill="white" opacity="0.65" />
-        {/* Pin body */}
-        <path d="M9.5 10.5 L14.5 10.5 L13 7 L11 7 Z" fill={color} opacity="0.9" />
-        {/* Pin needle */}
-        <path d="M11.5 10.5 L12.5 10.5 L12.5 17 L11.5 17 Z" fill="#9ca3af" />
-        {/* Grip ring */}
-        <rect x="9" y="9.5" width="6" height="1.2" rx="0.4" fill="#374151" />
+    <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 filter drop-shadow-[2px_4px_3px_rgba(0,0,0,0.38)] pointer-events-none">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id={gradientId} cx="35%" cy="30%" r="55%" fx="35%" fy="30%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
+            <stop offset="25%" stopColor={color} />
+            <stop offset="100%" stopColor={darker} />
+          </radialGradient>
+        </defs>
+        
+        {/* Metal pin shaft */}
+        <path d="M9.5 9.5 L10.5 9.5 L10.5 15.5 L9.5 15.5 Z" fill="#b0b5bc" />
+        <path d="M9.8 15.5 L10.2 15.5 L10 18 L9.8 15.5 Z" fill="#71767a" />
+        
+        {/* Pin base (cylindrical grip part) */}
+        <rect x="7.5" y="7" width="5" height="2.5" rx="0.8" fill={color} />
+        <rect x="7.5" y="7" width="5" height="1" rx="0.4" fill="#ffffff" opacity="0.3" />
+        
+        {/* Pin head (glossy sphere) */}
+        <circle cx="10" cy="5" r="4.5" fill={`url(#${gradientId})`} />
+        
+        {/* Inner glow highlight */}
+        <circle cx="9.2" cy="4" r="1.2" fill="#ffffff" opacity="0.7" />
       </svg>
     </div>
   );
@@ -150,6 +171,34 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
 
   const [isEditing, setIsEditing] = useState(false);
   const [isOverlayActive, setIsOverlayActive] = useState(false);
+
+  // Unconditional Framer Motion hooks for pinboard scroll sway & lift shadow
+  const { scrollY } = useScroll();
+  const rotation = (index ?? 0) % 2 === 0 ? 1.2 + ((index ?? 0) % 3) * 0.4 : -1.2 - ((index ?? 0) % 3) * 0.4;
+  const speedMultiplier = 0.05 + ((index ?? 0) % 3) * 0.03;
+  const directionMultiplier = (index ?? 0) % 2 === 0 ? 1 : -1;
+  const maxSway = 3.5;
+
+  const rawSway = useTransform(
+    scrollY,
+    [0, 300, 600, 900],
+    [
+      rotation,
+      rotation + maxSway * directionMultiplier * speedMultiplier * 10,
+      rotation - maxSway * directionMultiplier * speedMultiplier * 10,
+      rotation + (maxSway * 0.5) * directionMultiplier * speedMultiplier * 10,
+    ]
+  );
+  const sway = useSpring(rawSway, { stiffness: 60, damping: 20 });
+
+  const boxShadow = useTransform(sway, (val) => {
+    const diff = Math.abs(val - rotation);
+    const factor = Math.min(diff / maxSway, 1); // 0 at rest, 1 at max sway
+    const blur = 6 + factor * 12;
+    const offset = 3 + factor * 8;
+    const opacity = 0.16 + factor * 0.16;
+    return `0 ${offset}px ${blur}px rgba(0,0,0,${opacity}), 0 1px 3px rgba(0,0,0,0.08)`;
+  });
 
   const cardRef = useRef<HTMLDivElement>(null);
   const [pressed, setPressed] = useState(false);
@@ -535,93 +584,88 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
   }
 
   if (isPinboard) {
-    const rotation = ((index ?? 0) % 4) * 2.5 - 3.5; // rotates -3.5, -1, 1.5, 4 degrees for organic feel
     const noteColors = [
-      "linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%)", // Warm Yellow
-      "linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%)", // Soft Blue
-      "linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%)", // Soft Green
-      "linear-gradient(180deg, #fdf2f8 0%, #fce7f3 100%)", // Soft Pink
-      "linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%)", // Soft Purple
+      "#fefbeb", // Cream
+      "#f0f6ff", // Blue
+      "#f0fdf4", // Green
+      "#fdf2f8", // Pink
     ];
     const bg = noteColors[(index ?? 0) % noteColors.length];
-    const pinColors = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#9c27b0"];
+    const pinColors = ["#ef4444", "#f59e0b", "#10b981", "#9c27b0"];
     const pinColor = pinColors[(index ?? 0) % pinColors.length];
+    const platform = getPlatformInfo(item.url, item.storage_path);
+    const PlatformIcon = platform.icon;
+    const coverImg = thumb || "/placeholder.svg";
 
     return (
       <motion.div
         ref={cardRef}
-        initial={{ opacity: 0, scale: 0.85, rotate: rotation - 5 }}
-        animate={{ opacity: 1, scale: 1, rotate: rotation }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-        className="pinboard-note relative flex flex-col justify-between rounded-[3px] p-3 shadow-[3px_5px_14px_rgba(0,0,0,0.28),1px_1px_4px_rgba(0,0,0,0.12)] select-none cursor-pointer group active:scale-[0.97] transition-all border border-white/30"
+        initial={{ opacity: 0, scale: 0.3, y: -60, rotate: rotation }}
+        animate={{ opacity: 1, scale: 1, y: 0, rotate: rotation }}
+        transition={{
+          type: "spring",
+          stiffness: 120,
+          damping: 14,
+          delay: (index ?? 0) * 0.08,
+        }}
+        whileHover={{
+          y: -4,
+        }}
+        whileTap={{
+          y: -4,
+        }}
+        className="relative flex flex-col rounded-[4px] p-2 select-none cursor-pointer border border-black/[0.04] overflow-visible"
         style={{
-          width,
-          minHeight: 110,
+          width: "100%",
+          maxWidth: `${width}px`,
           background: bg,
-          "--note-rotate": `${rotation}deg`,
-        } as React.CSSProperties}
+          transformOrigin: "50% 8px",
+          rotate: sway,
+          boxShadow,
+        }}
         onClick={handleCardClick}
       >
-        {/* Pinned pushpin */}
+        {/* Glossy 3D Pushpin */}
         <PushPin color={pinColor} />
 
-        {/* Paper lines overlay */}
-        <div 
-          className="absolute inset-0 pointer-events-none opacity-[0.05]" 
-          style={{
-            backgroundImage: "linear-gradient(#000 1px, transparent 1px)",
-            backgroundSize: "100% 20px",
-            backgroundPosition: "0 32px"
-          }}
-        />
-
-        {/* Folded corner effect */}
-        <div 
-          className="absolute bottom-0 right-0 w-5 h-5 pointer-events-none"
-          style={{
-            background: "linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.06) 50%)",
-          }}
-        />
-
-        <div className="flex flex-col gap-1.5 pt-2 z-10">
-          {/* Title — Caveat handwritten font */}
-          <div 
-            className="font-caveat font-semibold text-midnight-ink whitespace-normal leading-snug"
-            style={{ fontSize: "15px" }}
-          >
-            {item.title}
-          </div>
-
-          {/* Domain / Info */}
-          {item.domain && (
-            <span className="text-[8px] text-smoke font-medium font-sans tracking-wide">
-              {item.domain}
-            </span>
+        {/* Polaroid Image Wrapper */}
+        <div className="relative aspect-square w-full rounded-[2px] overflow-hidden border border-black/[0.08] bg-stone-100/50">
+          {thumb && !imageError ? (
+            <img
+              src={coverImg}
+              alt=""
+              loading="lazy"
+              className="h-full w-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center">
+              <Icon size={24} className="text-stone-400 opacity-60" />
+            </div>
           )}
         </div>
 
-        {/* Bottom section with Badge */}
-        <div className="flex flex-col gap-2 mt-auto pt-1.5 border-t border-black/5 z-10">
-          <div className="flex items-center justify-between">
-            {(() => {
-              const platform = getPlatformInfo(item.url, item.storage_path);
-              const PlatformIcon = platform.icon;
-              return (
-                <span className="inline-flex items-center gap-1 text-[7px] font-bold text-midnight-ink/55 uppercase tracking-wider font-sans">
-                  <PlatformIcon size={7} />
-                  {platform.name}
-                </span>
-              );
-            })()}
+        {/* Polaroid Text & Info Strip */}
+        <div className="mt-2 px-1 flex flex-col justify-between flex-grow">
+          <div 
+            className="font-caveat font-semibold text-midnight-ink leading-tight line-clamp-2 text-left" 
+            style={{ fontSize: "14px", minHeight: "36px" }}
+          >
+            {item.title}
+          </div>
+          
+          <div className="mt-1 flex items-center gap-1.5 text-[8px] font-bold text-midnight-ink/55 uppercase tracking-wider font-sans text-left">
+            <PlatformIcon size={9} className="shrink-0" />
+            {platform.name}
           </div>
         </div>
 
-        {/* Modals */}
+        {/* Edit dialog — Portaled to body */}
         <EditItemModal
           open={isEditing}
           item={item}
           onClose={() => setIsEditing(false)}
-          onSaved={onChanged}
+          onSaved={() => onChanged?.()}
         />
       </motion.div>
     );
