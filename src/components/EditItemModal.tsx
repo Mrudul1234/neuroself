@@ -77,7 +77,7 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
 
     setDeleting(true);
     try {
-      await deleteItemWithFile(item.id, item.storage_path);
+      await deleteItemWithFile(item);
       toast.success("Item deleted successfully.");
       onSaved();
       onClose();
