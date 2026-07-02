@@ -1,4 +1,8 @@
-// ─── POLLINATIONS COVER GENERATION UTILITY ───────────────────
+// ─── POLLINATIONS COVER GENERATION UTILITY (OPTIMIZED) ───────────────────
+
+// In-memory cache for generated prompts to avoid redundant API calls
+const promptCache = new Map<string, string>();
+const imageCache = new Map<string, string>();
 
 export function cleanTitleForPrompt(title: string): string {
   // Strip bracketed numbers, codes, underscores, and extra whitespaces
@@ -22,11 +26,18 @@ const getTextModel = (title: string): string => {
   return "openai"; // Fallback from claude-fast
 };
 
-// ── STEP 1: AI writes the image prompt ──────────────────
+// ── STEP 1: AI writes the image prompt (with caching) ──────────────────
 const writeCoverPrompt = async (
   title: string,
   type: "paper" | "article" | "video",
 ): Promise<string> => {
+  // Check cache first
+  const cacheKey = `${title}:${type}`;
+  if (promptCache.has(cacheKey)) {
+    console.log("[NeuroShelf Cover] Using cached prompt");
+    return promptCache.get(cacheKey)!;
+  }
+
   const systemInstruction = `You are an image-prompt generator for a neuroscience and cognitive-science content
 library called NeuroShelf. You will be given the title of a piece of content — a
 paper, article, or video. Output a single, ready-to-use image-generation prompt.
@@ -125,14 +136,27 @@ Now generate the prompt for this title.`;
   if (!imagePrompt || !imagePrompt.trim()) {
     throw new Error("Empty prompt returned from chat completions.");
   }
-  return imagePrompt.trim().replace(/^"|"$/g, "");
+  
+  const cleanedPrompt = imagePrompt.trim().replace(/^"|"$/g, "");
+  
+  // Cache the prompt
+  promptCache.set(cacheKey, cleanedPrompt);
+  
+  return cleanedPrompt;
 };
 
-// ── STEP 2: Generate image from AI prompt ─────────────
+// ── STEP 2: Generate image from AI prompt (with timeout & abort) ─────────
 const generateCoverImage = async (
   imagePrompt: string,
   selectedModel: string = "flux",
 ): Promise<string> => {
+  // Check image cache
+  const imageCacheKey = `${imagePrompt}:${selectedModel}`;
+  if (imageCache.has(imageCacheKey)) {
+    console.log("[NeuroShelf Cover] Using cached image URL");
+    return imageCache.get(imageCacheKey)!;
+  }
+
   const encoded = encodeURIComponent(imagePrompt);
   const seed = Math.floor(Math.random() * 999999);
 
@@ -145,23 +169,41 @@ const generateCoverImage = async (
   console.log("[NeuroShelf Cover] Requesting Pollinations Image API:", {
     imagePrompt,
     model: selectedModel,
-    imageUrl,
+    seed,
   });
 
   try {
-    // Actually make the API call to force Pollinations to generate it right now
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      console.warn("[NeuroShelf Cover] Image API returned non-OK status:", response.status);
-    }
+    // Use AbortController with 30-second timeout for non-blocking operation
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    // Non-blocking fetch: return URL immediately, generate in background
+    fetch(imageUrl, { signal: controller.signal })
+      .then((response) => {
+        clearTimeout(timeoutId);
+        if (!response.ok) {
+          console.warn("[NeuroShelf Cover] Image API returned non-OK status:", response.status);
+        } else {
+          console.log("[NeuroShelf Cover] Image generated successfully");
+        }
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        if (error.name !== 'AbortError') {
+          console.error("[NeuroShelf Cover] Image API fetch failed:", error);
+        }
+      });
   } catch (error) {
-    console.error("[NeuroShelf Cover] Image API fetch failed:", error);
+    console.error("[NeuroShelf Cover] Error initiating image fetch:", error);
   }
 
+  // Cache and return URL immediately
+  imageCache.set(imageCacheKey, imageUrl);
+  
   return imageUrl;
 };
 
-// ── MAIN EXPORT: full pipeline ───────────────────────────────
+// ── MAIN EXPORT: optimized parallel pipeline ───────────────────────────────
 export const generateNeuroShelfCover = async (
   title: string,
   type: "paper" | "article" | "video",
@@ -177,14 +219,14 @@ export const generateNeuroShelfCover = async (
     // If model is turbo, map it to flux (or whatever fast model the user prefers)
     const resolvedModel = model === "turbo" ? "flux" : model;
 
-    // Generate the cover using the visual prompt
+    // Generate the cover using the visual prompt (non-blocking)
     const imageUrl = await generateCoverImage(imagePrompt, resolvedModel);
     return imageUrl;
   } catch (error) {
     console.error("[NeuroShelf Cover] Cover generation failed:", error);
     // Fallback: if text generation fails, use a direct fallback template
     try {
-      const fallbackPrompt = `A bold flat-color pop-art anatomical illustration of a human head in side profile, sagittal cross-section, showing the brain in flat saturated color blocks. Thick uneven hand-inked outlines, saturated poster-bright palette, high contrast, clean white background. No text, no words, no letters, no numbers, no labels, no captions, no logos, no watermark.`;
+      const fallbackPrompt = `A soft gradient-mesh illustration of a human brain rendered as a smooth, rounded semi-abstract object with gentle airbrushed shading and soft gradient transitions. Composed over simple abstract rolling wave shapes in soft flowing bands. Warm muted palette of sage green, terracotta orange, and cream with soft blended transitions. Calm, minimal composition, generous negative space, subtle paper-grain texture background. No text, no words, no letters, no numbers, no labels, no captions, no logos, no watermark.`;
       const resolvedModel = model === "turbo" ? "flux" : model;
       return await generateCoverImage(fallbackPrompt, resolvedModel);
     } catch (fallbackError) {
@@ -193,3 +235,11 @@ export const generateNeuroShelfCover = async (
     }
   }
 };
+
+// Clear caches periodically to prevent memory bloat (every 1 hour)
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    if (promptCache.size > 100) promptCache.clear();
+    if (imageCache.size > 50) imageCache.clear();
+  }, 3600000);
+}
