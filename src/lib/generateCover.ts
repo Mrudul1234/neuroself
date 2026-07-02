@@ -148,7 +148,7 @@ Now generate the prompt for this title.`;
 // ── STEP 2: Generate image from AI prompt (with timeout & abort) ─────────
 const generateCoverImage = async (
   imagePrompt: string,
-  selectedModel: string = "flux",
+  selectedModel: string = "turbo",
 ): Promise<string> => {
   // Check image cache
   const imageCacheKey = `${imagePrompt}:${selectedModel}`;
@@ -173,31 +173,28 @@ const generateCoverImage = async (
   });
 
   try {
-    // Use AbortController with 30-second timeout for non-blocking operation
+    // Use AbortController with 30-second timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    // Non-blocking fetch: return URL immediately, generate in background
-    fetch(imageUrl, { signal: controller.signal })
-      .then((response) => {
-        clearTimeout(timeoutId);
-        if (!response.ok) {
-          console.warn("[NeuroShelf Cover] Image API returned non-OK status:", response.status);
-        } else {
-          console.log("[NeuroShelf Cover] Image generated successfully");
-        }
-      })
-      .catch((error) => {
-        clearTimeout(timeoutId);
-        if (error.name !== 'AbortError') {
-          console.error("[NeuroShelf Cover] Image API fetch failed:", error);
-        }
-      });
+    // Blocking fetch: wait for generation to complete so success toast is timed properly
+    const response = await fetch(imageUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      console.warn("[NeuroShelf Cover] Image API returned non-OK status:", response.status);
+    } else {
+      console.log("[NeuroShelf Cover] Image generated successfully");
+    }
   } catch (error) {
-    console.error("[NeuroShelf Cover] Error initiating image fetch:", error);
+    if (error instanceof Error && error.name !== 'AbortError') {
+      console.error("[NeuroShelf Cover] Image API fetch failed:", error);
+    } else {
+      console.error("[NeuroShelf Cover] Image generation timed out or aborted.");
+    }
   }
 
-  // Cache and return URL immediately
+  // Cache and return URL
   imageCache.set(imageCacheKey, imageUrl);
   
   return imageUrl;
@@ -207,7 +204,7 @@ const generateCoverImage = async (
 export const generateNeuroShelfCover = async (
   title: string,
   type: "paper" | "article" | "video",
-  model: string = "flux",
+  model: string = "turbo",
 ): Promise<string | null> => {
   const cleanedTitle = cleanTitleForPrompt(title);
 
@@ -216,19 +213,15 @@ export const generateNeuroShelfCover = async (
     const imagePrompt = await writeCoverPrompt(cleanedTitle, type);
     console.log("[NeuroShelf Cover] Generated Prompt from OpenAI model:", imagePrompt);
 
-    // If model is turbo, map it to flux (or whatever fast model the user prefers)
-    const resolvedModel = model === "turbo" ? "flux" : model;
-
-    // Generate the cover using the visual prompt (non-blocking)
-    const imageUrl = await generateCoverImage(imagePrompt, resolvedModel);
+    // Generate the cover using the visual prompt (blocking until ready)
+    const imageUrl = await generateCoverImage(imagePrompt, model);
     return imageUrl;
   } catch (error) {
     console.error("[NeuroShelf Cover] Cover generation failed:", error);
     // Fallback: if text generation fails, use a direct fallback template
     try {
       const fallbackPrompt = `A soft gradient-mesh illustration of a human brain rendered as a smooth, rounded semi-abstract object with gentle airbrushed shading and soft gradient transitions. Composed over simple abstract rolling wave shapes in soft flowing bands. Warm muted palette of sage green, terracotta orange, and cream with soft blended transitions. Calm, minimal composition, generous negative space, subtle paper-grain texture background. No text, no words, no letters, no numbers, no labels, no captions, no logos, no watermark.`;
-      const resolvedModel = model === "turbo" ? "flux" : model;
-      return await generateCoverImage(fallbackPrompt, resolvedModel);
+      return await generateCoverImage(fallbackPrompt, model);
     } catch (fallbackError) {
       console.error("[NeuroShelf Cover] Fallback cover generation failed:", fallbackError);
       return null;

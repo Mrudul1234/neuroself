@@ -24,6 +24,7 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
   const [type, setType] = useState<ItemType>("article");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
       setUrl(item.url);
       setType(item.type);
       setError(null);
+      setConfirmDelete(false);
     }
   }, [item, open]);
 
@@ -72,8 +74,11 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
 
   const handleDelete = async () => {
     if (!item) return;
-    const confirmed = window.confirm("Are you sure you want to delete this item?");
-    if (!confirmed) return;
+    
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
 
     setDeleting(true);
     try {
@@ -225,11 +230,15 @@ export function EditItemModal({ open, item, onClose, onSaved }: Props) {
               type="button"
               onClick={handleDelete}
               disabled={deleting || saving}
-              className="mr-auto inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-4 py-2.5 text-red-600 hover:bg-red-100 transition-colors active:scale-95 cursor-pointer disabled:opacity-50"
+              className={`mr-auto inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 transition-colors active:scale-95 cursor-pointer disabled:opacity-50 ${
+                confirmDelete 
+                  ? "border-red-600 bg-red-600 text-white hover:bg-red-700"
+                  : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+              }`}
               style={{ fontSize: 13, fontWeight: 600 }}
             >
               {deleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-              <span>Delete</span>
+              <span>{confirmDelete ? "Confirm Delete?" : "Delete"}</span>
             </button>
 
             <button

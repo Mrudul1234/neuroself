@@ -539,11 +539,11 @@ export const LibraryCard = memo(function LibraryCard({
     setRegenerating(true);
     toast.loading("Generating cover…", { id: `cover-${item.id}` });
     try {
-      const url = await generateNeuroShelfCover(item.title, item.type, "flux");
+      const url = await generateNeuroShelfCover(item.title, item.type, "turbo");
       if (url) {
         setThumb(url);
-        const { supabase } = await import("@/integrations/supabase/client");
-        await supabase.from("library_items").update({ thumbnail_url: url }).eq("id", item.id);
+        const { updateItem } = await import("@/lib/library");
+        await updateItem(item.id, { thumbnail_url: url });
         toast.success("New cover generated ✓", { id: `cover-${item.id}` });
         onChanged?.();
       } else {
