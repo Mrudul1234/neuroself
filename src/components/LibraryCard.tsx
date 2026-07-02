@@ -194,7 +194,15 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
     e.preventDefault();
     e.stopPropagation();
     if (isEditing || confirming) return;
-    setIsOverlayActive((v) => !v);
+    if (isPinboard) {
+      void handleOpenContent(e);
+    } else {
+      // Toggle overlay on mobile/touch only
+      const isMobileOrTouch = typeof window !== "undefined" && (window.innerWidth < 768 || !window.matchMedia("(hover: hover)").matches);
+      if (isMobileOrTouch) {
+        setIsOverlayActive((v) => !v);
+      }
+    }
   };
 
   const handleOpenContent = async (e: React.MouseEvent) => {
@@ -233,6 +241,66 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
     article: "linear-gradient(135deg, #e8f0eb, #d0e4d8)",
     video: "linear-gradient(135deg, #e8e0f0, #d0c8e4)",
   };
+
+  const inlineOverlay = (
+    <div
+      className={`inline-action-overlay absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 rounded-[inherit] ${
+        isOverlayActive ? "is-active" : ""
+      }`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Close X (only visible on mobile/touch click-to-reveal) */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOverlayActive(false);
+        }}
+        className="close-btn absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-white/90 hover:bg-white/30 transition-colors"
+        aria-label="Close"
+      >
+        <X size={11} strokeWidth={2.5} />
+      </button>
+
+      {/* View */}
+      <button
+        type="button"
+        onClick={handleOpenContent}
+        className="flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-midnight-ink shadow-md hover:bg-white transition-colors text-[11px] font-semibold"
+      >
+        <BookOpen size={12} />
+        View
+      </button>
+
+      {/* Edit */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOverlayActive(false);
+          setIsEditing(true);
+        }}
+        className="flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-midnight-ink shadow-md hover:bg-white transition-colors text-[11px] font-semibold"
+      >
+        <Pencil size={12} />
+        Edit
+      </button>
+
+      {/* Generate Cover */}
+      <button
+        type="button"
+        onClick={(e) => {
+          setIsOverlayActive(false);
+          handleRegenerate(e);
+        }}
+        disabled={regenerating}
+        className="flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-midnight-ink shadow-md hover:bg-white transition-colors text-[11px] font-semibold disabled:opacity-60"
+      >
+        {regenerating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+        Generate
+      </button>
+    </div>
+  );
 
   const cover = isVideo ? (
     /* --- VIDEO CARD LAYOUT (No book opening) --- */
@@ -295,6 +363,8 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
       />
       {/* Sheen effect */}
       <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover/cover:translate-x-full" />
+      
+      {inlineOverlay}
     </div>
   ) : (
     /* --- ARTICLE & PAPER 3D BOOK LAYOUT --- */
@@ -373,6 +443,8 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
               </div>
               {/* Glossy sheen */}
               <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover/cover:translate-x-full" />
+              
+              {inlineOverlay}
             </div>
 
             {/* Left side of the book (spine) */}
@@ -447,9 +519,6 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
     }
   };
 
-  // Actions menu classes for desktop (prevents clipping)
-  const showActionsDesktop =
-    "hidden md:flex opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto";
 
   if (previewOnly) {
     return (
@@ -572,127 +641,15 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* Desktop Hover Action Menu (positioned above the card) */}
-      <div
-        className={`absolute -top-6 left-1/2 -translate-x-1/2 z-30 gap-1.5 p-1 bg-white/95 backdrop-blur-sm rounded-full shadow-lg border border-stone-mist/60 ${showActionsDesktop}`}
-        onTouchStart={(e) => e.stopPropagation()}
-        onTouchEnd={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
+      {/* Card Button Wrapper */}
+      <button
+        type="button"
+        onClick={handleCardClick}
+        title={item.title}
+        className="block w-full text-left outline-none cursor-pointer"
       >
-        <button
-          type="button"
-          onClick={handleRegenerate}
-          disabled={regenerating}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-midnight-ink shadow-md ring-1 ring-black/10 transition-transform active:scale-95 hover:bg-amber-pulse disabled:opacity-60 cursor-pointer"
-          title="Generate AI cover"
-          aria-label="Generate AI cover"
-        >
-          {regenerating ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={12} />}
-        </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsEditing(true);
-          }}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-midnight-ink shadow-md ring-1 ring-black/10 transition-transform active:scale-95 hover:bg-cream-paper cursor-pointer"
-          title="Edit"
-          aria-label="Edit item"
-        >
-          <Pencil size={12} />
-        </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setConfirming(true);
-          }}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive shadow-md ring-1 ring-black/10 transition-transform active:scale-95 hover:bg-destructive hover:text-white cursor-pointer"
-          title="Remove"
-          aria-label="Remove item"
-        >
-          <X size={12} strokeWidth={2.5} />
-        </button>
-      </div>
-
-      {/* Card Button Wrapper with Inline Overlay */}
-      <div className="relative w-full">
-        <button
-          type="button"
-          onClick={handleCardClick}
-          title={item.title}
-          className="block w-full text-left outline-none cursor-pointer"
-        >
-          {cover}
-        </button>
-
-        {/* Inline Action Overlay */}
-        <div
-          className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 rounded-[10px] transition-all duration-150 ${
-            isOverlayActive
-              ? "opacity-100 scale-100 pointer-events-auto"
-              : "opacity-0 scale-95 pointer-events-none"
-          }`}
-          style={{
-            background: "linear-gradient(180deg, rgba(26,26,26,0.55) 0%, rgba(26,26,26,0.78) 100%)",
-            backdropFilter: "blur(2px)",
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Close X */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsOverlayActive(false);
-            }}
-            className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-white/90 hover:bg-white/30 transition-colors"
-            aria-label="Close"
-          >
-            <X size={11} strokeWidth={2.5} />
-          </button>
-
-          {/* View */}
-          <button
-            type="button"
-            onClick={handleOpenContent}
-            className="flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-midnight-ink shadow-md hover:bg-white transition-colors text-[11px] font-semibold"
-          >
-            <BookOpen size={12} />
-            View
-          </button>
-
-          {/* Edit */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsOverlayActive(false);
-              setIsEditing(true);
-            }}
-            className="flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-midnight-ink shadow-md hover:bg-white transition-colors text-[11px] font-semibold"
-          >
-            <Pencil size={12} />
-            Edit
-          </button>
-
-          {/* Generate Cover */}
-          <button
-            type="button"
-            onClick={(e) => {
-              setIsOverlayActive(false);
-              handleRegenerate(e);
-            }}
-            disabled={regenerating}
-            className="flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-midnight-ink shadow-md hover:bg-white transition-colors text-[11px] font-semibold disabled:opacity-60"
-          >
-            {regenerating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-            Generate
-          </button>
-        </div>
-      </div>
+        {cover}
+      </button>
 
       {/* Typography with Ellipsis prevention, proper spacing */}
       <div

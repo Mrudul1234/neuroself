@@ -131,7 +131,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
         extracted_text: extractedText,
       };
       setDraft(initialDraft);
-      toast.success("PDF uploaded and parsed with PyMuPDF — review and save.");
+      toast.success("pdf uploaded");
 
       // Trigger cover generation pipeline
       const coverUrl = await generateNeuroShelfCover(cleanTitle, "paper", imageModel);

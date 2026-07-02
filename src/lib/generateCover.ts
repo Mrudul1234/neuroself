@@ -89,7 +89,7 @@ const generateCoverImage = async (
     (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_POLLINATIONS_API_KEY ||
     "sk_3W0bDijmfLwhwIebWPPRKjpwkHegcMWe";
 
-  const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=400&height=560&model=${selectedModel}&seed=${seed}&nologo=true&enhance=true&key=${apiKey}`;
+  const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=400&height=560&model=${selectedModel}&seed=${seed}&nologo=true&enhance=false&key=${apiKey}`;
 
   console.log("[NeuroShelf Cover] Requesting Pollinations Image API:", {
     imagePrompt,
@@ -118,42 +118,16 @@ export const generateNeuroShelfCover = async (
 ): Promise<string | null> => {
   const cleanedTitle = cleanTitleForPrompt(title);
 
-  const promptTemplate = `Create a clean editorial cover illustration for "{TITLE}".
-
-Interpret the title as a simple visual concept rather than a literal scene. Focus on one strong central subject with minimal supporting elements.
-
-Art Direction:
-• Layered Papercut Craft with soft stacked paper depth
-• Modern Layered Paper Art composition
-• Subtle Pop Art influence using bold but limited color blocks
-• Inspired by DTI Fiber Tractography and abstract neural pathways with elegant flowing lines
-• Gentle spiral and organic wave motifs
-• Soft Fauvist color harmony with painterly textures
-• Light Impressionist brush touches and handcrafted paper feel
-• Contemporary educational illustration aesthetic
-• Calm, bright, minimal, and visually soothing
-
-Style Rules:
-• Flat to semi-flat illustration
-• Clean geometric shapes
-• Soft rounded forms
-• Paper-cut layered shadows only
-• Limited color palette (4–6 harmonious colors)
-• Plenty of negative space
-• Balanced composition
-• Minimal details
-• No clutter
-• No text, labels, icons, logos, UI elements, borders, or watermarks
-• Avoid photorealism completely
-• Avoid cinematic lighting
-• Avoid hyper-detail
-• Avoid 3D rendering
-• Avoid realistic textures
-• Avoid people unless essential to the topic
-• Maintain a consistent modern editorial illustration style across all topics
-
-Mood:
-Thoughtful, intelligent, calming, aesthetic, modern, scientific, creative, approachable, premium.`;
+  const promptTemplate = `A calm, minimal, aesthetically soothing illustration about "{TITLE}" in a layered papercut craft
+style — soft stacked paper depth, hand-cut layered composition, contemporary
+educational-illustration aesthetic. Abstract flowing lines inspired by DTI fiber
+tractography and neural pathways, arranged in gentle spiral and organic wave
+motifs, as the dominant visual motif. Soft Fauvist-inspired color harmony with
+painterly textures. Subtle, limited pop-art color blocking used sparingly as an
+accent, not a dominant style. Light impressionist brush touches, handcrafted
+paper feel. Bright, uncluttered composition with generous negative space.
+No text, no words, no letters, no numbers, no typography, no captions, no logos,
+no watermark.`;
 
   const imagePrompt = promptTemplate.replace(/{TITLE}/g, cleanedTitle);
 

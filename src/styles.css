@@ -928,4 +928,45 @@
       transition: none !important;
     }
   }
+
+  /* Inline Action Overlay split styling */
+  .inline-action-overlay {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.95);
+  }
+
+  /* Default (mobile/no-hover/touch) style: click activated */
+  .inline-action-overlay.is-active {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: scale(1) !important;
+    background: linear-gradient(180deg, rgba(26,26,26,0.3) 0%, rgba(26,26,26,0.48) 100%) !important;
+    backdrop-filter: blur(4px) !important;
+  }
+
+  /* Desktop (md viewport and hover-capable) style: hover activated, no blur, no heavy scrim */
+  @media (min-width: 768px) and (hover: hover) {
+    /* Reset mobile/touch click-based rules on hover-capable desktops */
+    .inline-action-overlay {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: scale(0.95) !important;
+      background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.35) 100%) !important;
+      backdrop-filter: none !important;
+    }
+
+    /* Trigger show on card cover hover */
+    .group\/cover:hover .inline-action-overlay {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      transform: scale(1) !important;
+    }
+
+    /* Hide close X button on hover-capable desktop */
+    .inline-action-overlay .close-btn {
+      display: none !important;
+    }
+  }
 }
