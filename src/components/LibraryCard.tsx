@@ -12,7 +12,7 @@ import {
   Youtube,
   HardDrive,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import {
@@ -22,8 +22,9 @@ import {
   type LibraryItem,
 } from "@/lib/library";
 import { EditItemModal } from "./EditItemModal";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, useInView } from "framer-motion";
 import { generateNeuroShelfCover } from "@/lib/generateCover";
+import { PosterCard } from "./PosterCard";
 
 const iconFor: Record<ItemType, typeof FileText> = {
   paper: FileText,
@@ -155,7 +156,14 @@ function PushPin({ color = "#ef4444" }: { color?: string }) {
   );
 }
 
-export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinboard, index }: CardProps) {
+export const LibraryCard = memo(function LibraryCard({
+  item,
+  width = 128,
+  onChanged,
+  previewOnly,
+  isPinboard,
+  index,
+}: CardProps) {
   const Icon = iconFor[item.type];
   const isVideo = item.type === "video";
 
@@ -189,18 +197,22 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
       rotation + (maxSway * 0.5) * directionMultiplier * speedMultiplier * 10,
     ]
   );
-  const sway = useSpring(rawSway, { stiffness: 60, damping: 20 });
-
-  const boxShadow = useTransform(sway, (val) => {
-    const diff = Math.abs(val - rotation);
-    const factor = Math.min(diff / maxSway, 1); // 0 at rest, 1 at max sway
-    const blur = 6 + factor * 12;
-    const offset = 3 + factor * 8;
-    const opacity = 0.16 + factor * 0.16;
-    return `0 ${offset}px ${blur}px rgba(0,0,0,${opacity}), 0 1px 3px rgba(0,0,0,0.08)`;
-  });
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
 
   const cardRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(cardRef, { margin: "200px" });
+
+  const sway = useSpring((isMobile || !isInView ? rotation : rawSway) as any, { stiffness: 60, damping: 20 });
+
+  const shadowOpacity = useTransform(sway, (val: any) => {
+    const diff = Math.abs(val - rotation);
+    const factor = Math.min(diff / maxSway, 1); // 0 at rest, 1 at max sway
+    return 0.16 + factor * 0.3; // Maps to ~0.16 -> 0.46
+  });
+
   const [pressed, setPressed] = useState(false);
   const [touchStartPos, setTouchStartPos] = useState({ x: 0, y: 0, time: 0 });
 
@@ -381,18 +393,7 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
           {!imageLoaded && <div className="h-full w-full animate-shimmer" />}
         </>
       ) : (
-        <div
-          className="flex h-full w-full flex-col justify-between px-2 py-3 text-center"
-          style={{ background: typeGradients.video }}
-        >
-          <div />
-          <span className="font-instrument italic text-midnight-ink line-clamp-5 px-1 text-[13px] leading-tight">
-            {item.title}
-          </span>
-          <div className="flex justify-center">
-            <Play size={16} className="text-[#8a8a80] opacity-80" />
-          </div>
-        </div>
+        <PosterCard title={item.title} subtitle="Video" index={index ?? 0} />
       )}
 
       {/* Translucent overlay with pulsing play button */}
@@ -464,18 +465,7 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
                   {!imageLoaded && <div className="h-full w-full animate-shimmer" />}
                 </>
               ) : (
-                <div
-                  className="flex h-full w-full flex-col justify-between px-2 py-3 text-center"
-                  style={{ background: typeGradients[item.type] || typeGradients.paper }}
-                >
-                  <div />
-                  <span className="font-instrument italic text-midnight-ink line-clamp-5 px-1 text-[13px] leading-tight">
-                    {item.title}
-                  </span>
-                  <div className="flex justify-center">
-                    <Icon size={16} className="text-[#8a8a80] opacity-80" />
-                  </div>
-                </div>
+                <PosterCard title={item.title} subtitle={item.type} index={index ?? 0} />
               )}
 
               {/* Paper grain */}
@@ -624,10 +614,19 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
           background: bg,
           transformOrigin: "50% 8px",
           rotate: sway,
-          boxShadow,
+          willChange: isInView ? "transform" : "auto",
         }}
         onClick={handleCardClick}
       >
+        {/* GPU-accelerated animated shadow */}
+        <motion.div
+          className="pointer-events-none absolute inset-0 rounded-[4px]"
+          style={{
+            opacity: shadowOpacity,
+            boxShadow: "0 11px 18px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.08)",
+          }}
+        />
+
         {/* Glossy 3D Pushpin */}
         <PushPin color={pinColor} />
 
@@ -788,7 +787,7 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
       />
     </motion.div>
   );
-}
+});
 
 export function EmptyCard({ label, width = 120 }: { label: string; width?: number }) {
   return (
