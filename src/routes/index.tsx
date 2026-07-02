@@ -169,7 +169,7 @@ function LibraryPage() {
       </div>
       {/* ──────────────────────────────────────────────────────────── */}
 
-      <div className="relative mx-auto max-w-[1200px] px-5 pb-36 pt-5 sm:px-8 sm:pt-6">
+      <div className="relative mx-auto max-w-[1080px] px-4 pb-24 pt-4 sm:px-6 sm:pb-28 sm:pt-5">
         {/* Top utility bar */}
         <header className="flex items-center justify-between">
           <button
@@ -199,17 +199,17 @@ function LibraryPage() {
         ) : (
           <>
             {/* Title block */}
-            <div className="mt-6 text-center sm:mt-10 content-card">
+            <div className="mt-5 text-center sm:mt-8 content-card">
               <div
                 className="uppercase text-graphite-veil"
-                style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.22em" }}
+                style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.22em" }}
               >
                 My Brain Library
               </div>
               <h1
-                className="mt-2 font-fraunces text-midnight-ink"
+                className="mt-1.5 font-fraunces text-midnight-ink"
                 style={{
-                  fontSize: "clamp(64px, 16vw, 132px)",
+                  fontSize: "clamp(56px, 12vw, 100px)",
                   lineHeight: 0.88,
                   letterSpacing: "-0.055em",
                   fontWeight: 500,
@@ -219,8 +219,8 @@ function LibraryPage() {
                 Shelves<span className="text-amber-pulse">.</span>
               </h1>
               <div
-                className="mx-auto mt-3 font-instrument italic text-smoke"
-                style={{ fontSize: 15, lineHeight: 1.2, maxWidth: 320 }}
+                className="mx-auto mt-2 font-instrument italic text-smoke"
+                style={{ fontSize: 14, lineHeight: 1.2, maxWidth: 300 }}
               >
                 a quiet place for the things your brain wants to keep
               </div>
@@ -248,7 +248,7 @@ function LibraryPage() {
             )}
 
             {/* Shelves */}
-            <div className="mt-8 space-y-9 sm:mt-12 sm:space-y-12">
+            <div className="mt-6 space-y-7 sm:mt-8 sm:space-y-9">
               {loading ? (
                 <div
                   className="text-center text-smoke content-card"

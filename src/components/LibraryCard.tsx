@@ -22,9 +22,7 @@ import {
   type LibraryItem,
 } from "@/lib/library";
 import { EditItemModal } from "./EditItemModal";
-import { BookOverlay } from "./BookOverlay";
 import { motion } from "framer-motion";
-import { VideoModal } from "./VideoModal";
 import { generateNeuroShelfCover } from "@/lib/generateCover";
 
 const iconFor: Record<ItemType, typeof FileText> = {
@@ -151,25 +149,19 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
   }, [item.thumbnail_url]);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [isSelected, setIsSelected] = useState(false);
-  const [isBookOpen, setIsBookOpen] = useState(false);
-  const [isVideoOpen, setIsVideoOpen] = useState(false);
+  const [isOverlayActive, setIsOverlayActive] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const [pressed, setPressed] = useState(false);
   const [touchStartPos, setTouchStartPos] = useState({ x: 0, y: 0, time: 0 });
 
-  // Close card selection when clicking outside (mobile)
+  // Close overlay when clicking outside
   useEffect(() => {
-    if (!isSelected) return;
+    if (!isOverlayActive) return;
     const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
       const target = e.target as HTMLElement;
-      if (
-        cardRef.current &&
-        !cardRef.current.contains(target) &&
-        !target.closest(".mobile-glass-capsule")
-      ) {
-        setIsSelected(false);
+      if (cardRef.current && !cardRef.current.contains(target)) {
+        setIsOverlayActive(false);
       }
     };
     document.addEventListener("mousedown", handleOutsideClick);
@@ -178,7 +170,7 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("touchstart", handleOutsideClick);
     };
-  }, [isSelected]);
+  }, [isOverlayActive]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     // Standard browser tap/click handlers are preferred to prevent open lag
@@ -198,30 +190,30 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
     setPressed(false);
   };
 
-  const handleCardClick = async (e: React.MouseEvent) => {
+  const handleCardClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (isEditing || confirming) return;
+    setIsOverlayActive((v) => !v);
+  };
 
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-    if (isMobile) {
-      setIsBookOpen(true);
-    } else {
-      // Laptop: Open original content PDF/Link directly
-      try {
-        let targetUrl = item.url;
-        if (item.storage_path) {
-          const { getSignedFileUrl } = await import("@/lib/library");
-          targetUrl = await getSignedFileUrl(item.storage_path);
-        }
-        if (targetUrl) {
-          window.open(targetUrl, "_blank", "noopener,noreferrer");
-        } else {
-          toast.error("Document link not available.");
-        }
-      } catch {
-        toast.error("Could not resolve document link.");
+  const handleOpenContent = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOverlayActive(false);
+    try {
+      let targetUrl = item.url;
+      if (item.storage_path) {
+        const { getSignedFileUrl } = await import("@/lib/library");
+        targetUrl = await getSignedFileUrl(item.storage_path);
       }
+      if (targetUrl) {
+        window.open(targetUrl, "_blank", "noopener,noreferrer");
+      } else {
+        toast.error("Document link not available.");
+      }
+    } catch {
+      toast.error("Could not resolve document link.");
     }
   };
 
@@ -492,12 +484,13 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
         initial={{ opacity: 0, scale: 0.85, rotate: rotation - 5 }}
         animate={{ opacity: 1, scale: 1, rotate: rotation }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        className="relative flex flex-col justify-between rounded-[2px] p-3.5 shadow-[4px_6px_12px_rgba(0,0,0,0.22)] select-none cursor-pointer group active:scale-[0.97] transition-all border border-white/20"
+        className="pinboard-note relative flex flex-col justify-between rounded-[3px] p-3 shadow-[3px_5px_14px_rgba(0,0,0,0.28),1px_1px_4px_rgba(0,0,0,0.12)] select-none cursor-pointer group active:scale-[0.97] transition-all border border-white/30"
         style={{
           width,
-          minHeight: 120,
+          minHeight: 110,
           background: bg,
-        }}
+          "--note-rotate": `${rotation}deg`,
+        } as React.CSSProperties}
         onClick={handleCardClick}
       >
         {/* Pinned pushpin */}
@@ -505,49 +498,53 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
 
         {/* Paper lines overlay */}
         <div 
-          className="absolute inset-0 pointer-events-none opacity-[0.07]" 
+          className="absolute inset-0 pointer-events-none opacity-[0.05]" 
           style={{
             backgroundImage: "linear-gradient(#000 1px, transparent 1px)",
-            backgroundSize: "100% 18px",
-            backgroundPosition: "0 28px"
+            backgroundSize: "100% 20px",
+            backgroundPosition: "0 32px"
           }}
         />
 
-        <div className="flex flex-col gap-2 pt-2.5 z-10">
-          {/* Title */}
+        {/* Folded corner effect */}
+        <div 
+          className="absolute bottom-0 right-0 w-5 h-5 pointer-events-none"
+          style={{
+            background: "linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.06) 50%)",
+          }}
+        />
+
+        <div className="flex flex-col gap-1.5 pt-2 z-10">
+          {/* Title — Caveat handwritten font */}
           <div 
-            className="font-sans font-semibold text-midnight-ink whitespace-normal leading-snug tracking-tight"
-            style={{ 
-              fontSize: "11.5px", 
-              fontFamily: '"SamsungOne", "Samsung Sharp Sans", "Samsung sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-            }}
+            className="font-caveat font-semibold text-midnight-ink whitespace-normal leading-snug"
+            style={{ fontSize: "15px" }}
           >
             {item.title}
           </div>
 
           {/* Domain / Info */}
           {item.domain && (
-            <span className="text-[8px] text-smoke font-medium font-sans">
+            <span className="text-[8px] text-smoke font-medium font-sans tracking-wide">
               {item.domain}
             </span>
           )}
         </div>
 
-        {/* Bottom section with Badge + Actions */}
-        <div className="flex flex-col gap-2 mt-auto pt-2 border-t border-black/5 z-10">
+        {/* Bottom section with Badge */}
+        <div className="flex flex-col gap-2 mt-auto pt-1.5 border-t border-black/5 z-10">
           <div className="flex items-center justify-between">
             {(() => {
               const platform = getPlatformInfo(item.url, item.storage_path);
               const PlatformIcon = platform.icon;
               return (
-                <span className="inline-flex items-center gap-1 text-[8px] font-bold text-midnight-ink/65 uppercase tracking-wider font-sans">
-                  <PlatformIcon size={8} />
+                <span className="inline-flex items-center gap-1 text-[7px] font-bold text-midnight-ink/55 uppercase tracking-wider font-sans">
+                  <PlatformIcon size={7} />
                   {platform.name}
                 </span>
               );
             })()}
           </div>
-
         </div>
 
         {/* Modals */}
@@ -557,8 +554,6 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
           onClose={() => setIsEditing(false)}
           onSaved={onChanged}
         />
-        <BookOverlay open={isBookOpen} item={item} onClose={() => setIsBookOpen(false)} />
-        <VideoModal open={isVideoOpen} item={item} onClose={() => setIsVideoOpen(false)} />
       </motion.div>
     );
   }
@@ -622,15 +617,82 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
         </button>
       </div>
 
-      {/* Card Button Wrapper */}
-      <button
-        type="button"
-        onClick={handleCardClick}
-        title={item.title}
-        className="block w-full text-left outline-none cursor-pointer"
-      >
-        {cover}
-      </button>
+      {/* Card Button Wrapper with Inline Overlay */}
+      <div className="relative w-full">
+        <button
+          type="button"
+          onClick={handleCardClick}
+          title={item.title}
+          className="block w-full text-left outline-none cursor-pointer"
+        >
+          {cover}
+        </button>
+
+        {/* Inline Action Overlay */}
+        <div
+          className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 rounded-[10px] transition-all duration-150 ${
+            isOverlayActive
+              ? "opacity-100 scale-100 pointer-events-auto"
+              : "opacity-0 scale-95 pointer-events-none"
+          }`}
+          style={{
+            background: "linear-gradient(180deg, rgba(26,26,26,0.55) 0%, rgba(26,26,26,0.78) 100%)",
+            backdropFilter: "blur(2px)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close X */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOverlayActive(false);
+            }}
+            className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-white/90 hover:bg-white/30 transition-colors"
+            aria-label="Close"
+          >
+            <X size={11} strokeWidth={2.5} />
+          </button>
+
+          {/* View */}
+          <button
+            type="button"
+            onClick={handleOpenContent}
+            className="flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-midnight-ink shadow-md hover:bg-white transition-colors text-[11px] font-semibold"
+          >
+            <BookOpen size={12} />
+            View
+          </button>
+
+          {/* Edit */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOverlayActive(false);
+              setIsEditing(true);
+            }}
+            className="flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-midnight-ink shadow-md hover:bg-white transition-colors text-[11px] font-semibold"
+          >
+            <Pencil size={12} />
+            Edit
+          </button>
+
+          {/* Generate Cover */}
+          <button
+            type="button"
+            onClick={(e) => {
+              setIsOverlayActive(false);
+              handleRegenerate(e);
+            }}
+            disabled={regenerating}
+            className="flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-midnight-ink shadow-md hover:bg-white transition-colors text-[11px] font-semibold disabled:opacity-60"
+          >
+            {regenerating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+            Generate
+          </button>
+        </div>
+      </div>
 
       {/* Typography with Ellipsis prevention, proper spacing */}
       <div
@@ -714,12 +776,6 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
         onClose={() => setIsEditing(false)}
         onSaved={() => onChanged?.()}
       />
-
-      {/* Premium 3D Book overlay */}
-      <BookOverlay open={isBookOpen} item={item} onClose={() => setIsBookOpen(false)} />
-
-      {/* Premium Video Modal */}
-      <VideoModal open={isVideoOpen} item={item} onClose={() => setIsVideoOpen(false)} />
     </motion.div>
   );
 }

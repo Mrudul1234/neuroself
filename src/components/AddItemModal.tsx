@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Loader2, Upload, X } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import { Loader2, RefreshCw, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   detectMetadata,
@@ -37,6 +37,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
   const [generatingCover, setGeneratingCover] = useState(false);
   const [imageModel, setImageModel] = useState("flux");
   const fileInput = useRef<HTMLInputElement>(null);
+  const lastFileRef = useRef<File | null>(null);
 
   if (!open) return null;
 
@@ -102,6 +103,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
   };
 
   const handleFile = async (file: File) => {
+    lastFileRef.current = file;
     setError(null);
     setLoading(true);
     setProgress(0);
@@ -275,10 +277,23 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
 
         {error && (
           <div
-            className="mt-4 rounded-[14px] border border-stone-mist bg-cream-paper px-4 py-3 text-smoke"
+            className="mt-4 rounded-[14px] border border-stone-mist bg-cream-paper px-4 py-3"
             style={{ fontSize: 13 }}
           >
-            {error}
+            <p className="text-smoke">{error}</p>
+            {lastFileRef.current && mode === "file" && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (lastFileRef.current) void handleFile(lastFileRef.current);
+                }}
+                disabled={loading}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-midnight-ink px-4 py-2 text-white text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+              >
+                <RefreshCw size={12} />
+                Retry Upload
+              </button>
+            )}
           </div>
         )}
 

@@ -37,6 +37,7 @@
   --font-instrument:
     "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-fraunces: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-caveat: "Caveat", cursive, ui-sans-serif, system-ui;
   /* Backwards-compat alias for any leftover `font-eb-garamond` classes */
   --font-eb-garamond:
     "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
@@ -158,6 +159,11 @@
   .font-fraunces {
     font-family: var(--font-fraunces);
     letter-spacing: -0.04em;
+  }
+  .font-caveat {
+    font-family: var(--font-caveat);
+    letter-spacing: 0;
+    line-height: 1.15;
   }
 
   /* Transitions & Interactive defaults */
@@ -887,6 +893,39 @@
   @media (max-width: 767px) {
     .notebook-wrapper {
       animation: notebookEntranceMobile 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }
+  }
+
+  /* --- PINBOARD NOTE SCROLL WOBBLE --- */
+  @keyframes noteWobble {
+    0% {
+      transform: rotate(var(--note-rotate, 0deg)) translateY(0);
+    }
+    50% {
+      transform: rotate(calc(var(--note-rotate, 0deg) + 1.5deg)) translateY(-3px);
+    }
+    100% {
+      transform: rotate(var(--note-rotate, 0deg)) translateY(0);
+    }
+  }
+
+  .pinboard-note {
+    animation: noteWobble linear both;
+    animation-timeline: scroll();
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+
+  .pinboard-note:hover {
+    transform: rotate(calc(var(--note-rotate, 0deg) * 0.3)) scale(1.02) translateY(-2px) !important;
+    box-shadow: 6px 10px 20px rgba(0, 0, 0, 0.32), 1px 2px 6px rgba(0, 0, 0, 0.15);
+    z-index: 30;
+  }
+
+  /* Disable all motion for users who prefer reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .pinboard-note {
+      animation: none !important;
+      transition: none !important;
     }
   }
 }

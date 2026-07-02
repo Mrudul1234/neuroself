@@ -17,7 +17,7 @@ interface ShelfProps {
  * - Each row sits on a rendered wooden plank with side supports, plus a
  *   thin reflection strip below.
  */
-export function Shelf({ label, items, searching, accent, cardWidth = 118, onChanged }: ShelfProps) {
+export function Shelf({ label, items, searching, accent, cardWidth = 108, onChanged }: ShelfProps) {
   return (
     <section className="space-y-4">
       {/* Row header */}
@@ -47,7 +47,7 @@ export function Shelf({ label, items, searching, accent, cardWidth = 118, onChan
       <div className="relative">
         {/* Books */}
         <div
-          className="flex overflow-x-auto gap-4 px-3 pt-2 pb-3 scrollbar-none shelf-scroll-container md:grid md:gap-x-4 md:gap-y-5 md:pb-0 md:px-0 md:overflow-visible"
+          className="flex overflow-x-auto gap-4 px-3 pt-2 pb-3 scrollbar-none shelf-scroll-container md:grid md:gap-x-3 md:gap-y-4 lg:gap-x-4 lg:gap-y-5 md:pb-0 md:px-0 md:overflow-visible"
           style={{
             gridTemplateColumns: `repeat(auto-fill, minmax(${cardWidth}px, 1fr))`,
           }}

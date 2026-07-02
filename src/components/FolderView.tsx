@@ -11,7 +11,7 @@ export function FolderView({ items, onChanged }: Props) {
 
   return (
     <div
-      className="min-h-[calc(100vh-64px)] rounded-[20px] border-[14px] border-[#5c3a21] p-4 relative shadow-[inset_0_0_60px_rgba(0,0,0,0.5),0_12px_32px_rgba(0,0,0,0.35)] overflow-hidden"
+      className="min-h-[calc(100vh-64px)] rounded-[18px] border-[12px] border-[#5c3a21] p-3 sm:p-4 relative shadow-[inset_0_0_60px_rgba(0,0,0,0.5),0_12px_32px_rgba(0,0,0,0.35)] overflow-hidden"
       style={{
         backgroundColor: "#c68d4a",
         backgroundImage: `
@@ -28,9 +28,9 @@ export function FolderView({ items, onChanged }: Props) {
       <div className="absolute inset-0 pointer-events-none border border-black/15 rounded-[6px]" />
 
       {/* Header card pinned at the top */}
-      <div className="relative mb-8 text-center select-none pt-2">
+      <div className="relative mb-6 text-center select-none pt-2">
         <div
-          className="inline-block bg-[#fcfbfa] px-6 py-2.5 rounded shadow-[2px_4px_8px_rgba(0,0,0,0.25)] border border-stone-mist/60 relative"
+          className="inline-block bg-[#fcfbfa] px-5 py-2 rounded shadow-[2px_4px_8px_rgba(0,0,0,0.25)] border border-stone-mist/60 relative"
           style={{ transform: "rotate(-1.5deg)" }}
         >
           {/* Shiny pushpin for the header card */}
@@ -44,8 +44,8 @@ export function FolderView({ items, onChanged }: Props) {
             </svg>
           </div>
           <h1 
-            className="font-sans text-midnight-ink font-bold tracking-tight leading-none"
-            style={{ fontSize: 22, fontFamily: "system-ui, -apple-system, sans-serif" }}
+            className="font-caveat text-midnight-ink font-bold tracking-tight leading-none"
+            style={{ fontSize: 24 }}
           >
             My Shelf
           </h1>
@@ -60,9 +60,9 @@ export function FolderView({ items, onChanged }: Props) {
 
       {/* Grid of pinned content notes */}
       {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center select-none">
+        <div className="flex flex-col items-center justify-center py-16 text-center select-none">
           <div 
-            className="bg-white/90 px-6 py-4 rounded-[6px] shadow-[2px_4px_8px_rgba(0,0,0,0.15)] border border-stone-mist/40 max-w-[200px]"
+            className="bg-white/90 px-5 py-3.5 rounded-[6px] shadow-[2px_4px_8px_rgba(0,0,0,0.15)] border border-stone-mist/40 max-w-[200px]"
             style={{ transform: "rotate(1deg)" }}
           >
             <p className="text-xs font-semibold text-midnight-ink leading-tight">
@@ -74,7 +74,7 @@ export function FolderView({ items, onChanged }: Props) {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:gap-5 pb-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 pb-5">
           {items.map((item, idx) => (
             <div key={item.id} className="flex justify-center">
               <LibraryCard
@@ -90,7 +90,7 @@ export function FolderView({ items, onChanged }: Props) {
       )}
 
       {/* Footer bar */}
-      <div className="mt-4 flex items-center justify-between border-t border-black/5 pt-4 text-midnight-ink/80 text-[10px] font-bold tracking-wider uppercase font-sans px-1">
+      <div className="mt-3 flex items-center justify-between border-t border-black/5 pt-3 text-midnight-ink/80 text-[10px] font-bold tracking-wider uppercase font-sans px-1">
         <span>archive</span>
         <span>{year}</span>
       </div>

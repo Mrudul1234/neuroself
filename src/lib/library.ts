@@ -917,59 +917,107 @@ export async function generateCover(item: LibraryItem): Promise<string> {
   return dataUrl;
 }
 
+/**
+ * Upload a PDF file to Supabase Storage with real progress tracking.
+ *
+ * Uses a signed upload URL + XMLHttpRequest so the browser provides actual
+ * upload progress events instead of faking them. Retries up to 3 times with
+ * exponential backoff on failure. 5-minute timeout per attempt.
+ */
 export async function uploadPdfFile(
   file: File,
   onProgress?: (pct: number) => void,
 ): Promise<{ path: string; size: number }> {
-  // Emulate progressive loading
-  let currentPct = 5;
-  onProgress?.(currentPct);
+  const MAX_RETRIES = 3;
+  const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes per attempt
 
-  const intervalId = setInterval(() => {
-    if (currentPct < 90) {
-      currentPct += Math.max(1, Math.floor((90 - currentPct) / 10)); // slower as it gets closer
-      onProgress?.(currentPct);
-    }
-  }, 300);
+  let lastError: Error | null = null;
 
-  const uploadPromise = async () => {
-    const ext = file.name.split(".").pop() || "pdf";
-    const path = `${crypto.randomUUID()}.${ext}`;
-
-    const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-    });
-
-    if (error) {
-      throw new Error(`Upload failed: ${error.message}`);
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      // Exponential backoff: 2s, 4s
+      const delay = Math.pow(2, attempt) * 1000;
+      onProgress?.(0);
+      await new Promise((r) => setTimeout(r, delay));
     }
 
-    return { path };
-  };
+    try {
+      // 1. Get a signed upload URL from the server
+      const { signedUrl, path } = await createUploadUrlServer({
+        data: {
+          contentType: file.type || "application/pdf",
+          fileSize: file.size,
+          fileName: file.name,
+        },
+      });
 
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(
-      () =>
-        reject(
-          new Error(
-            "Upload timed out (30s). Please check your internet connection or verify that the 'library-files' storage bucket exists in your Supabase project.",
-          ),
-        ),
-      30000,
-    ),
-  );
+      // 2. Upload via XMLHttpRequest for real progress events
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        let timedOut = false;
 
-  try {
-    const { path } = await Promise.race([uploadPromise(), timeoutPromise]);
-    clearInterval(intervalId);
+        const timeout = setTimeout(() => {
+          timedOut = true;
+          xhr.abort();
+          reject(
+            new Error(
+              "Upload timed out after 5 minutes. Please check your internet connection and try again.",
+            ),
+          );
+        }, TIMEOUT_MS);
 
-    onProgress?.(100);
-    return { path, size: file.size };
-  } catch (err) {
-    clearInterval(intervalId);
-    throw err;
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            onProgress?.(Math.min(pct, 99)); // hold at 99 until confirmed
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          clearTimeout(timeout);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(
+              new Error(
+                `Upload failed (HTTP ${xhr.status}): ${xhr.statusText || "server error"}`,
+              ),
+            );
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          clearTimeout(timeout);
+          if (!timedOut) {
+            reject(new Error("Upload failed — network error. Check your connection."));
+          }
+        });
+
+        xhr.addEventListener("abort", () => {
+          clearTimeout(timeout);
+          if (!timedOut) {
+            reject(new Error("Upload was cancelled."));
+          }
+        });
+
+        xhr.open("PUT", signedUrl);
+        xhr.setRequestHeader("Content-Type", file.type || "application/pdf");
+        xhr.send(file);
+      });
+
+      onProgress?.(100);
+      return { path, size: file.size };
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      console.warn(
+        `[uploadPdfFile] Attempt ${attempt + 1}/${MAX_RETRIES} failed:`,
+        lastError.message,
+      );
+      // Continue to retry unless it's the last attempt
+    }
   }
+
+  throw lastError ?? new Error("Upload failed after multiple attempts.");
 }
 
 export async function getSignedFileUrl(path: string, expiresIn = 60 * 60): Promise<string> {
