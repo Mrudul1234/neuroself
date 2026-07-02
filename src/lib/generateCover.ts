@@ -44,67 +44,27 @@ paper, article, or video. Output a single, ready-to-use image-generation prompt.
 Nothing else. No explanation, no preamble, no markdown, no quotation marks around
 the output — just the prompt text itself.
 
-STEP 1 — Identify the subject.
-If the title names a specific brain region, structure, neurotransmitter, cell
-type, or neural process, the image must depict that specific thing (e.g. "Frontal
-Lobe" -> the frontal lobe highlighted in a brain cross-section; "Neurons" -> a
-neuron cell with dendrites and axon; "Amygdala and Fear" -> the amygdala within
-the limbic system).
-If the title is generic and names nothing anatomically specific (e.g. "Report,"
-"My Notes," "Untitled"), default to a general brain-and-upper-spinal-cord side
-profile as the subject — do not leave the subject vague and do not invent
-something unrelated to neuroscience.
+STEP 1 — Choose the design elements.
+Based on the mood and subject of the title, select one option for each of the following:
+- Background Color: Choose from deep orange, cobalt blue, forest green, cream, coral red, mustard yellow, or navy.
+- Typography: Choose one from Neue Haas Grotesk, Söhne, General Sans, Fraunces (bold serif/italic), Canela, Editorial New, Recoleta, Aeonik, or Archivo Black.
+- Title Placement: Choose one from:
+  1. Top-left aligned, large scale, breaking into 2–3 lines
+  2. Dead-center, medium scale, single or double line
+  3. Bottom-anchored, with subtitle above it
+  4. Title split across the card with one word large at top and one word large at bottom
+  5. Off-center/asymmetric placement with generous negative space on one side
 
-STEP 2 — Apply this exact visual style, every time, regardless of subject:
-Soft gradient-mesh illustration style. The main subject rendered as a smooth,
-rounded, semi-abstract object with gentle airbrushed shading and soft gradient
-transitions between tones — no hard outlines, no flat color blocking, no line
-art. Composed over simple abstract wave or rolling-hill shapes in the
-background, layered in soft flowing bands. Warm, muted, earthy color palette:
-sage green, terracotta orange, and cream, with soft blended transitions between
-them. Gentle, calm, minimal composition with generous negative space. Textured
-paper-grain background feel. No face, no head, no human figure, no anatomical
-skull or cross-section context — the subject stands alone against the
-background shapes.
+STEP 2 — Construct the final prompt using this template:
+niche neuroscience,brainparts,neuroscience,cognitive science,aiml,computer science,neuroscience the design a single flat-color poster card in a bold modern editorial/Swiss design style, similar to a minimalist typographic book cover. Background: solid flat color block in [SELECTED COLOR].
+Typography: The title "[EXACT TITLE]" is set in [SELECTED TYPOGRAPHY].
+Title placement: [SELECTED TITLE PLACEMENT]. The title must stay fully inside a safe margin (minimum 8–10% padding from every edge) — never cropped, cut off, or bleeding off the canvas.
+Supporting elements: A small thin-lined subtitle/tagline in a lighter weight, positioned near the title. A small numbered label (e.g. "01") in a top or bottom corner, in muted, low-contrast text.
+Overall style: Generous negative space, high contrast between text and background, no imagery or icons — pure typographic composition. Confident, editorial, print-like, similar to a limited-edition design zine or book cover.
 
-STEP 3 — Always end the prompt with this exact clause:
-No text, no words, no letters, no numbers, no labels, no captions, no logos, no
-watermark.
+Replace [SELECTED COLOR], [SELECTED TYPOGRAPHY], [SELECTED TITLE PLACEMENT], and [EXACT TITLE] with your choices and the provided title. Do not include the brackets.
 
-EXAMPLES:
-
-Title: "Frontal Lobe"
-Prompt: A soft gradient-mesh illustration of a human brain rendered as a smooth,
-rounded semi-abstract object with gentle airbrushed shading, the frontal lobe
-region distinguished by a subtle warm color shift within the brain form, no
-hard outlines, no flat color blocking. Composed over simple abstract rolling
-wave shapes in soft flowing bands. Warm muted palette of sage green, terracotta
-orange, and cream with soft blended transitions. Calm, minimal composition,
-generous negative space, subtle paper-grain texture background. No face, no
-head, no human figure, no skull, no text, no words, no letters, no numbers, no
-labels, no captions, no logos, no watermark.
-
-Title: "Neurons: Structure and Function"
-Prompt: A soft gradient-mesh illustration of a single neuron rendered as a
-smooth, rounded semi-abstract form with branching dendrites and a flowing axon,
-gentle airbrushed shading, no hard outlines, no flat color blocking. Composed
-over simple abstract wave shapes in soft flowing bands. Warm muted palette of
-sage green, terracotta orange, and cream with soft blended transitions. Calm,
-minimal composition, generous negative space, subtle paper-grain texture
-background. No face, no head, no human figure, no text, no words, no letters,
-no numbers, no labels, no captions, no logos, no watermark.
-
-Title: "Report"
-Prompt: A soft gradient-mesh illustration of a human brain rendered as a smooth,
-rounded semi-abstract object with gentle airbrushed shading, no hard outlines,
-no flat color blocking. Composed over simple abstract rolling wave shapes in
-soft flowing bands. Warm muted palette of sage green, terracotta orange, and
-cream with soft blended transitions. Calm, minimal composition, generous
-negative space, subtle paper-grain texture background. No face, no head, no
-human figure, no skull, no text, no words, no letters, no numbers, no labels,
-no captions, no logos, no watermark.
-
-Now generate the prompt for this title.`;
+Now generate the prompt for the given title.`;
 
   const userMessage = `Title: "${title}"`;
 
@@ -226,7 +186,7 @@ export const generateNeuroShelfCover = async (
     console.error("[NeuroShelf Cover] Cover generation failed:", error);
     // Fallback: if text generation fails, use a direct fallback template
     try {
-      const fallbackPrompt = `A soft gradient-mesh illustration of a human brain rendered as a smooth, rounded semi-abstract object with gentle airbrushed shading and soft gradient transitions. Composed over simple abstract rolling wave shapes in soft flowing bands. Warm muted palette of sage green, terracotta orange, and cream with soft blended transitions. Calm, minimal composition, generous negative space, subtle paper-grain texture background. No text, no words, no letters, no numbers, no labels, no captions, no logos, no watermark.`;
+      const fallbackPrompt = `niche neuroscience,brainparts,neuroscience,cognitive science,aiml,computer science,neuroscience the design a single flat-color poster card in a bold modern editorial/Swiss design style, similar to a minimalist typographic book cover. Background: solid flat color block in cream. Typography: The title "Neuroscience Report" is set in Neue Haas Grotesk. Title placement: Dead-center, medium scale, single or double line. The title must stay fully inside a safe margin (minimum 8–10% padding from every edge) — never cropped, cut off, or bleeding off the canvas. Supporting elements: A small thin-lined subtitle/tagline in a lighter weight, positioned near the title. A small numbered label (e.g. "01") in a top or bottom corner, in muted, low-contrast text. Overall style: Generous negative space, high contrast between text and background, no imagery or icons — pure typographic composition. Confident, editorial, print-like, similar to a limited-edition design zine or book cover.`;
       const resolvedModel = model === "turbo" ? "flux" : model;
       return await generateCoverImage(fallbackPrompt, resolvedModel);
     } catch (fallbackError) {
