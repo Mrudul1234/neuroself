@@ -194,16 +194,17 @@ export const LibraryCard = memo(function LibraryCard({
   const directionMultiplier = (index ?? 0) % 2 === 0 ? 1 : -1;
   const maxSway = 3.5;
 
-  const rawSway = useTransform(
-    scrollY,
-    [0, 300, 600, 900],
-    [
-      rotation,
-      rotation + maxSway * directionMultiplier * speedMultiplier * 10,
-      rotation - maxSway * directionMultiplier * speedMultiplier * 10,
-      rotation + maxSway * 0.5 * directionMultiplier * speedMultiplier * 10,
-    ],
-  );
+  const rawSway = useTransform(scrollY, (y) => {
+    // Continuous buttery-smooth oscillation for rotation based on scroll distance
+    // Offset phase by index so cards don't all move together
+    return rotation + Math.sin((y + (index ?? 0) * 120) / 200) * maxSway * directionMultiplier;
+  });
+
+  const rawX = useTransform(scrollY, (y) => {
+    // Continuous left-right shift oscillation
+    return Math.sin((y + (index ?? 0) * 160) / 250) * 12 * directionMultiplier;
+  });
+
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -212,7 +213,8 @@ export const LibraryCard = memo(function LibraryCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(cardRef, { margin: "200px" });
 
-  const sway = useSpring((isMobile || !isInView ? rotation : rawSway) as any, { stiffness: 60, damping: 20 });
+  const sway = useSpring((isMobile || !isInView ? rotation : rawSway) as any, { stiffness: 40, damping: 20 });
+  const translateX = useSpring((isMobile || !isInView ? 0 : rawX) as any, { stiffness: 40, damping: 20 });
 
   const shadowOpacity = useTransform(sway, (val: any) => {
     const diff = Math.abs(val - rotation);
@@ -624,6 +626,7 @@ export const LibraryCard = memo(function LibraryCard({
           background: bg,
           transformOrigin: "50% 8px",
           rotate: sway,
+          x: translateX,
           willChange: isInView ? "transform" : "auto",
         }}
         onClick={handleCardClick}
