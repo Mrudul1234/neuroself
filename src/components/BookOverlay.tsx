@@ -9,9 +9,10 @@ interface Props {
   open: boolean;
   item: LibraryItem | null;
   onClose: () => void;
+  onChanged?: () => void;
 }
 
-export function BookOverlay({ open, item, onClose }: Props) {
+export function BookOverlay({ open, item, onClose, onChanged }: Props) {
   const [shouldRender, setShouldRender] = useState(false);
   const [closing, setClosing] = useState(false);
   const [localItem, setLocalItem] = useState<LibraryItem | null>(null);
@@ -30,6 +31,7 @@ export function BookOverlay({ open, item, onClose }: Props) {
   // AI Summary State
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [generatingSummary, setGeneratingSummary] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
 
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
