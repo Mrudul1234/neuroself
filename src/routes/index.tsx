@@ -199,12 +199,20 @@ function LibraryPage() {
         ) : (
           <>
             {/* Title block */}
-            <div className="mt-5 text-center sm:mt-8 content-card">
+            <div className="mt-5 text-center sm:mt-8 content-card flex flex-col items-center">
+              <div className="mb-4 relative group">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-pulse/20 to-[#ffa946]/20 blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
+                <img
+                  src="/logo.jpg"
+                  alt="neuroself logo"
+                  className="relative h-16 w-16 rounded-full border border-stone-mist/60 shadow-md object-cover"
+                />
+              </div>
               <div
-                className="uppercase text-graphite-veil"
-                style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.22em" }}
+                className="uppercase text-graphite-veil font-semibold tracking-widest"
+                style={{ fontSize: 10, letterSpacing: "0.22em" }}
               >
-                My Brain Library
+                neuroself
               </div>
               <h1
                 className="mt-1.5 font-fraunces text-midnight-ink"
@@ -216,7 +224,7 @@ function LibraryPage() {
                   fontVariationSettings: '"opsz" 144',
                 }}
               >
-                Shelves<span className="text-amber-pulse">.</span>
+                neuroself<span className="text-amber-pulse">.</span>
               </h1>
               <div
                 className="mx-auto mt-2 font-instrument italic text-smoke"

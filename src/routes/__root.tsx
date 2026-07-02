@@ -78,40 +78,40 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
+      { title: "neuroself" },
       {
         name: "description",
         content:
-          "NeuroShelf is a personal web app for organizing brain and neuroscience research papers, articles, and videos.",
+          "neuroself is a personal web app for organizing brain and neuroscience research papers, articles, and videos.",
       },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
+      { name: "author", content: "neuroself" },
+      { property: "og:title", content: "neuroself" },
       {
         property: "og:description",
         content:
-          "NeuroShelf is a personal web app for organizing brain and neuroscience research papers, articles, and videos.",
+          "neuroself is a personal web app for organizing brain and neuroscience research papers, articles, and videos.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Lovable App" },
+      { name: "twitter:site", content: "@neuroself" },
+      { name: "twitter:title", content: "neuroself" },
       {
         name: "twitter:description",
         content:
-          "NeuroShelf is a personal web app for organizing brain and neuroscience research papers, articles, and videos.",
+          "neuroself is a personal web app for organizing brain and neuroscience research papers, articles, and videos.",
       },
       {
         property: "og:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f56cb8d7-3c60-406b-b009-fe1fdf3e0947/id-preview-a2b51bdc--852bf464-f142-4c9d-ad8c-ec1895a3d026.lovable.app-1782812549576.png",
+        content: "/logo.jpg",
       },
       {
         name: "twitter:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f56cb8d7-3c60-406b-b009-fe1fdf3e0947/id-preview-a2b51bdc--852bf464-f142-4c9d-ad8c-ec1895a3d026.lovable.app-1782812549576.png",
+        content: "/logo.jpg",
       },
     ],
     links: [
+      { rel: "icon", type: "image/jpeg", href: "/logo.jpg" },
+      { rel: "apple-touch-icon", href: "/logo.jpg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

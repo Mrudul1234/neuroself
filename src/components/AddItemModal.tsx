@@ -122,7 +122,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
 
       const initialDraft: DraftItem = {
         title: cleanTitle,
-        url: `lovable://library-files/${path}`,
+        url: `neuroself://library-files/${path}`,
         thumbnail_url: null,
         type: "paper",
         domain: null,

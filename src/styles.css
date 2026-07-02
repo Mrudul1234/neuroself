@@ -868,9 +868,11 @@
     perspective: 1000px;
   }
 
-  .book-container-3d:hover .book-3d {
-    transform: rotate3d(0, 1, 0, 28deg) translateY(-4px) !important;
-    box-shadow: 15px 15px 25px rgba(0, 0, 0, 0.22) !important;
+  @media (hover: hover) {
+    .book-container-3d:hover .book-3d {
+      transform: rotate3d(0, 1, 0, 28deg) translateY(-4px) !important;
+      box-shadow: 15px 15px 25px rgba(0, 0, 0, 0.22) !important;
+    }
   }
 
   /* Transition for smooth return */
