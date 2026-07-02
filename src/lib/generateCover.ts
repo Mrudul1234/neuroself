@@ -27,33 +27,18 @@ const writeCoverPrompt = async (
   title: string,
   type: "paper" | "article" | "video",
 ): Promise<string> => {
-  const typeContext = {
-    paper: "a neuroscience research paper",
-    article: "a neuroscience article or blog post",
-    video: "an educational neuroscience video",
-  };
+  const systemInstruction = `You are a creative book cover art director.
+Your job is to write a single precise image generation prompt that describes a beautiful cover illustration matching the title: "${title}".
 
-  const systemInstruction = `You are an expert vintage academic book cover illustrator.
-Your job is to write a single precise image generation prompt that creates a book cover illustration matching this exact style:
+Style Guidelines:
+- Design: Clean, simple, and modern editorial illustration. Bright and visually uplifting.
+- Theme: The illustration should visually resemble or directly represent the core concept of the title in a simple, metaphoric way.
+- Aesthetic: Bright, uncluttered composition with generous negative space and a clean, light cream background. Use a harmonious, bright, but limited color palette (3-4 colors max, e.g. soft teal, gold/amber, and cream).
+- No text: NO words, NO letters, NO numbers, NO labels, NO logos, NO watermarks.
 
-REFERENCE STYLE (always follow these exactly):
-- Background: warm cream/off-white (#ffffeb) with a subtle fine dot or linen grid texture, like aged paper
-- Illustration style: vintage scientific engraving or 1950s medical textbook anatomical illustration — hand-drawn feel, slightly stylized
-- Color palette: ONLY warm teal (#034f46), gold/amber (#ffa946), and cream (#ffffeb) — maximum 3 colors, no other hues
-- Subject: always a neuroscience/brain-related anatomical illustration directly related to the title topic — centered in frame
-- Decorative elements: elegant ornamental swirl flourishes or ribbon motifs in teal and gold at bottom or corners
-- NO text, NO words, NO labels in the image — illustration only
-- NO photorealism, NO 3D rendering, NO gradients, NO digital art effects
-- Style words: vintage, botanical, engraving, anatomical, scholarly, editorial, classic book cover
-- Aspect ratio: tall portrait (2:3), like a hardcover book
+OUTPUT: Return ONLY the raw image generation prompt text under 80 words. No intro, no quotes, no explanations.`;
 
-OUTPUT: Return ONLY the raw image prompt text.
-No explanation, no preamble, no quotes.
-Max 140 words.`;
-
-  const userMessage = `Write an image generation prompt for a vintage academic book cover illustration for ${typeContext[type]} titled: "${title}"
-
-The illustration should depict the specific neuroscience/brain concept named in the title, drawn in the style of a 1940s–1960s medical anatomy textbook engraving on cream paper. Include teal and gold ornamental swirl flourishes at the bottom. NO text.`;
+  const userMessage = `Create a simple, bright, and modern book cover illustration prompt for the content title: "${title}". Make the visual design closely represent and look similar to the title's meaning. No text.`;
 
   const textModel = getTextModel(title);
 
@@ -118,28 +103,27 @@ export const generateNeuroShelfCover = async (
 ): Promise<string | null> => {
   const cleanedTitle = cleanTitleForPrompt(title);
 
-  const promptTemplate = `A calm, minimal, aesthetically soothing illustration about "{TITLE}" in a layered papercut craft
-style — soft stacked paper depth, hand-cut layered composition, contemporary
-educational-illustration aesthetic. Abstract flowing lines inspired by DTI fiber
-tractography and neural pathways, arranged in gentle spiral and organic wave
-motifs, as the dominant visual motif. Soft Fauvist-inspired color harmony with
-painterly textures. Subtle, limited pop-art color blocking used sparingly as an
-accent, not a dominant style. Light impressionist brush touches, handcrafted
-paper feel. Bright, uncluttered composition with generous negative space.
-No text, no words, no letters, no numbers, no typography, no captions, no logos,
-no watermark.`;
-
-  const imagePrompt = promptTemplate.replace(/{TITLE}/g, cleanedTitle);
-
   try {
+    // Call OpenAI to write the image generation prompt matching the title
+    const imagePrompt = await writeCoverPrompt(cleanedTitle, type);
+    console.log("[NeuroShelf Cover] Generated Prompt from OpenAI model:", imagePrompt);
+
     // If model is turbo, map it to flux (or whatever fast model the user prefers)
     const resolvedModel = model === "turbo" ? "flux" : model;
 
-    // Direct Image URL generation using our master prompt
+    // Generate the cover using the visual prompt
     const imageUrl = await generateCoverImage(imagePrompt, resolvedModel);
     return imageUrl;
   } catch (error) {
     console.error("[NeuroShelf Cover] Cover generation failed:", error);
-    return null;
+    // Fallback: if text generation fails, use a direct fallback template
+    try {
+      const fallbackPrompt = `A calm, minimal, aesthetically soothing simple bright illustration about "${cleanedTitle}" in a layered papercut craft style. Bright, uncluttered composition with generous negative space. No text, no words.`;
+      const resolvedModel = model === "turbo" ? "flux" : model;
+      return await generateCoverImage(fallbackPrompt, resolvedModel);
+    } catch (fallbackError) {
+      console.error("[NeuroShelf Cover] Fallback cover generation failed:", fallbackError);
+      return null;
+    }
   }
 };
