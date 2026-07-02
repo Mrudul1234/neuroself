@@ -67,7 +67,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
     try {
       const result = await detectMetadata(url);
       setDraft(result);
-      
+
       setLoading(false);
 
       // YT oEmbed Skip check
@@ -93,7 +93,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
         domain: null,
       };
       setDraft(fallbackDraft);
-      
+
       setLoading(false);
 
       // Generate cover for manual input
@@ -140,7 +140,7 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
       };
       setDraft(initialDraft);
       toast.success("pdf uploaded");
-      
+
       setLoading(false);
 
       // Trigger cover generation pipeline

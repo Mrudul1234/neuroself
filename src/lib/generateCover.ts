@@ -108,8 +108,8 @@ Now generate the prompt for this title.`;
 
   const userMessage = `Title: "${title}"`;
 
-  const apiKey =
-    (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_POLLINATIONS_API_KEY;
+  const apiKey = (import.meta as ImportMeta & { env?: Record<string, string> }).env
+    ?.VITE_POLLINATIONS_API_KEY;
 
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (apiKey) {
@@ -136,12 +136,12 @@ Now generate the prompt for this title.`;
   if (!imagePrompt || !imagePrompt.trim()) {
     throw new Error("Empty prompt returned from chat completions.");
   }
-  
+
   const cleanedPrompt = imagePrompt.trim().replace(/^"|"$/g, "");
-  
+
   // Cache the prompt
   promptCache.set(cacheKey, cleanedPrompt);
-  
+
   return cleanedPrompt;
 };
 
@@ -161,8 +161,8 @@ const generateCoverImage = async (
   const seed = Math.floor(Math.random() * 999999);
 
   // Use the user's secret API key
-  const apiKey =
-    (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_POLLINATIONS_API_KEY;
+  const apiKey = (import.meta as ImportMeta & { env?: Record<string, string> }).env
+    ?.VITE_POLLINATIONS_API_KEY;
 
   const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=400&height=600&model=${selectedModel}&seed=${seed}&nologo=true&enhance=false${apiKey ? `&key=${apiKey}` : ""}`;
 
@@ -189,7 +189,7 @@ const generateCoverImage = async (
       })
       .catch((error) => {
         clearTimeout(timeoutId);
-        if (error.name !== 'AbortError') {
+        if (error.name !== "AbortError") {
           console.error("[NeuroShelf Cover] Image API fetch failed:", error);
         }
       });
@@ -199,7 +199,7 @@ const generateCoverImage = async (
 
   // Cache and return URL immediately
   imageCache.set(imageCacheKey, imageUrl);
-  
+
   return imageUrl;
 };
 
@@ -237,7 +237,7 @@ export const generateNeuroShelfCover = async (
 };
 
 // Clear caches periodically to prevent memory bloat (every 1 hour)
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   setInterval(() => {
     if (promptCache.size > 100) promptCache.clear();
     if (imageCache.size > 50) imageCache.clear();

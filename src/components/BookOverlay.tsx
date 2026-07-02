@@ -18,7 +18,9 @@ export function BookOverlay({ open, item, onClose, onChanged }: Props) {
   const [localItem, setLocalItem] = useState<LibraryItem | null>(null);
 
   // Animation Stages: 'closed' | 'lifting' | 'cover-open' | 'page-turn' | 'settled'
-  const [stage, setStage] = useState<"closed" | "lifting" | "cover-open" | "page-turn" | "settled">("closed");
+  const [stage, setStage] = useState<"closed" | "lifting" | "cover-open" | "page-turn" | "settled">(
+    "closed",
+  );
 
   // Reader States
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -95,9 +97,10 @@ export function BookOverlay({ open, item, onClose, onChanged }: Props) {
       author = `${p.charAt(0).toUpperCase() + p.slice(1)} Editorial Team`;
     }
 
-    const abstract = it.extracted_text && !it.extracted_text.startsWith("•")
-      ? it.extracted_text.slice(0, 480).trim() + "..."
-      : `This document explores the neuroscientific insights, experimental setups, and empirical findings related to "${it.title}". By assessing biological pathways, network dynamics, and cognitive properties, the study provides a critical framework for explaining how neural structures contribute to cognitive functioning. Detailed methodology, data sets, and conclusions are accessible in the full text.`;
+    const abstract =
+      it.extracted_text && !it.extracted_text.startsWith("•")
+        ? it.extracted_text.slice(0, 480).trim() + "..."
+        : `This document explores the neuroscientific insights, experimental setups, and empirical findings related to "${it.title}". By assessing biological pathways, network dynamics, and cognitive properties, the study provides a critical framework for explaining how neural structures contribute to cognitive functioning. Detailed methodology, data sets, and conclusions are accessible in the full text.`;
 
     return { author, abstract };
   };
@@ -146,7 +149,10 @@ export function BookOverlay({ open, item, onClose, onChanged }: Props) {
       if (puter?.ai?.chat) {
         const prompt = `You are a world-class neuroscientist. Provide a premium, clear, structured summary (3-4 bullet points starting with •) of the research paper titled "${localItem.title}". Make it sound professional and scholarly. Return only the summary text. Abstract context: ${localItem.extracted_text || ""}`;
         const response = await puter.ai.chat(prompt);
-        const summaryText = typeof response === "string" ? response : response?.message?.content || response?.text || "Failed to generate summary.";
+        const summaryText =
+          typeof response === "string"
+            ? response
+            : response?.message?.content || response?.text || "Failed to generate summary.";
         setAiSummary(summaryText);
         toast.success("Summary generated!", { id: toastId });
       } else {
@@ -270,7 +276,7 @@ export function BookOverlay({ open, item, onClose, onChanged }: Props) {
           </div>
 
           {/* Centered Premium Cover Image */}
-          <div 
+          <div
             onClick={handleOpenOriginal}
             className="w-[200px] h-[300px] rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-stone-mist/40 cursor-pointer active:scale-98 transition-transform group relative bg-white"
           >
@@ -290,7 +296,9 @@ export function BookOverlay({ open, item, onClose, onChanged }: Props) {
             )}
             {/* Tap to open hint overlay */}
             <div className="absolute inset-0 bg-black/45 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
-              <span className="text-white text-xs font-semibold tracking-wider uppercase">Tap to read</span>
+              <span className="text-white text-xs font-semibold tracking-wider uppercase">
+                Tap to read
+              </span>
             </div>
           </div>
 
@@ -365,369 +373,383 @@ export function BookOverlay({ open, item, onClose, onChanged }: Props) {
           }`}
           onClick={(e) => e.stopPropagation()}
         >
-        <div className="notebook-container" style={getContainerStyle()}>
-          {/* Leather back cover backing */}
-          <div className="notebook-back" />
+          <div className="notebook-container" style={getContainerStyle()}>
+            {/* Leather back cover backing */}
+            <div className="notebook-back" />
 
-          {/* Underlay Left Page (Static left backing, visible when open) */}
-          <div className="notebook-side-stack left-side z-10">
-            <div className="notebook-under-page under-1" />
-            <div className="notebook-under-page under-2" />
-            <div className="notebook-under-page under-3" />
-            <div className="notebook-under-page under-4" />
+            {/* Underlay Left Page (Static left backing, visible when open) */}
+            <div className="notebook-side-stack left-side z-10">
+              <div className="notebook-under-page under-1" />
+              <div className="notebook-under-page under-2" />
+              <div className="notebook-under-page under-3" />
+              <div className="notebook-under-page under-4" />
 
-            <div className="relative h-full w-full bg-[#fbf9f6] p-6 pr-8 flex flex-col justify-between rounded-l-12 z-10 border border-black/5">
-              <div className="paper-margins" />
-              <div className="paper-grain-texture" />
-              <div className="book-page-shine" />
+              <div className="relative h-full w-full bg-[#fbf9f6] p-6 pr-8 flex flex-col justify-between rounded-l-12 z-10 border border-black/5">
+                <div className="paper-margins" />
+                <div className="paper-grain-texture" />
+                <div className="book-page-shine" />
 
-              {/* Cover Artwork inside boundaries */}
-              <div className="relative flex-1 flex flex-col justify-center items-center border border-stone-mist/40 bg-white/40 p-4 rounded-[8px] shadow-inner overflow-hidden">
-                {localItem.thumbnail_url ? (
-                  <img
-                    src={localItem.thumbnail_url}
-                    alt=""
-                    className="max-h-[280px] w-auto object-cover rounded shadow-md mix-blend-multiply opacity-90 border border-stone-mist/30 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="flex h-[240px] w-[160px] flex-col justify-between p-4 border border-dashed border-stone-mist text-center rounded">
-                    <div />
-                    <BookOpen size={24} className="mx-auto text-graphite-veil" />
-                    <span className="font-instrument italic text-smoke text-sm">NeuroSelf Lib</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-4 flex justify-between text-[11px] font-mono tracking-widest text-graphite-veil uppercase">
-                <span>Ref // {localItem.type}</span>
-                <span>Page 01</span>
-              </div>
-            </div>
-          </div>
-
-          {/* --- REAL 3D FLIPPING SHEETS --- */}
-          {/* Sheet 1: Cover Page */}
-          <div
-            className={`notebook-page-sheet ${
-              stage !== "closed" && stage !== "lifting" ? "flipped" : ""
-            }`}
-          >
-            {/* Front of Cover (Book Cover Art) */}
-            <div className="page-face face-front flex flex-col justify-between border-l-4 border-stone-mist">
-              <div className="paper-margins" />
-              <div className="paper-grain-texture" />
-              <div className="flex-1 flex flex-col justify-center items-center bg-[#fcf9f2] border border-stone-mist/50 p-6 rounded shadow-inner">
-                <BookOpen size={48} className="text-[#034f46] mb-4 opacity-80" />
-                <h2 className="font-fraunces text-midnight-ink text-xl text-center leading-tight">
-                  {localItem.title}
-                </h2>
-                <div className="mt-4 font-instrument italic text-smoke text-sm">
-                  {localItem.domain}
-                </div>
-              </div>
-              <div className="text-[10px] font-mono tracking-widest text-graphite-veil text-center mt-3">
-                TAP TO OPEN JOURNAL
-              </div>
-            </div>
-
-            {/* Back of Cover (Blank Page) */}
-            <div className="page-face face-back flex flex-col justify-between border-r-4 border-stone-mist">
-              <div className="paper-margins" />
-              <div className="paper-grain-texture" />
-              <div className="flex-1 flex flex-col justify-center items-center opacity-40">
-                <svg className="w-40 h-40 text-graphite-veil" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="0.5">
-                  <path d="M50,10 C60,35 60,65 50,90 M40,20 Q60,50 40,80" />
-                  <circle cx="50" cy="50" r="1.5" fill="currentColor" />
-                </svg>
-                <div className="font-instrument italic text-xs mt-3 text-center">
-                  NeuroSelf Journal Collection
-                </div>
-              </div>
-              <div className="flex justify-between text-[10px] font-mono tracking-widest text-graphite-veil">
-                <span>Ref: NS-99</span>
-                <span>Page 02</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Sheet 2: Inner Transition Page */}
-          <div
-            className={`notebook-page-sheet ${
-              stage === "page-turn" || stage === "settled" ? "flipped" : ""
-            }`}
-          >
-            {/* Front of Inner Sheet */}
-            <div className="page-face face-front flex flex-col justify-between border-l-4 border-stone-mist">
-              <div className="paper-margins" />
-              <div className="paper-grain-texture" />
-              <div className="flex-1 flex flex-col justify-center">
-                <h3 className="font-fraunces text-sm font-semibold uppercase text-deep-forest-teal tracking-wider mb-2">
-                  Table of Contents
-                </h3>
-                <div className="space-y-3 font-instrument text-smoke text-sm">
-                  <div className="flex justify-between border-b border-dashed border-stone-mist/40 pb-1">
-                    <span>I. Executive Abstract Summary</span>
-                    <span>Page 03</span>
-                  </div>
-                  <div className="flex justify-between border-b border-dashed border-stone-mist/40 pb-1">
-                    <span>II. Full Publication Transcript</span>
-                    <span>Interactive Reader</span>
-                  </div>
-                  <div className="flex justify-between border-b border-dashed border-stone-mist/40 pb-1">
-                    <span>III. AI Generated Synapses & Summary</span>
-                    <span>Dynamic</span>
-                  </div>
-                </div>
-              </div>
-              <div className="text-[10px] font-mono tracking-widest text-graphite-veil text-right">
-                Page 03
-              </div>
-            </div>
-
-            {/* Back of Inner Sheet */}
-            <div className="page-face face-back flex flex-col justify-between border-r-4 border-stone-mist">
-              <div className="paper-margins" />
-              <div className="paper-grain-texture" />
-              <div className="flex-1 flex flex-col justify-center">
-                <span className="font-mono text-[9px] uppercase tracking-wider text-graphite-veil font-bold block mb-1">
-                  Metadata Notes
-                </span>
-                <p className="font-instrument text-xs text-smoke leading-relaxed">
-                  This scientific archive was cataloged in NeuroSelf on {new Date(localItem.created_at).toLocaleDateString()}. Full digital object identifier is attached to the interactive proxy portal.
-                </p>
-              </div>
-              <div className="text-[10px] font-mono tracking-widest text-graphite-veil">
-                Page 04
-              </div>
-            </div>
-          </div>
-
-          {/* Underlay Right Page (Static settled page) */}
-          <div className="notebook-side-stack right-side z-10">
-            <div className="notebook-under-page under-1" />
-            <div className="notebook-under-page under-2" />
-            <div className="notebook-under-page under-3" />
-            <div className="notebook-under-page under-4" />
-
-            <div className="relative h-full w-full bg-[#fbf9f6] p-6 pl-8 flex flex-col justify-between rounded-r-12 z-10 border border-black/5">
-              <div className="paper-margins" />
-              <div className="paper-grain-texture" />
-              <div className="book-page-shine" />
-
-              {/* Settled Content Container */}
-              {stage === "settled" ? (
-                <div className="flex-1 flex flex-col justify-between h-full min-h-0 relative">
-                  {showReader ? (
-                    /* --- Interactive PDF/HTML Reader View --- */
-                    <div className="flex-1 min-h-0 flex flex-col bg-white rounded-lg border border-stone-mist/60 overflow-hidden shadow-inner animate-in fade-in duration-500">
-                      {loadingReader ? (
-                        /* Themed flipping skeleton pages loader */
-                        <div className="flex-1 flex flex-col items-center justify-center bg-[#fdfbf7] p-8 space-y-4 animate-pulse">
-                          <Loader2 size={24} className="animate-spin text-deep-forest-teal" />
-                          <div className="space-y-2 w-full max-w-[200px]">
-                            <div className="h-2 bg-stone-mist/40 rounded w-5/6 mx-auto" />
-                            <div className="h-2 bg-stone-mist/40 rounded w-4/6 mx-auto" />
-                            <div className="h-2 bg-stone-mist/40 rounded w-3/6 mx-auto" />
-                          </div>
-                          <span className="font-instrument italic text-xs text-smoke">Flipping pages... Loading text</span>
-                        </div>
-                      ) : pdfUrl ? (
-                        <iframe
-                          src={pdfUrl}
-                          className="h-full w-full border-none bg-white rounded-lg"
-                          title={localItem.title}
-                          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                        />
-                      ) : (
-                        <div className="flex-1 flex items-center justify-center text-xs text-smoke">
-                          Failed to load reader.
-                        </div>
-                      )}
-                    </div>
+                {/* Cover Artwork inside boundaries */}
+                <div className="relative flex-1 flex flex-col justify-center items-center border border-stone-mist/40 bg-white/40 p-4 rounded-[8px] shadow-inner overflow-hidden">
+                  {localItem.thumbnail_url ? (
+                    <img
+                      src={localItem.thumbnail_url}
+                      alt=""
+                      className="max-h-[280px] w-auto object-cover rounded shadow-md mix-blend-multiply opacity-90 border border-stone-mist/30 transition-transform duration-500"
+                    />
                   ) : (
-                    /* --- Scholarly Abstract View --- */
-                    <div className="flex-1 min-h-0 flex flex-col justify-start overflow-y-auto scrollbar-none pr-1">
-                      <div className="text-[10px] font-mono tracking-widest text-[#034f46] uppercase font-bold">
-                        Neuroscience Review
-                      </div>
-
-                      {/* Title */}
-                      <h1 className="mt-3 font-fraunces text-midnight-ink text-xl sm:text-2xl font-medium tracking-tight leading-snug text-left word-break-normal overflow-wrap-break-word">
-                        {localItem.title}
-                      </h1>
-
-                      {/* Author */}
-                      <div className="mt-2 font-instrument italic text-smoke text-xs sm:text-sm border-b border-stone-mist/30 pb-2 text-left">
-                        Author: {author}
-                      </div>
-
-                      {/* Abstract / AI Summary Text */}
-                      <div className="mt-4 font-instrument text-[#222] text-sm leading-relaxed text-justify">
-                        <span className="font-mono text-[9px] tracking-wider uppercase font-bold text-graphite-veil block mb-1">
-                          {aiSummary && aiSummary.startsWith("•") ? "AI Synthesis Summary" : "Abstract"}
-                        </span>
-                        <div className="whitespace-pre-line text-sm pr-1">
-                          {aiSummary || abstract}
-                        </div>
-                      </div>
+                    <div className="flex h-[240px] w-[160px] flex-col justify-between p-4 border border-dashed border-stone-mist text-center rounded">
+                      <div />
+                      <BookOpen size={24} className="mx-auto text-graphite-veil" />
+                      <span className="font-instrument italic text-smoke text-sm">
+                        NeuroSelf Lib
+                      </span>
                     </div>
                   )}
+                </div>
 
-                  {/* Tactile Actions Bottom Bar */}
-                  <div className="mt-4 pt-3 border-t border-stone-mist/30 flex items-center justify-between gap-3 bg-[#fbf9f6]/95 z-20">
-                    <button
-                      type="button"
-                      onClick={handleClose}
-                      className="rounded-full border border-stone-mist bg-white/80 px-4 py-2 text-xs font-semibold text-midnight-ink hover:bg-cream-paper transition-all cursor-pointer min-h-[44px]"
-                    >
-                      Close Book
-                    </button>
+                <div className="mt-4 flex justify-between text-[11px] font-mono tracking-widest text-graphite-veil uppercase">
+                  <span>Ref // {localItem.type}</span>
+                  <span>Page 01</span>
+                </div>
+              </div>
+            </div>
 
-                    {localItem.storage_path || localItem.url ? (
-                      <button
-                        type="button"
-                        onClick={handleOpenOriginal}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-[#034f46] px-5 py-2.5 text-xs font-semibold text-[#ffffeb] hover:bg-[#023c35] transition-all shadow-md cursor-pointer min-h-[44px]"
-                      >
-                        <span>Read Full Document</span>
-                        <ExternalLink size={12} />
-                      </button>
-                    ) : null}
+            {/* --- REAL 3D FLIPPING SHEETS --- */}
+            {/* Sheet 1: Cover Page */}
+            <div
+              className={`notebook-page-sheet ${
+                stage !== "closed" && stage !== "lifting" ? "flipped" : ""
+              }`}
+            >
+              {/* Front of Cover (Book Cover Art) */}
+              <div className="page-face face-front flex flex-col justify-between border-l-4 border-stone-mist">
+                <div className="paper-margins" />
+                <div className="paper-grain-texture" />
+                <div className="flex-1 flex flex-col justify-center items-center bg-[#fcf9f2] border border-stone-mist/50 p-6 rounded shadow-inner">
+                  <BookOpen size={48} className="text-[#034f46] mb-4 opacity-80" />
+                  <h2 className="font-fraunces text-midnight-ink text-xl text-center leading-tight">
+                    {localItem.title}
+                  </h2>
+                  <div className="mt-4 font-instrument italic text-smoke text-sm">
+                    {localItem.domain}
                   </div>
                 </div>
-              ) : (
-                /* Flipping Loading Placeholder Skeletons */
-                <div className="flex-1 flex flex-col justify-center items-center opacity-20">
-                  <Loader2 size={24} className="animate-spin text-graphite-veil" />
+                <div className="text-[10px] font-mono tracking-widest text-graphite-veil text-center mt-3">
+                  TAP TO OPEN JOURNAL
                 </div>
-              )}
+              </div>
+
+              {/* Back of Cover (Blank Page) */}
+              <div className="page-face face-back flex flex-col justify-between border-r-4 border-stone-mist">
+                <div className="paper-margins" />
+                <div className="paper-grain-texture" />
+                <div className="flex-1 flex flex-col justify-center items-center opacity-40">
+                  <svg
+                    className="w-40 h-40 text-graphite-veil"
+                    viewBox="0 0 100 100"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="0.5"
+                  >
+                    <path d="M50,10 C60,35 60,65 50,90 M40,20 Q60,50 40,80" />
+                    <circle cx="50" cy="50" r="1.5" fill="currentColor" />
+                  </svg>
+                  <div className="font-instrument italic text-xs mt-3 text-center">
+                    NeuroSelf Journal Collection
+                  </div>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono tracking-widest text-graphite-veil">
+                  <span>Ref: NS-99</span>
+                  <span>Page 02</span>
+                </div>
+              </div>
             </div>
+
+            {/* Sheet 2: Inner Transition Page */}
+            <div
+              className={`notebook-page-sheet ${
+                stage === "page-turn" || stage === "settled" ? "flipped" : ""
+              }`}
+            >
+              {/* Front of Inner Sheet */}
+              <div className="page-face face-front flex flex-col justify-between border-l-4 border-stone-mist">
+                <div className="paper-margins" />
+                <div className="paper-grain-texture" />
+                <div className="flex-1 flex flex-col justify-center">
+                  <h3 className="font-fraunces text-sm font-semibold uppercase text-deep-forest-teal tracking-wider mb-2">
+                    Table of Contents
+                  </h3>
+                  <div className="space-y-3 font-instrument text-smoke text-sm">
+                    <div className="flex justify-between border-b border-dashed border-stone-mist/40 pb-1">
+                      <span>I. Executive Abstract Summary</span>
+                      <span>Page 03</span>
+                    </div>
+                    <div className="flex justify-between border-b border-dashed border-stone-mist/40 pb-1">
+                      <span>II. Full Publication Transcript</span>
+                      <span>Interactive Reader</span>
+                    </div>
+                    <div className="flex justify-between border-b border-dashed border-stone-mist/40 pb-1">
+                      <span>III. AI Generated Synapses & Summary</span>
+                      <span>Dynamic</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-[10px] font-mono tracking-widest text-graphite-veil text-right">
+                  Page 03
+                </div>
+              </div>
+
+              {/* Back of Inner Sheet */}
+              <div className="page-face face-back flex flex-col justify-between border-r-4 border-stone-mist">
+                <div className="paper-margins" />
+                <div className="paper-grain-texture" />
+                <div className="flex-1 flex flex-col justify-center">
+                  <span className="font-mono text-[9px] uppercase tracking-wider text-graphite-veil font-bold block mb-1">
+                    Metadata Notes
+                  </span>
+                  <p className="font-instrument text-xs text-smoke leading-relaxed">
+                    This scientific archive was cataloged in NeuroSelf on{" "}
+                    {new Date(localItem.created_at).toLocaleDateString()}. Full digital object
+                    identifier is attached to the interactive proxy portal.
+                  </p>
+                </div>
+                <div className="text-[10px] font-mono tracking-widest text-graphite-veil">
+                  Page 04
+                </div>
+              </div>
+            </div>
+
+            {/* Underlay Right Page (Static settled page) */}
+            <div className="notebook-side-stack right-side z-10">
+              <div className="notebook-under-page under-1" />
+              <div className="notebook-under-page under-2" />
+              <div className="notebook-under-page under-3" />
+              <div className="notebook-under-page under-4" />
+
+              <div className="relative h-full w-full bg-[#fbf9f6] p-6 pl-8 flex flex-col justify-between rounded-r-12 z-10 border border-black/5">
+                <div className="paper-margins" />
+                <div className="paper-grain-texture" />
+                <div className="book-page-shine" />
+
+                {/* Settled Content Container */}
+                {stage === "settled" ? (
+                  <div className="flex-1 flex flex-col justify-between h-full min-h-0 relative">
+                    {showReader ? (
+                      /* --- Interactive PDF/HTML Reader View --- */
+                      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-lg border border-stone-mist/60 overflow-hidden shadow-inner animate-in fade-in duration-500">
+                        {loadingReader ? (
+                          /* Themed flipping skeleton pages loader */
+                          <div className="flex-1 flex flex-col items-center justify-center bg-[#fdfbf7] p-8 space-y-4 animate-pulse">
+                            <Loader2 size={24} className="animate-spin text-deep-forest-teal" />
+                            <div className="space-y-2 w-full max-w-[200px]">
+                              <div className="h-2 bg-stone-mist/40 rounded w-5/6 mx-auto" />
+                              <div className="h-2 bg-stone-mist/40 rounded w-4/6 mx-auto" />
+                              <div className="h-2 bg-stone-mist/40 rounded w-3/6 mx-auto" />
+                            </div>
+                            <span className="font-instrument italic text-xs text-smoke">
+                              Flipping pages... Loading text
+                            </span>
+                          </div>
+                        ) : pdfUrl ? (
+                          <iframe
+                            src={pdfUrl}
+                            className="h-full w-full border-none bg-white rounded-lg"
+                            title={localItem.title}
+                            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                          />
+                        ) : (
+                          <div className="flex-1 flex items-center justify-center text-xs text-smoke">
+                            Failed to load reader.
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* --- Scholarly Abstract View --- */
+                      <div className="flex-1 min-h-0 flex flex-col justify-start overflow-y-auto scrollbar-none pr-1">
+                        <div className="text-[10px] font-mono tracking-widest text-[#034f46] uppercase font-bold">
+                          Neuroscience Review
+                        </div>
+
+                        {/* Title */}
+                        <h1 className="mt-3 font-fraunces text-midnight-ink text-xl sm:text-2xl font-medium tracking-tight leading-snug text-left word-break-normal overflow-wrap-break-word">
+                          {localItem.title}
+                        </h1>
+
+                        {/* Author */}
+                        <div className="mt-2 font-instrument italic text-smoke text-xs sm:text-sm border-b border-stone-mist/30 pb-2 text-left">
+                          Author: {author}
+                        </div>
+
+                        {/* Abstract / AI Summary Text */}
+                        <div className="mt-4 font-instrument text-[#222] text-sm leading-relaxed text-justify">
+                          <span className="font-mono text-[9px] tracking-wider uppercase font-bold text-graphite-veil block mb-1">
+                            {aiSummary && aiSummary.startsWith("•")
+                              ? "AI Synthesis Summary"
+                              : "Abstract"}
+                          </span>
+                          <div className="whitespace-pre-line text-sm pr-1">
+                            {aiSummary || abstract}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tactile Actions Bottom Bar */}
+                    <div className="mt-4 pt-3 border-t border-stone-mist/30 flex items-center justify-between gap-3 bg-[#fbf9f6]/95 z-20">
+                      <button
+                        type="button"
+                        onClick={handleClose}
+                        className="rounded-full border border-stone-mist bg-white/80 px-4 py-2 text-xs font-semibold text-midnight-ink hover:bg-cream-paper transition-all cursor-pointer min-h-[44px]"
+                      >
+                        Close Book
+                      </button>
+
+                      {localItem.storage_path || localItem.url ? (
+                        <button
+                          type="button"
+                          onClick={handleOpenOriginal}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-[#034f46] px-5 py-2.5 text-xs font-semibold text-[#ffffeb] hover:bg-[#023c35] transition-all shadow-md cursor-pointer min-h-[44px]"
+                        >
+                          <span>Read Full Document</span>
+                          <ExternalLink size={12} />
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : (
+                  /* Flipping Loading Placeholder Skeletons */
+                  <div className="flex-1 flex flex-col justify-center items-center opacity-20">
+                    <Loader2 size={24} className="animate-spin text-graphite-veil" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Central binder spine visual */}
+            <div className="notebook-spine" />
+            <div className="notebook-rings" />
           </div>
 
-          {/* Central binder spine visual */}
-          <div className="notebook-spine" />
-          <div className="notebook-rings" />
-        </div>
-
-        {/* --- DUAL FLOATING CONTROL BARS --- */}
-        {stage === "settled" && (
-          <>
-            {/* Desktop Toolbar - Horizontal Row with Borders */}
-            <div className="hidden md:flex mt-6 notebook-toolbar animate-in fade-in duration-300">
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={handleClose}
-                className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper transition-all cursor-pointer min-h-[48px]"
-                aria-label="Close Notebook"
-              >
-                <X size={15} />
-                <span>Close</span>
-              </button>
-
-              {/* Edit Button */}
-              <button
-                type="button"
-                onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper transition-all cursor-pointer min-h-[48px]"
-                aria-label="Edit Item"
-              >
-                <Pencil size={14} />
-                <span>Edit</span>
-              </button>
-
-              {/* Read PDF Button */}
-              <div className="hidden md:block">
+          {/* --- DUAL FLOATING CONTROL BARS --- */}
+          {stage === "settled" && (
+            <>
+              {/* Desktop Toolbar - Horizontal Row with Borders */}
+              <div className="hidden md:flex mt-6 notebook-toolbar animate-in fade-in duration-300">
+                {/* Close Button */}
                 <button
                   type="button"
-                  onClick={handleOpenOriginal}
+                  onClick={handleClose}
                   className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper transition-all cursor-pointer min-h-[48px]"
-                  aria-label="Read PDF"
+                  aria-label="Close Notebook"
                 >
-                  <BookOpen size={14} />
-                  <span>Read PDF</span>
+                  <X size={15} />
+                  <span>Close</span>
                 </button>
-              </div>
 
-              {/* Generate Summary Button */}
-              <button
-                type="button"
-                onClick={handleGenerateSummary}
-                disabled={generatingSummary}
-                className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper disabled:opacity-50 transition-all cursor-pointer min-h-[48px]"
-                aria-label="Generate AI Summary"
-              >
-                {generatingSummary ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Sparkles size={14} />
-                )}
-                <span>Generate Summary</span>
-              </button>
-
-              {/* Save Summary Button */}
-              <div className="hidden md:block">
+                {/* Edit Button */}
                 <button
                   type="button"
-                  onClick={handleSaveSummary}
-                  disabled={!aiSummary || aiSummary === localItem.extracted_text}
-                  className="flex items-center gap-1.5 rounded-full bg-midnight-ink text-white px-3.5 py-2 text-xs font-bold disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer min-h-[48px]"
-                  aria-label="Save Summary to Notebook"
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper transition-all cursor-pointer min-h-[48px]"
+                  aria-label="Edit Item"
                 >
-                  <Save size={14} />
-                  <span>Save</span>
+                  <Pencil size={14} />
+                  <span>Edit</span>
+                </button>
+
+                {/* Read PDF Button */}
+                <div className="hidden md:block">
+                  <button
+                    type="button"
+                    onClick={handleOpenOriginal}
+                    className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper transition-all cursor-pointer min-h-[48px]"
+                    aria-label="Read PDF"
+                  >
+                    <BookOpen size={14} />
+                    <span>Read PDF</span>
+                  </button>
+                </div>
+
+                {/* Generate Summary Button */}
+                <button
+                  type="button"
+                  onClick={handleGenerateSummary}
+                  disabled={generatingSummary}
+                  className="flex items-center gap-1.5 rounded-full border border-stone-mist bg-white px-3.5 py-2 text-xs font-bold text-midnight-ink hover:bg-cream-paper disabled:opacity-50 transition-all cursor-pointer min-h-[48px]"
+                  aria-label="Generate AI Summary"
+                >
+                  {generatingSummary ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={14} />
+                  )}
+                  <span>Generate Summary</span>
+                </button>
+
+                {/* Save Summary Button */}
+                <div className="hidden md:block">
+                  <button
+                    type="button"
+                    onClick={handleSaveSummary}
+                    disabled={!aiSummary || aiSummary === localItem.extracted_text}
+                    className="flex items-center gap-1.5 rounded-full bg-midnight-ink text-white px-3.5 py-2 text-xs font-bold disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer min-h-[48px]"
+                    aria-label="Save Summary to Notebook"
+                  >
+                    <Save size={14} />
+                    <span>Save</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile Floating Bottom Action Bar (Edit | Generate | Close) */}
+              <div className="flex md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[250] items-center justify-between gap-3.5 bg-white/95 backdrop-blur-md border border-stone-mist/60 rounded-full py-2.5 px-6 shadow-[0_12px_32px_rgba(0,0,0,0.18)] w-[90%] max-w-[340px] animate-in slide-in-from-bottom-5 duration-300">
+                {/* Edit Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-1 text-[11px] font-bold text-midnight-ink active:scale-95 transition-transform"
+                  aria-label="Edit Item"
+                >
+                  <Pencil size={13} />
+                  <span>Edit</span>
+                </button>
+
+                {/* Separator */}
+                <div className="w-[1px] h-4 bg-stone-mist/75" />
+
+                {/* Generate Button */}
+                <button
+                  type="button"
+                  onClick={handleGenerateSummary}
+                  disabled={generatingSummary}
+                  className="flex items-center gap-1 text-[11px] font-bold text-midnight-ink active:scale-95 transition-transform disabled:opacity-50"
+                  aria-label="Generate AI Summary"
+                >
+                  {generatingSummary ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={13} />
+                  )}
+                  <span>Generate</span>
+                </button>
+
+                {/* Separator */}
+                <div className="w-[1px] h-4 bg-stone-mist/75" />
+
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="flex items-center gap-1 text-[11px] font-bold text-red-600 active:scale-95 transition-transform"
+                  aria-label="Close Notebook"
+                >
+                  <X size={13} strokeWidth={2.5} />
+                  <span>Close</span>
                 </button>
               </div>
-            </div>
-
-            {/* Mobile Floating Bottom Action Bar (Edit | Generate | Close) */}
-            <div className="flex md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[250] items-center justify-between gap-3.5 bg-white/95 backdrop-blur-md border border-stone-mist/60 rounded-full py-2.5 px-6 shadow-[0_12px_32px_rgba(0,0,0,0.18)] w-[90%] max-w-[340px] animate-in slide-in-from-bottom-5 duration-300">
-              {/* Edit Button */}
-              <button
-                type="button"
-                onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1 text-[11px] font-bold text-midnight-ink active:scale-95 transition-transform"
-                aria-label="Edit Item"
-              >
-                <Pencil size={13} />
-                <span>Edit</span>
-              </button>
-
-              {/* Separator */}
-              <div className="w-[1px] h-4 bg-stone-mist/75" />
-
-              {/* Generate Button */}
-              <button
-                type="button"
-                onClick={handleGenerateSummary}
-                disabled={generatingSummary}
-                className="flex items-center gap-1 text-[11px] font-bold text-midnight-ink active:scale-95 transition-transform disabled:opacity-50"
-                aria-label="Generate AI Summary"
-              >
-                {generatingSummary ? (
-                  <Loader2 size={13} className="animate-spin" />
-                ) : (
-                  <Sparkles size={13} />
-                )}
-                <span>Generate</span>
-              </button>
-
-              {/* Separator */}
-              <div className="w-[1px] h-4 bg-stone-mist/75" />
-
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={handleClose}
-                className="flex items-center gap-1 text-[11px] font-bold text-red-600 active:scale-95 transition-transform"
-                aria-label="Close Notebook"
-              >
-                <X size={13} strokeWidth={2.5} />
-                <span>Close</span>
-              </button>
-            </div>
-          </>
-        )}
+            </>
+          )}
         </div>
       )}
 
