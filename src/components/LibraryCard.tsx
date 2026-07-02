@@ -599,20 +599,23 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
 
     return (
       <motion.div
+        layout
         ref={cardRef}
-        initial={{ opacity: 0, scale: 0.3, y: -60, rotate: rotation }}
-        animate={{ opacity: 1, scale: 1, y: 0, rotate: rotation }}
+        initial={{ opacity: 0, scale: 0.8, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{
           type: "spring",
-          stiffness: 120,
-          damping: 14,
-          delay: (index ?? 0) * 0.08,
+          stiffness: 260,
+          damping: 20,
+          delay: (index ?? 0) * 0.04,
         }}
         whileHover={{
+          scale: 1.03,
           y: -4,
+          zIndex: 10,
         }}
         whileTap={{
-          y: -4,
+          scale: 0.98,
         }}
         className="relative flex flex-col rounded-[4px] p-2 select-none cursor-pointer border border-black/[0.04] overflow-visible"
         style={{
@@ -631,13 +634,18 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
         {/* Polaroid Image Wrapper */}
         <div className="relative aspect-square w-full rounded-[2px] overflow-hidden border border-black/[0.08] bg-stone-100/50">
           {thumb && !imageError ? (
-            <img
-              src={coverImg}
-              alt=""
-              loading="lazy"
-              className="h-full w-full object-cover"
-              onError={() => setImageError(true)}
-            />
+            <>
+              <img
+                src={coverImg}
+                alt=""
+                loading="lazy"
+                className="h-full w-full object-cover transition-opacity duration-500"
+                style={{ opacity: imageLoaded ? 1 : 0, position: imageLoaded ? "static" : "absolute" }}
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+              />
+              {!imageLoaded && <div className="h-full w-full animate-shimmer bg-stone-200" />}
+            </>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center">
               <Icon size={24} className="text-stone-400 opacity-60" />
@@ -673,10 +681,11 @@ export function LibraryCard({ item, width = 128, onChanged, previewOnly, isPinbo
 
   return (
     <motion.div
+      layout
       ref={cardRef}
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
+      initial={{ opacity: 0, scale: 0.9, y: 15 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 24 }}
       className="group relative flex shrink-0 flex-col items-center select-none overflow-visible"
       style={{ width }}
       onTouchStart={handleTouchStart}

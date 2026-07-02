@@ -67,6 +67,8 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
     try {
       const result = await detectMetadata(url);
       setDraft(result);
+      
+      setLoading(false);
 
       // YT oEmbed Skip check
       const isYoutube = /youtube\.com|youtu\.be/i.test(url);
@@ -91,6 +93,8 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
         domain: null,
       };
       setDraft(fallbackDraft);
+      
+      setLoading(false);
 
       // Generate cover for manual input
       const coverUrl = await generateNeuroShelfCover(url, "article", imageModel);
@@ -136,6 +140,8 @@ export function AddItemModal({ open, onClose, onSaved }: Props) {
       };
       setDraft(initialDraft);
       toast.success("pdf uploaded");
+      
+      setLoading(false);
 
       // Trigger cover generation pipeline
       const coverUrl = await generateNeuroShelfCover(cleanTitle, "paper", imageModel);
